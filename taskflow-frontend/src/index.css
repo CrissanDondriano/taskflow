@@ -1,0 +1,133 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+/*
+  Design tokens. Single dark "mission control" theme by design — components
+  reference these CSS variables rather than hardcoded hex/rgba so the token
+  layer stays swappable later without touching every file, but there's
+  currently no theme toggle exposed to the user.
+*/
+:root {
+  --tf-primary: #2563EB;
+  --tf-navy: #0F172A;
+  --tf-teal: #14B8A6;
+  --tf-success: #22C55E;
+  --tf-warning: #F59E0B;
+  --tf-danger: #EF4444;
+
+  --tf-void: #05070C;
+  --tf-surface: #0A0F1C;
+  --tf-surface-translucent: rgba(10, 15, 28, 0.7);
+  --tf-overlay: rgba(2, 4, 10, 0.7);
+  --tf-panel: rgba(255, 255, 255, 0.045);
+  --tf-panel-border: rgba(255, 255, 255, 0.09);
+  --tf-ink: #EEF2F8;
+  --tf-ink-muted: #7C8AA5;
+  --tf-scrollbar-thumb: rgba(255, 255, 255, 0.15);
+  --tf-scrollbar-thumb-hover: rgba(255, 255, 255, 0.28);
+  --tf-aurora-opacity: 1;
+  --tf-skeleton-base: rgba(255, 255, 255, 0.06);
+  --tf-skeleton-shine: rgba(255, 255, 255, 0.14);
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background: var(--tf-void);
+  font-family: 'Inter', sans-serif;
+  color: var(--tf-ink);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+::selection {
+  background: rgba(20, 184, 166, 0.35);
+}
+
+.font-display {
+  font-family: 'Space Grotesk', sans-serif;
+}
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.ai-pulse-wrap {
+  position: relative;
+  border-radius: 1rem;
+  border: 1px solid rgba(20, 184, 166, 0.35);
+  animation: ai-breathe 3.2s ease-in-out infinite;
+}
+@keyframes ai-breathe {
+  0%, 100% { box-shadow: 0 0 0 rgba(20, 184, 166, 0); border-color: rgba(20, 184, 166, 0.25); }
+  50% { box-shadow: 0 0 22px rgba(20, 184, 166, 0.18); border-color: rgba(20, 184, 166, 0.55); }
+}
+
+/* Thin, themed scrollbars for Kanban columns, notification dropdowns, and
+   any other internally-scrolling panel — the browser default is jarring
+   against this UI in either theme. */
+.tf-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--tf-scrollbar-thumb) transparent;
+}
+.tf-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.tf-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.tf-scroll::-webkit-scrollbar-thumb {
+  background: var(--tf-scrollbar-thumb);
+  border-radius: 999px;
+}
+.tf-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--tf-scrollbar-thumb-hover);
+}
+
+.orbit-core-pulse {
+  animation: corepulse 3s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes corepulse {
+  0%, 100% { opacity: 0.75; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+
+.orbit-risk-ring {
+  animation: riskring 1.8s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes riskring {
+  0% { opacity: 0.9; transform: scale(0.9); }
+  70% { opacity: 0; transform: scale(1.6); }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+
+/* Skeleton loading placeholder shimmer (see components/ui/Skeleton.tsx) */
+.tf-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--tf-skeleton-base);
+}
+.tf-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, var(--tf-skeleton-shine), transparent);
+  animation: tf-shimmer 1.6s ease-in-out infinite;
+}
+@keyframes tf-shimmer {
+  100% { transform: translateX(100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tf-skeleton::after { animation: none; }
+  .ai-pulse-wrap, .orbit-core-pulse, .orbit-risk-ring { animation: none; }
+}
+
+/* visible keyboard focus ring everywhere, since we override a lot of default styles */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--tf-teal);
+  outline-offset: 2px;
+}
