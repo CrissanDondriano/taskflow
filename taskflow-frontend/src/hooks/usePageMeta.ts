@@ -13,7 +13,7 @@ const meta = (attr: "name" | "property", key: string, content: string) =>
 /** Per-page title, description, canonical URL and Open Graph tags. */
 export function usePageMeta(title: string, description: string) {
   useEffect(() => {
-    const full = title === "Home" ? "TaskFlow AI | AI task management for teams" : `${title} | TaskFlow AI`;
+    const full = title === "Home" ? "TaskFlow AI" : `${title} | TaskFlow AI`;
     const url = SITE + window.location.pathname;
     document.title = full;
     meta("name", "description", description);
