@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { LandingPage } from "./pages/LandingPage";
 import { MarketingLayout } from "./components/marketing/MarketingLayout";
 import { ProtectedRoute } from "./components/layout/ProtectedRoute";
@@ -8,6 +8,8 @@ import { NotificationsProvider } from "./context/NotificationsContext";
 import { MeetingsProvider } from "./context/MeetingsContext";
 import { TeamProvider } from "./context/TeamContext";
 
+// Everything except the home page is code-split to keep the first load small.
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage").then((m) => ({ default: m.NotFoundPage })));
 const FeaturesPage = lazy(() => import("./pages/marketing/FeaturesPage").then((m) => ({ default: m.FeaturesPage })));
 const PricingPage = lazy(() => import("./pages/marketing/PricingPage").then((m) => ({ default: m.PricingPage })));
 const AboutPage = lazy(() => import("./pages/marketing/AboutPage").then((m) => ({ default: m.AboutPage })));
@@ -23,16 +25,6 @@ const TeamPage = lazy(() => import("./pages/dashboard/TeamPage").then((m) => ({ 
 const ReportsPage = lazy(() => import("./pages/dashboard/ReportsPage").then((m) => ({ default: m.ReportsPage })));
 const SettingsPage = lazy(() => import("./pages/dashboard/SettingsPage").then((m) => ({ default: m.SettingsPage })));
 
-function NotFound() {
-  return (
-    <div className="mx-auto max-w-xl px-4 py-24 text-center">
-      <h1 className="font-display text-[28px] font-semibold">Page not found</h1>
-      <p className="mt-3 text-[14px]" style={{ color: "var(--tf-ink-muted)" }}>That address doesn't exist. Go back to the home page.</p>
-      <Link to="/" className="mt-6 inline-block underline underline-offset-4">Back to home</Link>
-    </div>
-  );
-}
-
 export default function App() {
   return (
     <Suspense fallback={<div role="status" aria-label="Loading" style={{ minHeight: "100vh", background: "var(--tf-void)" }} />}>
@@ -43,7 +35,8 @@ export default function App() {
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
-          <Route path="*" element={<NotFound />} />
+          {/* Any other URL (/112, /features/abc, ...) lands on the 404 page */}
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
 
         <Route path="/login" element={<LoginPage />} />
@@ -72,6 +65,7 @@ export default function App() {
           <Route path="team" element={<TeamPage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="*" element={<NotFoundPage compact />} />
         </Route>
       </Routes>
     </Suspense>

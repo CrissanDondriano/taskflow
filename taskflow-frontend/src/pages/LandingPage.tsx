@@ -99,8 +99,8 @@ export function LandingPage() {
                 <span aria-hidden="true" className="absolute bottom-2 left-5 top-2 w-px" style={{ background: "var(--tf-panel-border)" }} />
                 {STEPS.map((s, i) => (
                   <li key={s.title} className="relative pb-8 pl-14 last:pb-0">
+                    <span aria-hidden="true" className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-full font-display text-[15px] font-semibold text-white" style={{ background: "linear-gradient(135deg,#2563EB,#14B8A6)", boxShadow: "0 0 0 5px var(--tf-void)" }}>{i + 1}</span>
                     <Reveal delay={i * 90}>
-                      <span className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-full font-display text-[15px] font-semibold text-white" style={{ background: "linear-gradient(135deg,#2563EB,#14B8A6)" }}>{i + 1}</span>
                       <h4 className="text-[15px] font-semibold">{s.title}</h4>
                       <p className="mt-1 max-w-[52ch] text-[13px] leading-relaxed" style={MUTED}>{s.desc}</p>
                     </Reveal>

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-const SITE = "https://taskflow.ai"; // TODO: set to your production domain
+const SITE = "https://taskflow-frontend-liard-eight.vercel.app"; // production domain
 
 function upsert(selector: string, make: () => HTMLElement, set: (el: HTMLElement) => void) {
   let el = document.head.querySelector<HTMLElement>(selector);

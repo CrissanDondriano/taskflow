@@ -1,5 +1,5 @@
 User-agent: *
 Allow: /
 Disallow: /dashboard
-
-Sitemap: https://taskflow.ai/sitemap.xml
+ 
+Sitemap: https://taskflow-frontend-liard-eight.vercel.app/sitemap.xml
