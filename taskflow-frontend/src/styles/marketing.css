@@ -1,0 +1,43 @@
+.aurora {
+  background:
+    radial-gradient(60% 55% at 12% 0%, rgba(37, 99, 235, 0.3), transparent 70%),
+    radial-gradient(50% 45% at 92% 8%, rgba(20, 184, 166, 0.24), transparent 70%);
+}
+.grid-fade {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(ellipse at top, #000 25%, transparent 72%);
+  mask-image: radial-gradient(ellipse at top, #000 25%, transparent 72%);
+}
+.text-gradient {
+  background: linear-gradient(120deg, #60a5fa, #2dd4bf);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@keyframes rise { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes marquee { to { transform: translateX(-50%); } }
+@keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+.rise { animation: rise 0.85s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.float { animation: float 6s ease-in-out infinite; }
+.marquee-track { display: flex; width: max-content; animation: marquee 28s linear infinite; }
+.pulse-dot { animation: pulse-dot 1.8s ease-in-out infinite; }
+
+.reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.reveal.is-in { opacity: 1; transform: none; }
+.reveal .bar { transform: scaleY(0); transform-origin: bottom; transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) 0.25s; }
+.reveal.is-in .bar { transform: scaleY(1); }
+
+.lift { transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease; }
+.lift:hover { transform: translateY(-4px); border-color: rgba(96, 165, 250, 0.45) !important; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35); }
+
+@media (prefers-reduced-motion: reduce) {
+  .rise, .float, .marquee-track, .pulse-dot { animation: none; }
+  .reveal, .reveal .bar { opacity: 1; transform: none; transition: none; }
+  .lift { transition: none; }
+}

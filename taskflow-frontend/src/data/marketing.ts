@@ -1,6 +1,7 @@
 import { BrainCircuit, Workflow, Users, BarChart3, KanbanSquare, Plug, FileText, ShieldAlert, LayoutDashboard, type LucideIcon } from "lucide-react";
 
 export const NAV = [
+  { to: "/", label: "Home" },
   { to: "/features", label: "Features" },
   { to: "/pricing", label: "Pricing" },
   { to: "/about", label: "About" },

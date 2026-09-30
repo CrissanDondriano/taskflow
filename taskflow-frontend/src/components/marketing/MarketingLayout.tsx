@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { Sparkles, Menu, X } from "lucide-react";
 import { Container, ButtonLink } from "./Bits";
 import { NAV } from "../../data/marketing";
+import "../../styles/marketing.css";
 
 const FOCUS = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tf-teal)]";
 const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -41,7 +42,7 @@ export function MarketingLayout() {
         <Container className="flex h-16 items-center justify-between">
           <Logo />
           <nav aria-label="Main" className="hidden items-center gap-7 md:flex" style={{ color: "var(--tf-ink-muted)" }}>
-            {NAV.map((l) => <NavLink key={l.to} to={l.to} className={linkClass}>{l.label}</NavLink>)}
+            {NAV.map((l) => <NavLink key={l.to} to={l.to} end={l.to === "/"} className={linkClass}>{l.label}</NavLink>)}
           </nav>
           <div className="hidden items-center gap-4 md:flex">
             <Link to="/login" className={`rounded-md py-2 text-[14px] font-medium ${FOCUS}`} style={{ color: "var(--tf-ink-muted)" }}>Log in</Link>
@@ -59,7 +60,7 @@ export function MarketingLayout() {
           <nav id="mobile-nav" aria-label="Mobile" className="md:hidden" style={{ borderTop: "1px solid var(--tf-panel-border)" }}>
             <Container className="flex flex-col gap-1 pb-4 pt-2" >
               {NAV.map((l) => (
-                <NavLink key={l.to} to={l.to} className={({ isActive }) => `flex min-h-11 items-center rounded-lg px-2 text-[15px] ${FOCUS} ${isActive ? "text-white" : ""}`} style={{ color: "var(--tf-ink-muted)" }}>{l.label}</NavLink>
+                <NavLink key={l.to} to={l.to} end={l.to === "/"} className={({ isActive }) => `flex min-h-11 items-center rounded-lg px-2 text-[15px] ${FOCUS} ${isActive ? "text-white" : ""}`} style={{ color: "var(--tf-ink-muted)" }}>{l.label}</NavLink>
               ))}
               <Link to="/login" className={`flex min-h-11 items-center rounded-lg px-2 text-[15px] ${FOCUS}`}>Log in</Link>
               <ButtonLink to="/signup">Get started</ButtonLink>
@@ -79,6 +80,7 @@ export function MarketingLayout() {
           <nav aria-label="Product">
             <h2 className="mb-3 text-[13px] font-semibold">Product</h2>
             <ul className="flex flex-col gap-2 text-[13px]" style={{ color: "var(--tf-ink-muted)" }}>
+              <li><Link to="/" className="hover:text-white">Home</Link></li>
               <li><Link to="/features" className="hover:text-white">Features</Link></li>
               <li><Link to="/pricing" className="hover:text-white">Pricing</Link></li>
               <li><Link to="/signup" className="hover:text-white">Sign up</Link></li>
