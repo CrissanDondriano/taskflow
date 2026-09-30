@@ -1,15 +1,25 @@
 import { useEffect } from "react";
 
-/** Sets the document title and meta description for the current marketing page. */
+const SITE = "https://taskflow.ai"; // TODO: set to your production domain
+
+function upsert(selector: string, make: () => HTMLElement, set: (el: HTMLElement) => void) {
+  let el = document.head.querySelector<HTMLElement>(selector);
+  if (!el) { el = make(); document.head.appendChild(el); }
+  set(el);
+}
+const meta = (attr: "name" | "property", key: string, content: string) =>
+  upsert(`meta[${attr}="${key}"]`, () => { const m = document.createElement("meta"); m.setAttribute(attr, key); return m; }, (m) => m.setAttribute("content", content));
+
+/** Per-page title, description, canonical URL and Open Graph tags. */
 export function usePageMeta(title: string, description: string) {
   useEffect(() => {
-    document.title = title === "Home" ? "TaskFlow AI | AI task management for teams" : `${title} | TaskFlow AI`;
-    let meta = document.querySelector<HTMLMetaElement>('meta[name="description"]');
-    if (!meta) {
-      meta = document.createElement("meta");
-      meta.name = "description";
-      document.head.appendChild(meta);
-    }
-    meta.content = description;
+    const full = title === "Home" ? "TaskFlow AI | AI task management for teams" : `${title} | TaskFlow AI`;
+    const url = SITE + window.location.pathname;
+    document.title = full;
+    meta("name", "description", description);
+    meta("property", "og:title", full);
+    meta("property", "og:description", description);
+    meta("property", "og:url", url);
+    upsert('link[rel="canonical"]', () => { const l = document.createElement("link"); l.rel = "canonical"; return l; }, (l) => l.setAttribute("href", url));
   }, [title, description]);
 }

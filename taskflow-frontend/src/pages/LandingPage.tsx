@@ -1,21 +1,22 @@
 import { Link } from "react-router-dom";
-import { Check, X, Lock, Download, ShieldCheck } from "lucide-react";
+import { Check, Lock, Download, ShieldCheck } from "lucide-react";
 import { Container, SectionHead, ButtonLink, Faq } from "../components/marketing/Bits";
 import { Reveal } from "../components/marketing/Reveal";
 import { DashboardMock } from "../components/marketing/Visuals";
 import { ProductTour } from "../components/marketing/ProductTour";
+import { HeroBackdrop } from "../components/marketing/HeroBackdrop";
+import { PricingCards, CtaBand } from "../components/marketing/Sections";
 import { usePageMeta } from "../hooks/usePageMeta";
-import { FEATURES, STEPS, FAQS, PLANS } from "../data/marketing";
+import { FEATURES, INTEGRATIONS, STEPS, FAQS } from "../data/marketing";
 
-const TOOLS = ["Slack", "Google Calendar", "Outlook", "Email", "Meeting transcripts", "CSV export"];
 const TRUST = ["Free plan, no expiry", "No credit card", "Set up in minutes"];
-const BEFORE = ["Status lives in meetings and chat threads", "You find out a task is late after it is", "Meeting notes sit in a doc nobody reopens", "Reports are assembled by hand every week"];
-const AFTER = ["Live status on one Mission Control screen", "Risk is scored and flagged before deadlines slip", "Paste a transcript, get owned tasks in your Backlog", "Reports write themselves from real project data"];
 const SECURITY = [
   { icon: Lock, title: "Your data stays yours", desc: "Every project is private to your workspace and its members." },
   { icon: Download, title: "Export any time", desc: "Take your tasks, reports and files with you, on any plan." },
   { icon: ShieldCheck, title: "Roles and SSO", desc: "Assign roles per member. SSO and audit logs are on Enterprise." },
 ];
+const PANEL = { background: "var(--tf-panel)", border: "1px solid var(--tf-panel-border)" };
+const MUTED = { color: "var(--tf-ink-muted)" };
 
 export function LandingPage() {
   usePageMeta("Home", "TaskFlow AI reads your projects, ranks work by deadline risk, and turns meeting notes into tasks. Start free.");
@@ -24,23 +25,20 @@ export function LandingPage() {
       {/* Hero */}
       <section aria-labelledby="hero-title" className="relative overflow-hidden pb-20 pt-16 sm:pt-24 lg:pb-28">
         <div className="aurora pointer-events-none absolute inset-0" aria-hidden="true" />
-        <div className="grid-fade pointer-events-none absolute inset-0" aria-hidden="true" />
+        <HeroBackdrop />
         <Container className="relative">
           <div className="mx-auto max-w-3xl text-center">
-            <p className="rise mx-auto mb-6 inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[13px]" style={{ background: "rgba(20,184,166,0.1)", border: "1px solid rgba(20,184,166,0.3)", color: "#5EEAD4" }}>
-              <span className="pulse-dot h-1.5 w-1.5 rounded-full" style={{ background: "#2DD4BF" }} aria-hidden="true" /> AI task assistant now built in
-            </p>
-            <h1 id="hero-title" className="rise font-display text-[36px] font-semibold leading-[1.08] text-balance sm:text-[56px]" style={{ animationDelay: "80ms" }}>
+            <h1 id="hero-title" className="rise font-display text-[36px] font-semibold leading-[1.08] text-balance sm:text-[56px]">
               Stop chasing status. Let AI tell your team what to do <span className="text-gradient">next</span>
             </h1>
-            <p className="rise mx-auto mt-5 max-w-[56ch] text-[16px] leading-relaxed sm:text-[18px]" style={{ animationDelay: "160ms", color: "var(--tf-ink-muted)" }}>
+            <p className="rise mx-auto mt-5 max-w-[56ch] text-[16px] leading-relaxed sm:text-[18px]" style={{ animationDelay: "100ms", ...MUTED }}>
               TaskFlow AI ranks every task by risk, turns meeting notes into owned tasks, and keeps your whole team on one screen.
             </p>
-            <div className="rise mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row" style={{ animationDelay: "240ms" }}>
+            <div className="rise mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row" style={{ animationDelay: "200ms" }}>
               <ButtonLink to="/signup">Start free</ButtonLink>
               <ButtonLink to="/features" variant="ghost">See how it works</ButtonLink>
             </div>
-            <ul className="rise m-0 mt-6 flex list-none flex-wrap items-center justify-center gap-x-6 gap-y-2 p-0 text-[13px]" style={{ animationDelay: "300ms", color: "var(--tf-ink-muted)" }}>
+            <ul className="rise m-0 mt-6 flex list-none flex-wrap items-center justify-center gap-x-6 gap-y-2 p-0 text-[13px]" style={{ animationDelay: "280ms", ...MUTED }}>
               {TRUST.map((t) => <li key={t} className="flex items-center gap-1.5"><Check size={14} color="#14B8A6" aria-hidden="true" />{t}</li>)}
             </ul>
           </div>
@@ -48,16 +46,24 @@ export function LandingPage() {
         </Container>
       </section>
 
-      {/* Integrations */}
-      <section aria-label="Works with your tools" className="py-10" style={{ borderTop: "1px solid var(--tf-panel-border)", borderBottom: "1px solid var(--tf-panel-border)" }}>
-        <p className="mb-5 text-center text-[13px]" style={{ color: "var(--tf-ink-muted)" }}>Fits into the tools your team already uses</p>
-        <div className="overflow-hidden" style={{ WebkitMaskImage: "linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)", maskImage: "linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)" }}>
-          <div className="marquee-track gap-4 pr-4">
-            {[...TOOLS, ...TOOLS].map((t, i) => (
-              <span key={`${t}-${i}`} aria-hidden={i >= TOOLS.length} className="whitespace-nowrap rounded-full px-5 py-2 text-[14px] font-medium" style={{ background: "var(--tf-panel)", border: "1px solid var(--tf-panel-border)" }}>{t}</span>
+      {/* Integrations: a fixed, contained grid (no endless scrolling) */}
+      <section aria-labelledby="int-title" className="py-14" style={{ borderTop: "1px solid var(--tf-panel-border)", borderBottom: "1px solid var(--tf-panel-border)" }}>
+        <Container>
+          <Reveal><h2 id="int-title" className="mb-8 text-center text-[15px] font-medium" style={MUTED}>Fits into the tools your team already uses</h2></Reveal>
+          <ul className="m-0 grid list-none grid-cols-2 gap-3 p-0 md:grid-cols-3 lg:grid-cols-5">
+            {INTEGRATIONS.map(({ icon: Icon, name, desc }, i) => (
+              <li key={name} className={i === 4 ? "col-span-2 md:col-span-1" : ""}>
+                <Reveal delay={i * 80} className="h-full">
+                  <div className="lift flex h-full flex-col items-center rounded-2xl px-4 py-5 text-center" style={PANEL}>
+                    <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: "rgba(37,99,235,0.14)" }}><Icon size={18} color="#93C5FD" aria-hidden="true" /></span>
+                    <p className="text-[14px] font-semibold">{name}</p>
+                    <p className="mt-1 text-[12px] leading-snug" style={MUTED}>{desc}</p>
+                  </div>
+                </Reveal>
+              </li>
             ))}
-          </div>
-        </div>
+          </ul>
+        </Container>
       </section>
 
       {/* Product tour */}
@@ -68,132 +74,77 @@ export function LandingPage() {
         </Container>
       </section>
 
-      {/* Before / after */}
-      <section aria-labelledby="ba-title" className="py-20 lg:py-24" style={{ background: "rgba(255,255,255,0.015)" }}>
+      {/* Everything: features + steps + trust in one section */}
+      <section aria-labelledby="all-title" className="py-20 lg:py-28" style={{ background: "rgba(255,255,255,0.015)" }}>
         <Container>
-          <Reveal><SectionHead id="ba-title" title="Less status-chasing, more shipping" lead="What changes when your tasks can read themselves." /></Reveal>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Reveal className="h-full">
-              <div className="h-full rounded-2xl p-6 sm:p-8" style={{ background: "var(--tf-panel)", border: "1px solid var(--tf-panel-border)" }}>
-                <h3 className="mb-4 text-[16px] font-semibold">Without TaskFlow AI</h3>
-                <ul className="m-0 flex list-none flex-col gap-3 p-0">
-                  {BEFORE.map((b) => <li key={b} className="flex items-start gap-3 text-[14px]" style={{ color: "var(--tf-ink-muted)" }}><X size={16} className="mt-0.5 shrink-0" color="#F87171" aria-hidden="true" />{b}</li>)}
-                </ul>
-              </div>
-            </Reveal>
-            <Reveal delay={120} className="h-full">
-              <div className="h-full rounded-2xl p-6 sm:p-8" style={{ background: "rgba(37,99,235,0.1)", border: "1px solid rgba(37,99,235,0.5)" }}>
-                <h3 className="mb-4 text-[16px] font-semibold">With TaskFlow AI</h3>
-                <ul className="m-0 flex list-none flex-col gap-3 p-0">
-                  {AFTER.map((a) => <li key={a} className="flex items-start gap-3 text-[14px]"><Check size={16} className="mt-0.5 shrink-0" color="#14B8A6" aria-hidden="true" />{a}</li>)}
-                </ul>
-              </div>
-            </Reveal>
-          </div>
-        </Container>
-      </section>
-
-      {/* Feature grid */}
-      <section aria-labelledby="features-title" className="py-20 lg:py-28">
-        <Container>
-          <Reveal><SectionHead id="features-title" title="Everything your team needs" lead="Built to remove a step, not add one." /></Reveal>
+          <Reveal><SectionHead id="all-title" title="Everything your team needs, from first project to finished sprint" lead="Built to remove a step, not add one, and to be trusted with your work." /></Reveal>
           <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map(({ icon: Icon, title, desc }, i) => (
               <li key={title}>
                 <Reveal delay={i * 70} className="h-full">
-                  <div className="lift h-full rounded-2xl p-6" style={{ background: "var(--tf-panel)", border: "1px solid var(--tf-panel-border)" }}>
+                  <div className="lift h-full rounded-2xl p-6" style={PANEL}>
                     <span className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: "rgba(37,99,235,0.14)" }}><Icon size={20} color="#93C5FD" aria-hidden="true" /></span>
                     <h3 className="mb-2 mt-4 text-[16px] font-semibold">{title}</h3>
-                    <p className="text-[13px] leading-relaxed" style={{ color: "var(--tf-ink-muted)" }}>{desc}</p>
+                    <p className="text-[13px] leading-relaxed" style={MUTED}>{desc}</p>
                   </div>
                 </Reveal>
               </li>
             ))}
           </ul>
-        </Container>
-      </section>
 
-      {/* How it works */}
-      <section aria-labelledby="how-title" className="py-20 lg:py-24" style={{ background: "rgba(255,255,255,0.015)" }}>
-        <Container>
-          <Reveal><SectionHead id="how-title" title="From blank project to finished sprint" lead="Five steps, in order." /></Reveal>
-          <ol className="m-0 grid list-none grid-cols-1 gap-8 p-0 sm:grid-cols-2 lg:grid-cols-5 lg:gap-5">
-            {STEPS.map((s, i) => (
-              <li key={s.title}>
-                <Reveal delay={i * 110}>
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full font-display text-[15px] font-semibold text-white" style={{ background: "linear-gradient(135deg,#2563EB,#14B8A6)" }}>{i + 1}</span>
-                  <h3 className="mb-1 mt-4 text-[15px] font-semibold">{s.title}</h3>
-                  <p className="text-[13px] leading-relaxed" style={{ color: "var(--tf-ink-muted)" }}>{s.desc}</p>
-                </Reveal>
-              </li>
-            ))}
-          </ol>
-        </Container>
-      </section>
-
-      {/* Security */}
-      <section aria-labelledby="sec-title" className="py-20 lg:py-28">
-        <Container>
-          <Reveal><SectionHead id="sec-title" title="Built to be trusted with your work" /></Reveal>
-          <ul className="m-0 grid list-none grid-cols-1 gap-6 p-0 md:grid-cols-3">
-            {SECURITY.map(({ icon: Icon, title, desc }, i) => (
-              <li key={title}>
-                <Reveal delay={i * 100}>
-                  <Icon size={22} color="#5EEAD4" aria-hidden="true" />
-                  <h3 className="mb-1.5 mt-3 text-[16px] font-semibold">{title}</h3>
-                  <p className="max-w-[40ch] text-[14px] leading-relaxed" style={{ color: "var(--tf-ink-muted)" }}>{desc}</p>
-                </Reveal>
-              </li>
-            ))}
-          </ul>
-        </Container>
-      </section>
-
-      {/* Pricing teaser */}
-      <section aria-labelledby="pricing-title" className="py-20 lg:py-24" style={{ background: "rgba(255,255,255,0.015)" }}>
-        <Container>
-          <Reveal><SectionHead id="pricing-title" title="Start free. Upgrade when you need to." /></Reveal>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {PLANS.map((p, i) => (
-              <Reveal key={p.name} delay={i * 100} className="h-full">
-                <div className="lift flex h-full flex-col rounded-2xl p-6" style={{ background: p.featured ? "rgba(37,99,235,0.1)" : "var(--tf-panel)", border: `1px solid ${p.featured ? "rgba(37,99,235,0.5)" : "var(--tf-panel-border)"}` }}>
-                  <h3 className="text-[16px] font-semibold">{p.name}{p.featured && <span className="ml-2 text-[12px] font-normal" style={{ color: "#5EEAD4" }}>Most popular</span>}</h3>
-                  <p className="mt-2"><span className="font-display text-[30px] font-semibold">{p.price}</span> <span className="text-[12px]" style={{ color: "var(--tf-ink-muted)" }}>{p.period}</span></p>
-                  <ul className="m-0 my-5 flex flex-1 list-none flex-col gap-2 p-0 text-[13px]" style={{ color: "#C7D2E3" }}>
-                    {p.features.slice(0, 3).map((f) => <li key={f} className="flex items-start gap-2"><Check size={14} className="mt-0.5 shrink-0" color="#14B8A6" aria-hidden="true" />{f}</li>)}
+          <div className="mt-16 grid gap-12 lg:grid-cols-12 lg:gap-16">
+            <div className="lg:col-span-7">
+              <Reveal><h3 className="mb-8 font-display text-[22px] font-semibold">From blank project to finished sprint</h3></Reveal>
+              <ol className="relative m-0 list-none p-0">
+                <span aria-hidden="true" className="absolute bottom-2 left-5 top-2 w-px" style={{ background: "var(--tf-panel-border)" }} />
+                {STEPS.map((s, i) => (
+                  <li key={s.title} className="relative pb-8 pl-14 last:pb-0">
+                    <Reveal delay={i * 90}>
+                      <span className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-full font-display text-[15px] font-semibold text-white" style={{ background: "linear-gradient(135deg,#2563EB,#14B8A6)" }}>{i + 1}</span>
+                      <h4 className="text-[15px] font-semibold">{s.title}</h4>
+                      <p className="mt-1 max-w-[52ch] text-[13px] leading-relaxed" style={MUTED}>{s.desc}</p>
+                    </Reveal>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <div className="lg:col-span-5">
+              <Reveal delay={120} className="h-full">
+                <div className="h-full rounded-2xl p-6 sm:p-8" style={{ background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.4)" }}>
+                  <h3 className="mb-6 font-display text-[22px] font-semibold">Built to be trusted with your work</h3>
+                  <ul className="m-0 flex list-none flex-col gap-6 p-0">
+                    {SECURITY.map(({ icon: Icon, title, desc }) => (
+                      <li key={title} className="flex gap-4">
+                        <Icon size={20} className="mt-0.5 shrink-0" color="#5EEAD4" aria-hidden="true" />
+                        <div><h4 className="text-[15px] font-semibold">{title}</h4><p className="mt-1 text-[13px] leading-relaxed" style={MUTED}>{desc}</p></div>
+                      </li>
+                    ))}
                   </ul>
-                  <ButtonLink to={p.name === "Enterprise" ? "/contact" : "/signup"} variant={p.featured ? "primary" : "ghost"}>{p.cta}</ButtonLink>
                 </div>
               </Reveal>
-            ))}
+            </div>
           </div>
-          <p className="mt-6 text-[14px]"><Link to="/pricing" className="underline underline-offset-4">Compare all plans</Link></p>
+        </Container>
+      </section>
+
+      {/* Pricing */}
+      <section aria-labelledby="pricing-title" className="py-20 lg:py-28">
+        <Container>
+          <Reveal><SectionHead id="pricing-title" title="Start free. Upgrade when you need to." lead="No credit card to start. Export your data on any plan." /></Reveal>
+          <PricingCards />
+          <p className="mt-8 text-center text-[14px]"><Link to="/pricing" className="underline underline-offset-4">See full plan details and FAQs</Link></p>
         </Container>
       </section>
 
       {/* FAQ */}
-      <section aria-labelledby="faq-title" className="py-20 lg:py-28">
+      <section aria-labelledby="faq-title" className="pb-20 lg:pb-28">
         <Container className="max-w-3xl">
           <Reveal><SectionHead id="faq-title" title="Frequently asked questions" /></Reveal>
           <Reveal delay={100}><Faq items={FAQS} /></Reveal>
         </Container>
       </section>
 
-      {/* Final CTA */}
-      <section aria-labelledby="cta-title" className="pb-24">
-        <Container>
-          <Reveal>
-            <div className="aurora relative overflow-hidden rounded-3xl px-6 py-14 text-center sm:px-12 sm:py-16" style={{ background: "var(--tf-panel)", border: "1px solid var(--tf-panel-border)" }}>
-              <h2 id="cta-title" className="mx-auto max-w-2xl font-display text-[26px] font-semibold text-balance sm:text-[34px]">Plan your next sprint with real risk numbers</h2>
-              <p className="mx-auto mt-3 max-w-[48ch] text-[15px]" style={{ color: "var(--tf-ink-muted)" }}>Create a project in minutes. The free plan never expires.</p>
-              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <ButtonLink to="/signup">Start free</ButtonLink>
-                <ButtonLink to="/contact" variant="ghost">Talk to sales</ButtonLink>
-              </div>
-            </div>
-          </Reveal>
-        </Container>
-      </section>
+      <CtaBand />
     </>
   );
 }

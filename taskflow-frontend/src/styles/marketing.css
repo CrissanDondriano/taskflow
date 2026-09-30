@@ -1,15 +1,9 @@
+/* Marketing site motion + backgrounds. Imported by MarketingLayout.
+   Only opacity/transform are animated, so nothing triggers layout work. */
 .aurora {
   background:
-    radial-gradient(60% 55% at 12% 0%, rgba(37, 99, 235, 0.3), transparent 70%),
-    radial-gradient(50% 45% at 92% 8%, rgba(20, 184, 166, 0.24), transparent 70%);
-}
-.grid-fade {
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
-  background-size: 48px 48px;
-  -webkit-mask-image: radial-gradient(ellipse at top, #000 25%, transparent 72%);
-  mask-image: radial-gradient(ellipse at top, #000 25%, transparent 72%);
+    radial-gradient(60% 55% at 12% 0%, rgba(37, 99, 235, 0.28), transparent 70%),
+    radial-gradient(50% 45% at 92% 8%, rgba(20, 184, 166, 0.2), transparent 70%);
 }
 .text-gradient {
   background: linear-gradient(120deg, #60a5fa, #2dd4bf);
@@ -18,15 +12,19 @@
   color: transparent;
 }
 
+/* Hero backdrop: a task-dependency map that draws itself once, then breathes. */
+.edge { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 1.8s cubic-bezier(0.2, 0.7, 0.2, 1) forwards; }
+.node { transform-box: fill-box; transform-origin: center; animation: node 4.5s ease-in-out infinite; }
+.ring { transform-box: fill-box; transform-origin: center; animation: ring 2.6s ease-out infinite; }
+
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes node { 0%, 100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 1; transform: scale(1.35); } }
+@keyframes ring { from { opacity: 0.7; transform: scale(1); } to { opacity: 0; transform: scale(3.4); } }
 @keyframes rise { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-@keyframes marquee { to { transform: translateX(-50%); } }
-@keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 
 .rise { animation: rise 0.85s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 .float { animation: float 6s ease-in-out infinite; }
-.marquee-track { display: flex; width: max-content; animation: marquee 28s linear infinite; }
-.pulse-dot { animation: pulse-dot 1.8s ease-in-out infinite; }
 
 .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1); }
 .reveal.is-in { opacity: 1; transform: none; }
@@ -37,7 +35,8 @@
 .lift:hover { transform: translateY(-4px); border-color: rgba(96, 165, 250, 0.45) !important; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35); }
 
 @media (prefers-reduced-motion: reduce) {
-  .rise, .float, .marquee-track, .pulse-dot { animation: none; }
+  .rise, .float, .node, .ring { animation: none; }
+  .edge { animation: none; stroke-dashoffset: 0; }
   .reveal, .reveal .bar { opacity: 1; transform: none; transition: none; }
   .lift { transition: none; }
 }

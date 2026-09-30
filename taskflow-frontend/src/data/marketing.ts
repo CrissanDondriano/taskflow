@@ -1,4 +1,4 @@
-import { BrainCircuit, Workflow, Users, BarChart3, KanbanSquare, Plug, FileText, ShieldAlert, LayoutDashboard, type LucideIcon } from "lucide-react";
+import { BrainCircuit, Workflow, Users, BarChart3, KanbanSquare, Plug, FileText, ShieldAlert, LayoutDashboard, MessageSquare, CalendarDays, Mail, Download, type LucideIcon } from "lucide-react";
 
 export const NAV = [
   { to: "/", label: "Home" },
@@ -17,6 +17,14 @@ export const FEATURES: { icon: LucideIcon; title: string; desc: string }[] = [
   { icon: Plug, title: "Integrations", desc: "Connect Slack, Calendar and Outlook so tasks and deadlines show up where you already work." },
 ];
 
+export const INTEGRATIONS: { icon: LucideIcon; name: string; desc: string }[] = [
+  { icon: MessageSquare, name: "Slack", desc: "Alerts and updates in your channels" },
+  { icon: CalendarDays, name: "Google Calendar", desc: "Deadlines on your calendar" },
+  { icon: Mail, name: "Outlook", desc: "Tasks alongside your inbox" },
+  { icon: FileText, name: "Meeting transcripts", desc: "Paste notes, get tasks" },
+  { icon: Download, name: "CSV export", desc: "Take your data anywhere" },
+];
+
 export const STEPS = [
   { title: "Create a project", desc: "Set a goal and a deadline. The AI suggests a task breakdown." },
   { title: "Add your team", desc: "Invite people, assign roles and see workload balance out." },
@@ -32,9 +40,9 @@ export const SCENARIOS: { icon: LucideIcon; title: string; desc: string }[] = [
 ];
 
 export const PLANS = [
-  { name: "Free", price: "$0", period: "forever", features: ["Up to 3 projects", "Basic Kanban and calendar", "5 AI queries per day", "1 team member"], cta: "Start free", featured: false },
-  { name: "Pro", price: "$14", period: "per user / month", features: ["Unlimited projects", "Full AI suite", "Meeting notes converter", "Risk detection and alerts", "Slack, Calendar, Outlook"], cta: "Start free trial", featured: true },
-  { name: "Enterprise", price: "Custom", period: "talk to us", features: ["SSO and advanced roles", "Dedicated support", "Custom integrations", "Audit logs and compliance"], cta: "Contact sales", featured: false },
+  { name: "Free", tagline: "For trying it on a real project", price: "$0", period: "forever", features: ["Up to 3 projects", "Basic Kanban and calendar", "5 AI queries per day", "1 team member"], cta: "Start free", featured: false },
+  { name: "Pro", tagline: "For teams that ship every week", price: "$14", period: "per user / month", features: ["Unlimited projects", "Full AI suite", "Meeting notes converter", "Risk detection and alerts", "Slack, Calendar, Outlook"], cta: "Start free trial", featured: true },
+  { name: "Enterprise", tagline: "For organizations with security needs", price: "Custom", period: "talk to us", features: ["SSO and advanced roles", "Dedicated support", "Custom integrations", "Audit logs and compliance"], cta: "Contact sales", featured: false },
 ];
 
 export const FAQS = [
