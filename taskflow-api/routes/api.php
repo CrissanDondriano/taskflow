@@ -13,10 +13,10 @@ use App\Http\Controllers\Api\TeamController;
 use Illuminate\Support\Facades\Route;
 
 // Public
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
-Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
+Route::post('/login', [AuthController::class, 'login'])->name('login')->middleware('throttle:5,1');
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');
 
 // OAuth callbacks — hit directly by Google/Microsoft's redirect, so no
 // Sanctum bearer token is present. Team identity travels in the signed

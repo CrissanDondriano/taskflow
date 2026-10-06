@@ -1,5 +1,4 @@
-// const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
-const API_URL = "https://taskflow-api-x5dc.onrender.com/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
 export class ApiError extends Error {
   status: number;

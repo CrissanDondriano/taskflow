@@ -27,7 +27,7 @@ class AiService
             . "Answer using only the context provided. Be concise and actionable. "
             . "Reference specific task titles and due dates when relevant.";
 
-        $prompt = "Context (JSON):\n" . json_encode($context) . "\n\nQuestion: {$question}";
+        $prompt = "Context (JSON):\n" . json_encode($context) . "\n\nQuestion: " . $this->sanitizeInput($question);
 
         return $this->complete($system, $prompt);
     }
@@ -43,7 +43,7 @@ class AiService
             . '{"tasks": [{"title": "", "description": "", "priority": "low|medium|high|critical", '
             . '"estimated_days": 0, "category": "", "suggested_role": ""}], "milestones": [{"title": "", "day_offset": 0}]}';
 
-        $prompt = "Goal: {$goal}\n\nRequirements: {$requirements}";
+        $prompt = "Goal: " . $this->sanitizeInput($goal) . "\n\nRequirements: " . $this->sanitizeInput($requirements);
 
         $raw = $this->complete($system, $prompt);
 
@@ -85,7 +85,7 @@ class AiService
         $system = "You convert meeting notes into a summary and action items. Output ONLY valid JSON: "
             . '{"summary": "", "action_items": [{"title": "", "suggested_owner": "", "priority": "low|medium|high|critical"}]}';
 
-        $raw = $this->complete($system, $notes);
+        $raw = $this->complete($system, $this->sanitizeInput($notes));
 
         return $this->safeJsonDecode($raw, ['summary' => '', 'action_items' => []]);
     }
@@ -136,5 +136,18 @@ class AiService
         $decoded = json_decode($clean, true);
 
         return json_last_error() === JSON_ERROR_NONE ? $decoded : $fallback;
+    }
+
+    /**
+     * Sanitize user input before sending to OpenAI.
+     * Strips control characters and enforces a reasonable length limit.
+     */
+    protected function sanitizeInput(string $input): string
+    {
+        // Remove control characters (except newlines and tabs)
+        $clean = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $input);
+
+        // Limit to 10,000 characters to prevent abuse
+        return mb_substr($clean ?? '', 0, 10000);
     }
 }
