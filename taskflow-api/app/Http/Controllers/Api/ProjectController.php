@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreProjectRequest;
+use App\Http\Requests\UpdateProjectRequest;
+use App\Http\Resources\ProjectResource;
 use App\Models\ActivityLog;
 use App\Models\Project;
 use Illuminate\Http\Request;
@@ -24,27 +27,20 @@ class ProjectController extends Controller
             return $project;
         });
 
-        return response()->json($projects);
+        return ProjectResource::collection($projects);
     }
 
-    public function store(Request $request)
+    public function store(StoreProjectRequest $request)
     {
         $this->authorize('create', Project::class);
 
-        $data = $request->validate([
-            'team_id' => ['nullable', 'exists:teams,id'],
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'priority' => ['sometimes', 'in:low,medium,high,critical'],
-            'start_date' => ['nullable', 'date'],
-            'deadline' => ['nullable', 'date', 'after_or_equal:start_date'],
-        ]);
+        $data = $request->validated();
 
         $project = Project::create([...$data, 'created_by' => $request->user()->id]);
 
         ActivityLog::record('created', $project, "{$request->user()->name} created project \"{$project->name}\"");
 
-        return response()->json($project, 201);
+        return (new ProjectResource($project))->response()->setStatusCode(201);
     }
 
     public function show(Project $project)
@@ -53,26 +49,19 @@ class ProjectController extends Controller
         $project->progress_percent = $project->progressPercent();
         $project->is_overdue = $project->isOverdue();
 
-        return response()->json($project);
+        return new ProjectResource($project);
     }
 
-    public function update(Request $request, Project $project)
+    public function update(UpdateProjectRequest $request, Project $project)
     {
         $this->authorize('update', $project);
 
-        $data = $request->validate([
-            'name' => ['sometimes', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'status' => ['sometimes', 'in:active,completed,archived'],
-            'priority' => ['sometimes', 'in:low,medium,high,critical'],
-            'start_date' => ['nullable', 'date'],
-            'deadline' => ['nullable', 'date'],
-        ]);
+        $data = $request->validated();
 
         $project->update($data);
         ActivityLog::record('updated', $project, "{$request->user()->name} updated project \"{$project->name}\"");
 
-        return response()->json($project);
+        return new ProjectResource($project);
     }
 
     public function destroy(Request $request, Project $project)

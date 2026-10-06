@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\TeamResource;
 use App\Models\Team;
 use Illuminate\Http\Request;
 
@@ -10,7 +11,7 @@ class TeamController extends Controller
 {
     public function index(Request $request)
     {
-        return response()->json(
+        return TeamResource::collection(
             $request->user()->isAdmin()
                 ? Team::with('members:id,name,avatar_url')->get()
                 : $request->user()->teams()->with('members:id,name,avatar_url')->get()
@@ -29,7 +30,7 @@ class TeamController extends Controller
         $team = Team::create([...$data, 'owner_id' => $request->user()->id]);
         $team->members()->attach($request->user()->id, ['role_in_team' => 'lead']);
 
-        return response()->json($team, 201);
+        return (new TeamResource($team))->response()->setStatusCode(201);
     }
 
     public function addMember(Request $request, Team $team)
@@ -45,7 +46,7 @@ class TeamController extends Controller
             $data['user_id'] => ['role_in_team' => $data['role_in_team'] ?? 'member'],
         ]);
 
-        return response()->json($team->load('members'));
+        return new TeamResource($team->load('members'));
     }
 
     public function removeMember(Request $request, Team $team, $userId)

@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreTaskRequest;
+use App\Http\Requests\UpdateTaskRequest;
+use App\Http\Resources\TaskResource;
 use App\Models\ActivityLog;
 use App\Models\Task;
 use App\Notifications\TaskAssignedNotification;
@@ -10,6 +13,7 @@ use App\Services\GoogleCalendarService;
 use App\Services\OutlookCalendarService;
 use App\Services\SlackService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TaskController extends Controller
 {
@@ -38,60 +42,44 @@ class TaskController extends Controller
             ->whereNull('parent_task_id')
             ->with(['assignee:id,name,avatar_url', 'subtasks'])
             ->orderBy('position')
-            ->get();
+            ->paginate(20);
 
-        return response()->json($tasks);
+        return TaskResource::collection($tasks);
     }
 
-    public function store(Request $request)
+    public function store(StoreTaskRequest $request)
     {
-        $data = $request->validate([
-            'project_id' => ['required', 'exists:projects,id'],
-            'parent_task_id' => ['nullable', 'exists:tasks,id'],
-            'assignee_id' => ['nullable', 'exists:users,id'],
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'status' => ['sometimes', 'in:backlog,todo,in_progress,review,testing,completed'],
-            'priority' => ['sometimes', 'in:low,medium,high,critical'],
-            'category' => ['nullable', 'string', 'max:100'],
-            'due_date' => ['nullable', 'date'],
-            'is_recurring' => ['sometimes', 'boolean'],
-            'recurrence_rule' => ['nullable', 'array'],
-        ]);
+        $data = $request->validated();
 
-        $task = Task::create([...$data, 'created_by' => $request->user()->id]);
-        $task->load('assignee:id,name,avatar_url', 'project.team');
+        $task = DB::transaction(function () use ($data, $request) {
+            $task = Task::create([...$data, 'created_by' => $request->user()->id]);
+            $task->load('assignee:id,name,avatar_url', 'project.team');
 
-        ActivityLog::record('created', $task, "{$request->user()->name} created task \"{$task->title}\"");
+            ActivityLog::record('created', $task, "{$request->user()->name} created task \"{$task->title}\"");
 
-        if ($task->assignee_id) {
-            $this->slack->taskAssigned($task);
-            $task->assignee->notify(new TaskAssignedNotification($task));
-        }
+            if ($task->assignee_id) {
+                $this->slack->taskAssigned($task);
+                $task->assignee->notify(new TaskAssignedNotification($task));
+            }
 
-        $this->syncCalendars($task);
+            $this->syncCalendars($task);
 
-        return response()->json($task, 201);
+            return $task;
+        });
+
+        return (new TaskResource($task))->response()->setStatusCode(201);
     }
 
     public function show(Task $task)
     {
-        return response()->json($task->load(['assignee', 'creator', 'subtasks', 'comments.user', 'attachments']));
+        return new TaskResource($task->load(['assignee', 'creator', 'subtasks', 'comments.user', 'attachments']));
     }
 
-    public function update(Request $request, Task $task)
+    public function update(UpdateTaskRequest $request, Task $task)
     {
         $this->authorize('update', $task);
 
-        $data = $request->validate([
-            'title' => ['sometimes', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'assignee_id' => ['nullable', 'exists:users,id'],
-            'status' => ['sometimes', 'in:backlog,todo,in_progress,review,testing,completed'],
-            'priority' => ['sometimes', 'in:low,medium,high,critical'],
-            'category' => ['nullable', 'string', 'max:100'],
-            'due_date' => ['nullable', 'date'],
-        ]);
+        $data = $request->validated();
 
         $wasAssignee = $task->assignee_id;
         $wasCompleted = $task->status === 'completed';
@@ -100,24 +88,28 @@ class TaskController extends Controller
             $data['completed_at'] = now();
         }
 
-        $task->update($data);
-        $task->load('project.team', 'assignee:id,name,avatar_url');
-        ActivityLog::record('updated', $task, "{$request->user()->name} updated task \"{$task->title}\"");
+        $task = DB::transaction(function () use ($task, $data, $request, $wasAssignee, $wasCompleted) {
+            $task->update($data);
+            $task->load('project.team', 'assignee:id,name,avatar_url');
+            ActivityLog::record('updated', $task, "{$request->user()->name} updated task \"{$task->title}\"");
 
-        if ($task->assignee_id && $task->assignee_id !== $wasAssignee) {
-            $this->slack->taskAssigned($task);
-            $task->assignee->notify(new TaskAssignedNotification($task));
-        }
+            if ($task->assignee_id && $task->assignee_id !== $wasAssignee) {
+                $this->slack->taskAssigned($task);
+                $task->assignee->notify(new TaskAssignedNotification($task));
+            }
 
-        if ($task->status === 'completed' && ! $wasCompleted) {
-            $this->slack->taskCompleted($task);
-        }
+            if ($task->status === 'completed' && ! $wasCompleted) {
+                $this->slack->taskCompleted($task);
+            }
 
-        if (array_key_exists('due_date', $data)) {
-            $this->syncCalendars($task);
-        }
+            if (array_key_exists('due_date', $data)) {
+                $this->syncCalendars($task);
+            }
 
-        return response()->json($task);
+            return $task;
+        });
+
+        return new TaskResource($task);
     }
 
     /**
@@ -135,23 +127,27 @@ class TaskController extends Controller
 
         $wasCompleted = $task->status === 'completed';
 
-        $task->update([
-            ...$data,
-            'completed_at' => $data['status'] === 'completed' && ! $wasCompleted ? now() : $task->completed_at,
-        ]);
+        $task = DB::transaction(function () use ($task, $data, $request, $wasCompleted) {
+            $task->update([
+                ...$data,
+                'completed_at' => $data['status'] === 'completed' && ! $wasCompleted ? now() : $task->completed_at,
+            ]);
 
-        ActivityLog::record(
-            'moved',
-            $task,
-            "{$request->user()->name} moved \"{$task->title}\" to " . str_replace('_', ' ', $data['status'])
-        );
+            ActivityLog::record(
+                'moved',
+                $task,
+                "{$request->user()->name} moved \"{$task->title}\" to " . str_replace('_', ' ', $data['status'])
+            );
 
-        if ($data['status'] === 'completed' && ! $wasCompleted) {
-            $task->load('project.team');
-            $this->slack->taskCompleted($task);
-        }
+            if ($data['status'] === 'completed' && ! $wasCompleted) {
+                $task->load('project.team');
+                $this->slack->taskCompleted($task);
+            }
 
-        return response()->json($task);
+            return $task;
+        });
+
+        return new TaskResource($task);
     }
 
     public function destroy(Request $request, Task $task)

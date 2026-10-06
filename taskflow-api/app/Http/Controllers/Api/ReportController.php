@@ -8,7 +8,7 @@ use App\Models\Task;
 use App\Models\User;
 use App\Services\AiService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class ReportController extends Controller
 {
@@ -16,33 +16,39 @@ class ReportController extends Controller
 
     public function projectStatus(Request $request)
     {
-        $projects = Project::withCount([
-            'tasks',
-            'tasks as completed_tasks_count' => fn ($q) => $q->where('status', 'completed'),
-            'tasks as overdue_tasks_count' => fn ($q) => $q->where('due_date', '<', now())->where('status', '!=', 'completed'),
-        ])->get();
+        $projects = Cache::remember('reports.projectStatus', now()->addMinutes(5), function () {
+            return Project::withCount([
+                'tasks',
+                'tasks as completed_tasks_count' => fn ($q) => $q->where('status', 'completed'),
+                'tasks as overdue_tasks_count' => fn ($q) => $q->where('due_date', '<', now())->where('status', '!=', 'completed'),
+            ])->get();
+        });
 
         return response()->json($projects);
     }
 
     public function teamPerformance(Request $request)
     {
-        $data = User::withCount([
-            'assignedTasks',
-            'assignedTasks as completed_tasks_count' => fn ($q) => $q->where('status', 'completed'),
-        ])->get(['id', 'name', 'role']);
+        $data = Cache::remember('reports.teamPerformance', now()->addMinutes(5), function () {
+            return User::withCount([
+                'assignedTasks',
+                'assignedTasks as completed_tasks_count' => fn ($q) => $q->where('status', 'completed'),
+            ])->get(['id', 'name', 'role']);
+        });
 
         return response()->json($data);
     }
 
     public function productivity(Request $request)
     {
-        $trend = Task::selectRaw('DATE(completed_at) as day, COUNT(*) as completed')
-            ->whereNotNull('completed_at')
-            ->where('completed_at', '>=', now()->subDays(7))
-            ->groupBy('day')
-            ->orderBy('day')
-            ->get();
+        $trend = Cache::remember('reports.productivity', now()->addMinutes(5), function () {
+            return Task::selectRaw('DATE(completed_at) as day, COUNT(*) as completed')
+                ->whereNotNull('completed_at')
+                ->where('completed_at', '>=', now()->subDays(7))
+                ->groupBy('day')
+                ->orderBy('day')
+                ->get();
+        });
 
         return response()->json($trend);
     }

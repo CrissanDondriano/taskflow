@@ -1,3 +1,45 @@
+# TaskFlow API
+
+Laravel 12 REST API powering the TaskFlow frontend.
+
+## Queue Worker
+
+Notifications are queued (`QUEUE_CONNECTION=database`) and processed by a queue worker. Without a running worker, notifications will not be delivered.
+
+**Development:** run everything together (API + queue + logs + Vite):
+
+```bash
+composer dev
+```
+
+This starts `php artisan queue:listen` alongside the API server.
+
+**Production (Render):** add a separate worker process or use a supervisor. If you run only `php artisan serve`, queue jobs will remain in the `jobs` table until a worker picks them up.
+
+You can process pending jobs manually with:
+
+```bash
+php artisan queue:work --tries=3
+```
+
+## Setup
+
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+php artisan serve
+```
+
+## Testing
+
+```bash
+php artisan test
+```
+
+---
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
