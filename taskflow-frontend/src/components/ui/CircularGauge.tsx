@@ -22,7 +22,7 @@ export function CircularGauge({ value, size = 96, strokeWidth = 8, color = "var(
   return (
     <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
-        <circle cx={center} cy={center} r={radius} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={strokeWidth} />
+        <circle cx={center} cy={center} r={radius} fill="none" stroke="var(--tf-fill-08)" strokeWidth={strokeWidth} />
         <circle
           cx={center}
           cy={center}

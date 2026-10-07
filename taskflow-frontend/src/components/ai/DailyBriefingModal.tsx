@@ -20,8 +20,8 @@ export function DailyBriefingModal({ open, onClose, tasks, meetings }: { open: b
     <Modal open={open} onClose={onClose} title="Daily briefing">
       <div className="flex flex-col gap-4">
         <div className="flex items-start gap-2.5 p-3 rounded-xl" style={{ background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.25)" }}>
-          <Sparkles size={15} className="mt-0.5 shrink-0" color="#93C5FD" />
-          <p className="text-sm leading-snug" style={{ color: "#C7D2E3" }}>
+          <Sparkles size={15} className="mt-0.5 shrink-0" color="var(--tf-info-text)" />
+          <p className="text-sm leading-snug" style={{ color: "var(--tf-ink-soft)" }}>
             {topPriority
               ? `Start with "${topPriority.title}" (${topPriority.priority.toLowerCase()} priority, due today).`
               : "Nothing urgent due today — a good day to make progress on Backlog items."}

@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
-import { Sparkles, Menu, X, ArrowUp, Mail } from "lucide-react";
+import { Sparkles, Menu, X, ArrowUp, Mail, Sun, Moon } from "lucide-react";
 import { Container, ButtonLink } from "./Bits";
+import { useAuth } from "../../context/AuthContext";
+import { useThemeStore } from "../../stores/themeStore";
 import { NAV } from "../../data/marketing";
 import "../../styles/marketing.css";
 
@@ -31,6 +33,9 @@ export function MarketingLayout() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { pathname } = useLocation();
+  const { user } = useAuth();
+  const theme = useThemeStore((s) => s.theme);
+  const toggleTheme = useThemeStore((s) => s.toggleTheme);
 
   useEffect(() => { setOpen(false); window.scrollTo(0, 0); }, [pathname]);
   useEffect(() => {
@@ -54,15 +59,31 @@ export function MarketingLayout() {
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-black">Skip to content</a>
 
       <header className="sticky top-0 z-40 backdrop-blur-xl transition-[background,box-shadow,border-color] duration-300 motion-reduce:transition-none"
-        style={{ background: scrolled || open ? "rgba(5,7,12,0.92)" : "rgba(5,7,12,0.55)", borderBottom: `1px solid ${scrolled || open ? "var(--tf-panel-border)" : "transparent"}`, boxShadow: scrolled ? "0 8px 30px rgba(0,0,0,0.35)" : "none" }}>
+        style={{ background: scrolled || open ? "var(--tf-header-scrolled)" : "var(--tf-header)", borderBottom: `1px solid ${scrolled || open ? "var(--tf-panel-border)" : "transparent"}`, boxShadow: scrolled ? "0 8px 30px rgba(0,0,0,0.35)" : "none" }}>
         <Container className="flex h-16 items-center justify-between gap-6">
           <Logo />
           <nav aria-label="Main" className="hidden items-center gap-8 md:flex">
             {NAV.map((l) => <NavLink key={l.to} to={l.to} end={l.to === "/"} className={navClass}>{l.label}</NavLink>)}
           </nav>
           <div className="hidden items-center gap-3 md:flex">
-            <Link to="/login" className={`rounded-md px-3 py-2 text-[14px] font-medium transition-colors hover:text-white motion-reduce:transition-none ${FOCUS}`} style={MUTED}>Log in</Link>
-            <ButtonLink to="/signup">Get started</ButtonLink>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+              title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+              className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors hover:text-white motion-reduce:transition-none ${FOCUS}`}
+              style={{ border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink-muted)" }}
+            >
+              {theme === "dark" ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
+            </button>
+            {user ? (
+              <ButtonLink to="/dashboard">Go to dashboard</ButtonLink>
+            ) : (
+              <>
+                <Link to="/login" className={`rounded-md px-3 py-2 text-[14px] font-medium transition-colors hover:text-white motion-reduce:transition-none ${FOCUS}`} style={MUTED}>Log in</Link>
+                <ButtonLink to="/signup">Get started</ButtonLink>
+              </>
+            )}
           </div>
           <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="mobile-nav" aria-label={open ? "Close menu" : "Open menu"}
             className={`flex h-11 w-11 items-center justify-center rounded-xl md:hidden ${FOCUS}`} style={{ border: "1px solid var(--tf-panel-border)" }}>
@@ -71,15 +92,33 @@ export function MarketingLayout() {
         </Container>
 
         {open && (
-          <nav id="mobile-nav" aria-label="Mobile" className="menu-in absolute inset-x-0 top-full max-h-[calc(100vh-4rem)] overflow-y-auto md:hidden" style={{ background: "rgba(5,7,12,0.98)", borderBottom: "1px solid var(--tf-panel-border)" }}>
+          <nav id="mobile-nav" aria-label="Mobile" className="menu-in absolute inset-x-0 top-full max-h-[calc(100vh-4rem)] overflow-y-auto md:hidden" style={{ background: "var(--tf-nav-panel)", borderBottom: "1px solid var(--tf-panel-border)" }}>
             <Container className="flex flex-col gap-1 pb-6 pt-3">
               {NAV.map((l) => (
                 <NavLink key={l.to} to={l.to} end={l.to === "/"}
                   className={({ isActive }) => `flex min-h-12 items-center rounded-xl px-4 text-[16px] font-medium ${FOCUS} ${isActive ? "bg-white/5 text-white" : "text-[color:var(--tf-ink-muted)]"}`}>{l.label}</NavLink>
               ))}
               <div className="mt-4 grid grid-cols-2 gap-3">
-                <ButtonLink to="/login" variant="ghost">Log in</ButtonLink>
-                <ButtonLink to="/signup">Get started</ButtonLink>
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+                  className={`col-span-2 flex min-h-11 items-center justify-center gap-2 rounded-xl text-[14px] font-medium ${FOCUS}`}
+                  style={{ border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
+                >
+                  {theme === "dark" ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
+                  {theme === "dark" ? "Light theme" : "Dark theme"}
+                </button>
+                {user ? (
+                  <div className="col-span-2">
+                    <ButtonLink to="/dashboard">Go to dashboard</ButtonLink>
+                  </div>
+                ) : (
+                  <>
+                    <ButtonLink to="/login" variant="ghost">Log in</ButtonLink>
+                    <ButtonLink to="/signup">Get started</ButtonLink>
+                  </>
+                )}
               </div>
             </Container>
           </nav>
@@ -88,7 +127,7 @@ export function MarketingLayout() {
 
       <main id="main" className="flex-1"><Outlet /></main>
 
-      <footer style={{ borderTop: "1px solid var(--tf-panel-border)", background: "rgba(255,255,255,0.015)" }}>
+      <footer style={{ borderTop: "1px solid var(--tf-panel-border)", background: "var(--tf-fill-015)" }}>
         <Container className="grid grid-cols-2 gap-x-6 gap-y-10 py-14 lg:grid-cols-12">
           <div className="col-span-2 lg:col-span-6">
             <Logo />

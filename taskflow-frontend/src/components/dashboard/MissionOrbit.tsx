@@ -55,7 +55,7 @@ export function MissionOrbit({
       </defs>
 
       {ORBIT_RINGS.map((r) => (
-        <circle key={r.priority} cx={cx} cy={cy} r={r.radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={1} strokeDasharray="2 5" />
+        <circle key={r.priority} cx={cx} cy={cy} r={r.radius} fill="none" stroke="var(--tf-fill-06)" strokeWidth={1} strokeDasharray="2 5" />
       ))}
 
       <circle cx={cx} cy={cy} r={20} fill="url(#coreGlow)" className="orbit-core-pulse" />

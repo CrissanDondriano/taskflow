@@ -138,7 +138,7 @@ export function TimeGrid({
                     onDrop={() => {
                       if (draggingMeetingId && inAnchorMonth) onMoveMeeting(draggingMeetingId, dayNum, h);
                     }}
-                    style={{ height: ROW_HEIGHT, borderBottom: "1px solid rgba(255,255,255,0.04)" }}
+                    style={{ height: ROW_HEIGHT, borderBottom: "1px solid var(--tf-fill-04)" }}
                   />
                 ))}
 

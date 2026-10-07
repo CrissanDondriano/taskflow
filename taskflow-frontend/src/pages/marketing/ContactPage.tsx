@@ -34,7 +34,7 @@ export function ContactPage() {
   const [errors, setErrors] = useState<Errors>({});
   const [sent, setSent] = useState(false);
   const a11y = (f: Field) => ({ "aria-invalid": !!errors[f], "aria-describedby": errors[f] ? `${f}-err` : undefined, style: { border: `1px solid ${errors[f] ? "#F87171" : "var(--tf-panel-border)"}` } });
-  const err = (f: Field) => errors[f] && <p id={`${f}-err`} className="mt-1.5 text-[12px]" style={{ color: "#FCA5A5" }}>{errors[f]}</p>;
+  const err = (f: Field) => errors[f] && <p id={`${f}-err`} className="mt-1.5 text-[12px]" style={{ color: "var(--tf-danger-text)" }}>{errors[f]}</p>;
 
   // Replace the mailto with a POST to your Laravel API (e.g. /api/contact) when ready.
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -83,7 +83,7 @@ export function ContactPage() {
                 <li key={title}>
                   <Reveal delay={i * 100}>
                     <div className="lift flex gap-4 rounded-2xl p-5" style={PANEL}>
-                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" style={{ background: "rgba(37,99,235,0.14)" }}><Icon size={20} color="#93C5FD" aria-hidden="true" /></span>
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" style={{ background: "rgba(37,99,235,0.14)" }}><Icon size={20} color="var(--tf-info-text)" aria-hidden="true" /></span>
                       <div><h2 className="text-[15px] font-semibold">{title}</h2><p className="mt-1 text-[13px] leading-relaxed" style={MUTED}>{desc}</p></div>
                     </div>
                   </Reveal>

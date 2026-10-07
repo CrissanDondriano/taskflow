@@ -117,7 +117,7 @@ export function MeetingNotesConverter() {
 
   const selectedCount = result?.actionItems.filter((i) => i.selected).length ?? 0;
   const allSelected = result ? result.actionItems.every((i) => i.selected) : false;
-  const fieldStyle = { background: "rgba(255,255,255,0.03)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" };
+  const fieldStyle = { background: "var(--tf-fill-03)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" };
 
   return (
     <div className="max-w-6xl">
@@ -182,11 +182,11 @@ export function MeetingNotesConverter() {
               <PulseCard>
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles size={15} color="#14B8A6" />
-                  <h3 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
+                  <h2 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
                     Summary
-                  </h3>
+                  </h2>
                 </div>
-                <p className="text-sm leading-relaxed" style={{ color: "#C7D2E3" }}>
+                <p className="text-sm leading-relaxed" style={{ color: "var(--tf-ink-soft)" }}>
                   {result.summary}
                 </p>
               </PulseCard>
@@ -195,9 +195,9 @@ export function MeetingNotesConverter() {
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <ListChecks size={16} color="#2563EB" />
-                    <h3 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
+                    <h2 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
                       Action items
-                    </h3>
+                    </h2>
                   </div>
                   <button onClick={() => toggleAll(!allSelected)} className="flex items-center gap-1.5 text-xs" style={{ color: "var(--tf-ink-muted)" }}>
                     {allSelected ? <CheckSquare size={13} /> : <Square size={13} />}

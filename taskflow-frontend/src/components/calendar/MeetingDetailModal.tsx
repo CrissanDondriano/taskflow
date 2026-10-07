@@ -30,7 +30,7 @@ export function MeetingDetailModal({
     }
   }, [meeting]);
 
-  const fieldStyle = { background: "rgba(255,255,255,0.04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" };
+  const fieldStyle = { background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" };
   const labelStyle = { color: "var(--tf-ink-muted)" };
 
   function toggleAttendee(initials: string) {
@@ -143,7 +143,7 @@ export function MeetingDetailModal({
                   key={p.initials}
                   onClick={() => toggleAttendee(p.initials)}
                   className="flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full text-xs transition-opacity"
-                  style={{ background: active ? "rgba(37,99,235,0.15)" : "rgba(255,255,255,0.04)", opacity: active ? 1 : 0.5, color: "var(--tf-ink)" }}
+                  style={{ background: active ? "rgba(37,99,235,0.15)" : "var(--tf-fill-04)", opacity: active ? 1 : 0.5, color: "var(--tf-ink)" }}
                 >
                   <Avatar initials={p.initials} color={p.color} size={20} />
                   {p.name.split(" ")[0]}

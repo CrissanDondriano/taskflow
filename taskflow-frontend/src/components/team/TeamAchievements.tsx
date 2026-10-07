@@ -20,9 +20,9 @@ export function TeamAchievements({ tasks }: { tasks: Task[] }) {
 
   return (
     <GlassPanel className="p-5">
-      <h3 className="text-sm font-semibold font-display mb-4" style={{ color: "var(--tf-ink)" }}>
+      <h2 className="text-sm font-semibold font-display mb-4" style={{ color: "var(--tf-ink)" }}>
         Team achievements
-      </h3>
+      </h2>
       <div className="flex flex-col gap-3">
         {badges.map((b) => {
           const Icon = b.icon;

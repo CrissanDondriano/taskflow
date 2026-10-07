@@ -46,9 +46,9 @@ export function AgendaView({ meetings, deadlines, conflictIds }: { meetings: Mee
     <div className="flex flex-col gap-4">
       {days.map((day) => (
         <GlassPanel key={day} className="p-4">
-          <h3 className="text-sm font-semibold font-display mb-3" style={{ color: "var(--tf-ink)" }}>
+          <h2 className="text-sm font-semibold font-display mb-3" style={{ color: "var(--tf-ink)" }}>
             {new Date(ANCHOR_YEAR, ANCHOR_MONTH, day).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
-          </h3>
+          </h2>
           <div className="flex flex-col gap-2">
             {grouped[day].map((e, i) => {
               if (e.kind === "meeting") {

@@ -3,10 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import { LandingPage } from "./pages/LandingPage";
 import { MarketingLayout } from "./components/marketing/MarketingLayout";
 import { ProtectedRoute } from "./components/layout/ProtectedRoute";
-import { TasksProvider } from "./context/TasksContext";
-import { NotificationsProvider } from "./context/NotificationsContext";
-import { MeetingsProvider } from "./context/MeetingsContext";
-import { TeamProvider } from "./context/TeamContext";
+import { LoadingScreen } from "./components/ui/LoadingScreen";
 
 // Everything except the home page is code-split to keep the first load small.
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage").then((m) => ({ default: m.NotFoundPage })));
@@ -27,7 +24,7 @@ const SettingsPage = lazy(() => import("./pages/dashboard/SettingsPage").then((m
 
 export default function App() {
   return (
-    <Suspense fallback={<div role="status" aria-label="Loading" style={{ minHeight: "100vh", background: "var(--tf-void)" }} />}>
+    <Suspense fallback={<LoadingScreen />}>
       <Routes>
         <Route element={<MarketingLayout />}>
           <Route path="/" element={<LandingPage />} />
@@ -46,15 +43,7 @@ export default function App() {
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <TeamProvider>
-                <TasksProvider>
-                  <MeetingsProvider>
-                    <NotificationsProvider>
-                      <DashboardLayout />
-                    </NotificationsProvider>
-                  </MeetingsProvider>
-                </TasksProvider>
-              </TeamProvider>
+              <DashboardLayout />
             </ProtectedRoute>
           }
         >

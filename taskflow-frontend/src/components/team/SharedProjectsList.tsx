@@ -17,9 +17,9 @@ export function SharedProjectsList({ tasks }: { tasks: Task[] }) {
     <GlassPanel className="p-5">
       <div className="flex items-center gap-1.5 mb-4">
         <FolderKanban size={14} color="var(--tf-ink-muted)" />
-        <h3 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
+        <h2 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
           Shared projects
-        </h3>
+        </h2>
       </div>
       <div className="flex flex-col gap-3">
         {projects.map(([name, stats]) => {
@@ -32,7 +32,7 @@ export function SharedProjectsList({ tasks }: { tasks: Task[] }) {
                   {stats.done}/{stats.total}
                 </span>
               </div>
-              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
+              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--tf-fill-08)" }}>
                 <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--tf-teal)" }} />
               </div>
             </div>

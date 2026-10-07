@@ -97,12 +97,12 @@ export function DashboardHome() {
                 {metrics.atRisk > 0 ? `${metrics.atRisk} item${metrics.atRisk === 1 ? "" : "s"} need attention` : "All systems nominal"}
               </span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-display font-semibold mb-3" style={{ color: "var(--tf-ink)" }}>
+            <h2 className="text-xl sm:text-2xl font-display font-semibold mb-3" style={{ color: "var(--tf-ink)" }}>
               {greeting()}, {user?.name?.split(" ")[0] ?? "there"}. Mission control is live.
-            </h1>
+            </h2>
             <div className="flex items-start gap-2.5 p-3 rounded-xl" style={{ background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.25)" }}>
-              <Sparkles size={15} className="mt-0.5 shrink-0" color="#93C5FD" />
-              <p className="text-sm leading-snug" style={{ color: "#C7D2E3" }}>
+              <Sparkles size={15} className="mt-0.5 shrink-0" color="var(--tf-info-text)" />
+              <p className="text-sm leading-snug" style={{ color: "var(--tf-ink-soft)" }}>
                 <span className="font-semibold" style={{ color: "var(--tf-ink)" }}>
                   AI recommendation:
                 </span>{" "}
@@ -128,7 +128,7 @@ export function DashboardHome() {
                   Pending · Completed
                 </div>
                 <div className="text-base font-display font-semibold" style={{ color: "var(--tf-ink)" }}>
-                  <span style={{ color: "#93C5FD" }}>{metrics.pending}</span> <span style={{ color: "var(--tf-ink-muted)" }}>·</span>{" "}
+                  <span style={{ color: "var(--tf-info-text)" }}>{metrics.pending}</span> <span style={{ color: "var(--tf-ink-muted)" }}>·</span>{" "}
                   <span style={{ color: "var(--tf-teal)" }}>{metrics.completed}</span>
                 </div>
               </div>
@@ -204,7 +204,7 @@ export function DashboardHome() {
           )}
 
           {selectedNode && (
-            <div className="mt-3 flex items-center justify-between rounded-xl px-4 py-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid var(--tf-panel-border)" }}>
+            <div className="mt-3 flex items-center justify-between rounded-xl px-4 py-3" style={{ background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)" }}>
               <div className="min-w-0">
                 <div className="text-sm font-medium truncate" style={{ color: "var(--tf-ink)" }}>
                   {selectedNode.title}
@@ -240,7 +240,7 @@ export function DashboardHome() {
               </p>
             ) : (
               insights.map((line, i) => (
-                <div key={i} className="text-sm leading-snug pl-3 border-l-2" style={{ color: "#C7D2E3", borderColor: "#14B8A6" }}>
+                <div key={i} className="text-sm leading-snug pl-3 border-l-2" style={{ color: "var(--tf-ink-soft)", borderColor: "#14B8A6" }}>
                   {line}
                 </div>
               ))
@@ -317,12 +317,12 @@ export function DashboardHome() {
               people.map((w) => (
                 <div key={w.initials}>
                   <div className="flex justify-between text-xs mb-1">
-                    <span style={{ color: "#C7D2E3" }}>{w.name}</span>
+                    <span style={{ color: "var(--tf-ink-soft)" }}>{w.name}</span>
                     <span className="font-mono" style={{ color: "var(--tf-ink-muted)" }}>
                       {w.workloadPct}%
                     </span>
                   </div>
-                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
+                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--tf-fill-08)" }}>
                     <div className="h-full rounded-full" style={{ width: `${w.workloadPct}%`, background: w.color, boxShadow: `0 0 8px ${w.color}` }} />
                   </div>
                 </div>

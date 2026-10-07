@@ -63,7 +63,7 @@ export function FloatingAssistant() {
               <div
                 key={i}
                 className={`text-sm px-3 py-2 rounded-xl max-w-[85%] ${m.role === "user" ? "self-end ml-auto text-white" : "self-start"}`}
-                style={m.role === "ai" ? { background: "rgba(255,255,255,0.05)", color: "#C7D2E3" } : { background: "var(--tf-primary)" }}
+                style={m.role === "ai" ? { background: "var(--tf-fill-05)", color: "var(--tf-ink-soft)" } : { background: "var(--tf-primary)" }}
               >
                 {m.text}
               </div>
@@ -79,7 +79,7 @@ export function FloatingAssistant() {
               aria-label="Ask the AI task assistant"
               autoFocus
               className="flex-1 text-sm px-3 py-2 rounded-xl outline-none"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
+              style={{ background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
             />
             <button
               onClick={() => ask(question)}

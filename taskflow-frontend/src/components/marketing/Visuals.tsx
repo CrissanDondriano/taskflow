@@ -16,12 +16,12 @@ export function DashboardMock() {
       <div className="overflow-hidden rounded-2xl" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-panel-border)", boxShadow: "0 40px 100px rgba(37,99,235,0.18), 0 30px 80px rgba(0,0,0,0.55)" }}>
         <div className="flex items-center gap-1.5 px-4 py-3" style={{ borderBottom: "1px solid var(--tf-panel-border)" }}>
           {["#EF4444", "#F59E0B", "#22C55E"].map((c) => <span key={c} className="h-2.5 w-2.5 rounded-full" style={{ background: c }} />)}
-          <span className="mx-auto rounded-md px-16 py-1 text-[11px]" style={{ background: "rgba(255,255,255,0.05)", ...MUTED }}>app.taskflow.ai/dashboard</span>
+          <span className="mx-auto rounded-md px-16 py-1 text-[11px]" style={{ background: "var(--tf-fill-05)", ...MUTED }}>app.taskflow.ai/dashboard</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-[170px_1fr]">
           <div className="hidden flex-col gap-1.5 p-4 sm:flex" style={{ borderRight: "1px solid var(--tf-panel-border)" }}>
             {["Mission control", "Kanban board", "Calendar", "Meeting notes", "Team", "Reports"].map((l, i) => (
-              <div key={l} className="rounded-lg px-3 py-2 text-[12px]" style={{ background: i === 0 ? "rgba(37,99,235,0.2)" : "transparent", color: i === 0 ? "#fff" : "var(--tf-ink-muted)" }}>{l}</div>
+              <div key={l} className="rounded-lg px-3 py-2 text-[12px]" style={{ background: i === 0 ? "var(--tf-mock-chip)" : "transparent", color: i === 0 ? "#fff" : "var(--tf-ink-muted)" }}>{l}</div>
             ))}
           </div>
           <div className="flex flex-col gap-4 p-4 sm:p-5">
@@ -35,7 +35,7 @@ export function DashboardMock() {
             </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {cols.map((c, ci) => (
-                <div key={c.name} className={`rounded-xl p-3 ${ci === 2 ? "hidden sm:block" : ""}`} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--tf-panel-border)" }}>
+                <div key={c.name} className={`rounded-xl p-3 ${ci === 2 ? "hidden sm:block" : ""}`} style={{ background: "var(--tf-fill-02)", border: "1px solid var(--tf-panel-border)" }}>
                   <p className="mb-2 text-[11px] font-semibold" style={MUTED}>{c.name}</p>
                   {c.cards.map(([t, tone]) => (
                     <div key={t} className="mb-2 rounded-lg p-2.5 text-[12px]" style={PANEL}>
@@ -64,7 +64,7 @@ export function ChatVisual() {
     <div aria-hidden="true" className="rounded-2xl p-5" style={PANEL}>
       <div className="mb-3 flex items-center gap-2 text-[12px] font-semibold"><Sparkles size={14} color="#2DD4BF" /> AI assistant</div>
       <p className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm px-3.5 py-2.5 text-[13px]" style={{ background: "var(--tf-primary)", color: "#fff" }}>What should I work on today?</p>
-      <div className="mt-3 max-w-[92%] rounded-2xl rounded-bl-sm px-3.5 py-3 text-[13px] leading-relaxed" style={{ background: "rgba(255,255,255,0.05)" }}>
+      <div className="mt-3 max-w-[92%] rounded-2xl rounded-bl-sm px-3.5 py-3 text-[13px] leading-relaxed" style={{ background: "var(--tf-fill-05)" }}>
         Start with <b>Ship billing webhook</b>. It's due tomorrow and blocks two tasks. Then review the onboarding copy before Friday.
       </div>
       <div className="mt-3 flex gap-2 text-[11px]" style={MUTED}>
@@ -83,7 +83,7 @@ export function RiskVisual() {
         {rows.map(([n, v, c]) => (
           <div key={n}>
             <div className="mb-1 flex justify-between text-[12px]"><span>{n}</span><span style={MUTED}>{v}%</span></div>
-            <div className="h-2 overflow-hidden rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
+            <div className="h-2 overflow-hidden rounded-full" style={{ background: "var(--tf-fill-06)" }}>
               <div className="h-full rounded-full" style={{ width: `${v}%`, background: c }} />
             </div>
           </div>

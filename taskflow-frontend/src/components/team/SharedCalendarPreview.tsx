@@ -16,9 +16,9 @@ export function SharedCalendarPreview({ meetings }: { meetings: Meeting[] }) {
     <GlassPanel className="p-5">
       <div className="flex items-center gap-1.5 mb-4">
         <CalendarClock size={14} color="var(--tf-ink-muted)" />
-        <h3 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
+        <h2 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
           Shared calendar
-        </h3>
+        </h2>
       </div>
       <div className="flex flex-col gap-3">
         {upcoming.length === 0 && (

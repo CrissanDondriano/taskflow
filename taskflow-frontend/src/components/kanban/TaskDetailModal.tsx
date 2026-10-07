@@ -37,7 +37,7 @@ export function TaskDetailModal({
     onClose();
   }
 
-  const fieldStyle = { background: "rgba(255,255,255,0.04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" };
+  const fieldStyle = { background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" };
   const labelStyle = { color: "var(--tf-ink-muted)" };
 
   return (
@@ -90,7 +90,7 @@ export function TaskDetailModal({
                 {draft.checklist.done}/{draft.checklist.total}
               </span>
             </div>
-            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--tf-fill-08)" }}>
               <div
                 className="h-full rounded-full"
                 style={{ width: `${(draft.checklist.done / draft.checklist.total) * 100}%`, background: "var(--tf-teal)" }}

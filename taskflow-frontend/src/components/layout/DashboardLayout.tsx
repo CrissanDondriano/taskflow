@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu, Search, Plus, Sparkles } from "lucide-react";
+import { Menu, Search, Plus, Sparkles, Sun, Moon } from "lucide-react";
 import { Button } from "../ui/Button";
 import { DesktopSidebar, MobileSidebar } from "./Sidebar";
 import { NotificationsBell } from "./NotificationsBell";
@@ -11,6 +11,7 @@ import { FloatingAssistant } from "../ai/FloatingAssistant";
 import { NewTaskModal } from "../dashboard/NewTaskModal";
 import { useTasks } from "../../context/TasksContext";
 import { useMeetings } from "../../context/MeetingsContext";
+import { useThemeStore } from "../../stores/themeStore";
 import { useKeyboardShortcut } from "../../hooks/useKeyboardShortcut";
 
 const TITLES: Record<string, string> = {
@@ -30,6 +31,8 @@ export function DashboardLayout() {
   const [briefingOpen, setBriefingOpen] = useState(false);
   const { tasks, addTask } = useTasks();
   const { meetings } = useMeetings();
+  const theme = useThemeStore((s) => s.theme);
+  const toggleTheme = useThemeStore((s) => s.toggleTheme);
   const location = useLocation();
   const title = TITLES[location.pathname] ?? "TaskFlow AI";
 
@@ -75,7 +78,7 @@ export function DashboardLayout() {
             <button
               onClick={() => setPaletteOpen(true)}
               className="hidden md:flex items-center gap-2 pl-3 pr-2 py-2 rounded-xl text-[13px] w-56"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink-muted)" }}
+              style={{ background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink-muted)" }}
             >
               <Search size={14} aria-hidden="true" />
               <span className="flex-1 text-left">Search or jump to...</span>
@@ -92,6 +95,15 @@ export function DashboardLayout() {
             >
               <Sparkles size={16} />
             </button>
+            <button
+              onClick={toggleTheme}
+              aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+              title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+              className="w-9 h-9 rounded-xl flex items-center justify-center"
+              style={{ border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink-muted)" }}
+            >
+              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
             <NotificationsBell />
             <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => setModalOpen(true)}>
               <span className="hidden sm:inline">New task</span>
@@ -99,7 +111,7 @@ export function DashboardLayout() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 sm:p-8">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
@@ -111,7 +123,7 @@ export function DashboardLayout() {
               <Outlet />
             </motion.div>
           </AnimatePresence>
-        </div>
+        </main>
       </div>
     </div>
   );

@@ -39,7 +39,7 @@ export function FeaturesPage() {
         </Container>
       </section>
 
-      <section aria-labelledby="all-features" className="py-20 lg:py-24" style={{ background: "rgba(255,255,255,0.015)" }}>
+      <section aria-labelledby="all-features" className="py-20 lg:py-24" style={{ background: "var(--tf-fill-015)" }}>
         <Container>
           <Reveal><SectionHead id="all-features" title="All features" /></Reveal>
           <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 lg:grid-cols-3">
@@ -47,7 +47,7 @@ export function FeaturesPage() {
               <li key={title}>
                 <Reveal delay={i * 70} className="h-full">
                   <div className="lift h-full rounded-2xl p-6" style={PANEL}>
-                    <span className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: "rgba(37,99,235,0.14)" }}><Icon size={20} color="#93C5FD" aria-hidden="true" /></span>
+                    <span className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: "rgba(37,99,235,0.14)" }}><Icon size={20} color="var(--tf-info-text)" aria-hidden="true" /></span>
                     <h3 className="mb-2 mt-4 text-[16px] font-semibold">{title}</h3>
                     <p className="text-[13px] leading-relaxed" style={{ color: "var(--tf-ink-muted)" }}>{desc}</p>
                   </div>
@@ -66,9 +66,9 @@ export function FeaturesPage() {
               <li key={title}>
                 <Reveal delay={i * 100} className="h-full">
                   <div className="lift h-full rounded-2xl p-6" style={PANEL}>
-                    <Icon size={22} color="#5EEAD4" aria-hidden="true" />
+                    <Icon size={22} color="var(--tf-accent-text)" aria-hidden="true" />
                     <h3 className="mb-2 mt-3 text-[16px] font-semibold">{title}</h3>
-                    <p className="text-[13px] leading-relaxed" style={{ color: "#C7D2E3" }}>{desc}</p>
+                    <p className="text-[13px] leading-relaxed" style={{ color: "var(--tf-ink-soft)" }}>{desc}</p>
                   </div>
                 </Reveal>
               </li>

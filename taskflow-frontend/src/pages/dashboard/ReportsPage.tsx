@@ -9,9 +9,9 @@ import { computeWeeklyTrend, computeProjectStatus } from "../../lib/reports";
 import { API_URL } from "../../lib/api";
 
 function statusColor(status: string) {
-  if (status === "Active") return { bg: "rgba(37,99,235,0.1)", fg: "#93C5FD" };
-  if (status === "Completed") return { bg: "rgba(34,197,94,0.1)", fg: "#86EFAC" };
-  return { bg: "rgba(255,255,255,0.06)", fg: "var(--tf-ink-muted)" };
+  if (status === "Active") return { bg: "rgba(37,99,235,0.1)", fg: "var(--tf-info-text)" };
+  if (status === "Completed") return { bg: "rgba(34,197,94,0.1)", fg: "var(--tf-success-text)" };
+  return { bg: "var(--tf-fill-06)", fg: "var(--tf-ink-muted)" };
 }
 
 function ExportButton({ label, icon, href }: { label: string; icon: React.ReactNode; href: string }) {
@@ -42,9 +42,9 @@ export function ReportsPage() {
   return (
     <div className="flex flex-col gap-5">
       <GlassPanel className="p-5">
-        <h3 className="text-[14px] font-semibold mb-4" style={{ color: "var(--tf-ink)" }}>
+        <h2 className="text-[14px] font-semibold mb-4" style={{ color: "var(--tf-ink)" }}>
           Weekly completion trend
-        </h3>
+        </h2>
         {hasTrend ? (
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={trendData} margin={{ left: -20, right: 10, top: 5, bottom: 0 }}>
@@ -67,7 +67,7 @@ export function ReportsPage() {
 
       <GlassPanel className="p-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-          <div className="flex gap-1 rounded-xl p-1" style={{ background: "rgba(255,255,255,0.03)" }}>
+          <div className="flex gap-1 rounded-xl p-1" style={{ background: "var(--tf-fill-03)" }}>
             {(["projects", "team"] as const).map((t) => (
               <button
                 key={t}
@@ -135,7 +135,7 @@ export function ReportsPage() {
                         </td>
                         <td className="py-3">
                           <div className="flex items-center gap-2 w-32">
-                            <div className="h-1.5 flex-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
+                            <div className="h-1.5 flex-1 rounded-full overflow-hidden" style={{ background: "var(--tf-fill-08)" }}>
                               <div className="h-full rounded-full" style={{ width: `${p.progress}%`, background: "#14B8A6" }} />
                             </div>
                             <span className="text-[11px] font-mono" style={{ color: "var(--tf-ink-muted)" }}>
@@ -171,7 +171,7 @@ export function ReportsPage() {
                     </td>
                     <td className="py-3">
                       <div className="flex items-center gap-2 w-32">
-                        <div className="h-1.5 flex-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
+                        <div className="h-1.5 flex-1 rounded-full overflow-hidden" style={{ background: "var(--tf-fill-08)" }}>
                           <div className="h-full rounded-full" style={{ width: `${p.workloadPct}%`, background: p.color }} />
                         </div>
                         <span className="text-[11px] font-mono" style={{ color: "var(--tf-ink-muted)" }}>

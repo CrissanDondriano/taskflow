@@ -21,10 +21,10 @@ export const PRIORITY_HEX: Record<string, string> = {
 };
 
 export const PRIORITY_STYLE: Record<string, string> = {
-  Low: "bg-[#14B8A6]/10 text-[#5EEAD4] border border-[#14B8A6]/30",
-  Medium: "bg-[#F59E0B]/10 text-[#FCD34D] border border-[#F59E0B]/30",
-  High: "bg-[#2563EB]/10 text-[#93C5FD] border border-[#2563EB]/30",
-  Critical: "bg-[#EF4444]/10 text-[#FCA5A5] border border-[#EF4444]/30",
+  Low: "bg-[#14B8A6]/10 text-[color:var(--tf-accent-text)] border border-[#14B8A6]/30",
+  Medium: "bg-[#F59E0B]/10 text-[color:var(--tf-warning-text)] border border-[#F59E0B]/30",
+  High: "bg-[#2563EB]/10 text-[color:var(--tf-info-text)] border border-[#2563EB]/30",
+  Critical: "bg-[#EF4444]/10 text-[color:var(--tf-danger-text)] border border-[#EF4444]/30",
 };
 
 export const SAMPLE_MEETING_NOTES = `Sprint sync - July 2

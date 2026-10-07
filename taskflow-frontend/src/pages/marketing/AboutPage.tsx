@@ -44,7 +44,7 @@ export function AboutPage() {
         </Container>
       </section>
 
-      <section aria-labelledby="story" className="py-20 lg:py-24" style={{ background: "rgba(255,255,255,0.015)" }}>
+      <section aria-labelledby="story" className="py-20 lg:py-24" style={{ background: "var(--tf-fill-015)" }}>
         <Container className="grid items-center gap-10 lg:grid-cols-12 lg:gap-16">
           <Reveal className="lg:col-span-5">
             <figure className="m-0 rounded-3xl p-8 sm:p-10" style={{ background: "linear-gradient(160deg,rgba(37,99,235,0.18),rgba(20,184,166,0.1))", border: "1px solid rgba(37,99,235,0.4)" }}>
@@ -54,7 +54,7 @@ export function AboutPage() {
           </Reveal>
           <Reveal delay={100} className="lg:col-span-7">
             <h2 id="story" className="font-display text-[26px] font-semibold leading-tight text-balance sm:text-[32px]">How TaskFlow AI works</h2>
-            <div className="mt-5 flex max-w-[62ch] flex-col gap-4 text-[15px] leading-relaxed" style={{ color: "#C7D2E3" }}>
+            <div className="mt-5 flex max-w-[62ch] flex-col gap-4 text-[15px] leading-relaxed" style={{ color: "var(--tf-ink-soft)" }}>
               <p>TaskFlow AI reads your projects and answers the questions your team keeps asking: which task is slipping, who is overloaded, what was decided in Tuesday's meeting.</p>
               <p>It ranks work by deadline and workload risk, turns meeting notes into owned tasks, and keeps the calendar, board and team view in one place.</p>
             </div>
@@ -70,7 +70,7 @@ export function AboutPage() {
               <li key={title}>
                 <Reveal delay={i * 100} className="h-full">
                   <div className="lift h-full rounded-2xl p-6" style={PANEL}>
-                    <span className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: "rgba(20,184,166,0.14)" }}><Icon size={20} color="#5EEAD4" aria-hidden="true" /></span>
+                    <span className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: "rgba(20,184,166,0.14)" }}><Icon size={20} color="var(--tf-accent-text)" aria-hidden="true" /></span>
                     <h3 className="mb-2 mt-4 text-[16px] font-semibold">{title}</h3>
                     <p className="text-[13px] leading-relaxed" style={MUTED}>{desc}</p>
                   </div>

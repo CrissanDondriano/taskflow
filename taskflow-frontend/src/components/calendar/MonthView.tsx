@@ -36,9 +36,9 @@ export function MonthView({
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
       <GlassPanel className="lg:col-span-2 p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
+          <h2 className="text-base font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
             {formatMonthLabel(monthOffset)}
-          </h3>
+          </h2>
           <div className="flex gap-1">
             <button
               onClick={() => onMonthOffsetChange(Math.max(MIN_OFFSET, monthOffset - 1))}
@@ -64,7 +64,7 @@ export function MonthView({
         <PriorityLegend className="mb-4" />
 
         {!isAnchorMonth && (
-          <div className="mb-3 px-3 py-2 rounded-lg text-xs" style={{ background: "rgba(255,255,255,0.03)", color: "var(--tf-ink-muted)" }}>
+          <div className="mb-3 px-3 py-2 rounded-lg text-xs" style={{ background: "var(--tf-fill-03)", color: "var(--tf-ink-muted)" }}>
             No demo meetings or deadlines outside July 2026.{" "}
             <button onClick={() => onMonthOffsetChange(0)} className="underline" style={{ color: "var(--tf-teal)" }}>
               Jump back to July
@@ -94,7 +94,7 @@ export function MonthView({
                 className="h-16 rounded-xl text-left p-1.5 flex flex-col justify-between disabled:cursor-default"
                 style={{
                   border: `1px solid ${isSelected ? "var(--tf-primary)" : "transparent"}`,
-                  background: !day ? "transparent" : isSelected ? "rgba(37,99,235,0.1)" : "rgba(255,255,255,0.02)",
+                  background: !day ? "transparent" : isSelected ? "rgba(37,99,235,0.1)" : "var(--tf-fill-02)",
                 }}
               >
                 {day && (

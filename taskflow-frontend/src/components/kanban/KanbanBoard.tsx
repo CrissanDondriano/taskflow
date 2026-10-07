@@ -109,7 +109,7 @@ function KanbanCard({
               {task.checklist.done}/{task.checklist.total}
             </span>
           </div>
-          <div className="h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
+          <div className="h-1 rounded-full overflow-hidden" style={{ background: "var(--tf-fill-08)" }}>
             <div className="h-full rounded-full" style={{ width: `${(task.checklist.done / task.checklist.total) * 100}%`, background: "var(--tf-teal)" }} />
           </div>
         </div>
@@ -166,20 +166,20 @@ export function KanbanBoard({
             onDrop={() => handleDrop(col)}
             className="w-72 shrink-0 rounded-2xl transition-colors flex flex-col max-h-[calc(100vh-320px)]"
             style={{
-              background: dragOverCol === col ? "rgba(37,99,235,0.08)" : "rgba(255,255,255,0.02)",
+              background: dragOverCol === col ? "rgba(37,99,235,0.08)" : "var(--tf-fill-02)",
               border: `1px solid ${dragOverCol === col ? "rgba(37,99,235,0.4)" : "var(--tf-panel-border)"}`,
             }}
           >
             <div
               className="sticky top-0 z-10 flex items-center justify-between px-3 py-3 rounded-t-2xl backdrop-blur-sm"
-              style={{ background: "rgba(5,7,12,0.85)" }}
+              style={{ background: "var(--tf-sticky)" }}
             >
               <span className="text-xs font-semibold tracking-wide" style={{ color: "var(--tf-ink)" }}>
                 {col}
               </span>
               <div className="flex items-center gap-1.5">
                 {criticalCount > 0 && (
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full" style={{ background: "rgba(239,68,68,0.12)", color: "#FCA5A5" }}>
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full" style={{ background: "rgba(239,68,68,0.12)", color: "var(--tf-danger-text)" }}>
                     {criticalCount} critical
                   </span>
                 )}

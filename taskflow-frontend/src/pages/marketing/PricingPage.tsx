@@ -21,14 +21,14 @@ export function PricingPage() {
       <PageHero title="Simple pricing that grows with your team" lead="Start free. Upgrade when you need more projects or the full AI suite." />
       <section aria-label="Plans" className="py-16 lg:py-24"><Container><PricingCards level={2} /></Container></section>
 
-      <section aria-labelledby="included" className="py-16 lg:py-20" style={{ background: "rgba(255,255,255,0.015)" }}>
+      <section aria-labelledby="included" className="py-16 lg:py-20" style={{ background: "var(--tf-fill-015)" }}>
         <Container>
           <Reveal><SectionHead id="included" title="On every plan" /></Reveal>
           <ul className="m-0 grid list-none grid-cols-1 gap-6 p-0 md:grid-cols-3">
             {INCLUDED.map(({ icon: Icon, title, desc }, i) => (
               <li key={title}>
                 <Reveal delay={i * 100}>
-                  <Icon size={22} color="#5EEAD4" aria-hidden="true" />
+                  <Icon size={22} color="var(--tf-accent-text)" aria-hidden="true" />
                   <h3 className="mb-1.5 mt-3 text-[16px] font-semibold">{title}</h3>
                   <p className="text-[14px] leading-relaxed" style={{ color: "var(--tf-ink-muted)" }}>{desc}</p>
                 </Reveal>

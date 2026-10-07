@@ -96,7 +96,7 @@ export function NewTaskModal({
   }
 
   const fieldStyle = {
-    background: "rgba(255,255,255,0.04)",
+    background: "var(--tf-fill-04)",
     border: "1px solid var(--tf-panel-border)",
     color: "var(--tf-ink)",
   };

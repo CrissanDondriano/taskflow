@@ -3,6 +3,7 @@ import { Slack, Check, AlertTriangle } from "lucide-react";
 import { GlassPanel, Avatar } from "../../components/ui/Primitives";
 import { Button } from "../../components/ui/Button";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 import { api, ApiError } from "../../lib/api";
 
 function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
@@ -16,7 +17,7 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
       style={{
         width: 40,
         height: 24,
-        background: checked ? "var(--tf-primary)" : "rgba(255,255,255,0.12)",
+        background: checked ? "var(--tf-primary)" : "var(--tf-fill-12)",
         boxShadow: checked ? "none" : "inset 0 0 0 1px var(--tf-panel-border)",
       }}
     >
@@ -30,6 +31,7 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
 
 export function SettingsPage() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [name, setName] = useState(user?.name ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
   const [saved, setSaved] = useState(false);
@@ -43,13 +45,14 @@ export function SettingsPage() {
   const [slackStatus, setSlackStatus] = useState<"idle" | "connecting" | "connected" | "error">("idle");
   const [slackError, setSlackError] = useState<string | null>(null);
 
-  const fieldStyle = { background: "rgba(255,255,255,0.04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" };
+  const fieldStyle = { background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" };
   const labelStyle = { color: "var(--tf-ink-muted)" };
 
   function saveProfile(e: React.FormEvent) {
     e.preventDefault();
     // Wire this to PATCH /api/me (add that endpoint to AuthController) when ready.
     setSaved(true);
+    toast("Profile changes saved.", "success");
     setTimeout(() => setSaved(false), 2000);
   }
 
@@ -62,9 +65,12 @@ export function SettingsPage() {
       // Requires a team ID in a real setup — this assumes team 1 for the demo seed data.
       await api.post("/teams/1/integrations/slack", { webhook_url: webhookUrl.trim() });
       setSlackStatus("connected");
+      toast("Slack connected — check your channel for a test message.", "success");
     } catch (err) {
+      const message = err instanceof ApiError ? err.message : "Couldn't connect to Slack.";
       setSlackStatus("error");
-      setSlackError(err instanceof ApiError ? err.message : "Couldn't connect to Slack.");
+      setSlackError(message);
+      toast(message, "error");
     }
   }
 
@@ -73,9 +79,9 @@ export function SettingsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
         <div className="flex flex-col gap-5">
           <GlassPanel className="p-5">
-            <h3 className="text-sm font-semibold font-display mb-4" style={{ color: "var(--tf-ink)" }}>
+            <h2 className="text-sm font-semibold font-display mb-4" style={{ color: "var(--tf-ink)" }}>
               Profile
-            </h3>
+            </h2>
             <div className="flex items-center gap-3 mb-4">
               <Avatar initials={initialsOf(name)} color="#2563EB" size={48} />
               <div>
@@ -114,9 +120,9 @@ export function SettingsPage() {
           </GlassPanel>
 
           <GlassPanel className="p-5">
-            <h3 className="text-sm font-semibold font-display mb-4" style={{ color: "var(--tf-ink)" }}>
+            <h2 className="text-sm font-semibold font-display mb-4" style={{ color: "var(--tf-ink)" }}>
               Notifications
-            </h3>
+            </h2>
             <div className="flex flex-col gap-2">
               {[
                 { label: "Email notifications", desc: "Deadline reminders and weekly summaries", value: emailNotifs, set: setEmailNotifs },
@@ -127,7 +133,7 @@ export function SettingsPage() {
                 <div
                   key={row.label}
                   className="flex items-center justify-between gap-4 p-3 rounded-xl"
-                  style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--tf-panel-border)" }}
+                  style={{ background: "var(--tf-fill-02)", border: "1px solid var(--tf-panel-border)" }}
                 >
                   <div className="min-w-0">
                     <div className="text-sm font-medium" style={{ color: "var(--tf-ink)" }}>
@@ -148,9 +154,9 @@ export function SettingsPage() {
           <GlassPanel className="p-5">
             <div className="flex items-center gap-2 mb-1">
               <Slack size={16} color="#14B8A6" />
-              <h3 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
+              <h2 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
                 Slack integration
-              </h3>
+              </h2>
             </div>
             <p className="text-xs mb-3" style={{ color: "var(--tf-ink-muted)" }}>
               Paste an Incoming Webhook URL from Slack to get task and risk alerts in a channel.
@@ -180,9 +186,9 @@ export function SettingsPage() {
           </GlassPanel>
 
           <GlassPanel className="p-5" style={{ borderColor: "rgba(239,68,68,0.3)" }}>
-            <h3 className="text-sm font-semibold font-display mb-1" style={{ color: "var(--tf-danger)" }}>
+            <h2 className="text-sm font-semibold font-display mb-1" style={{ color: "var(--tf-danger)" }}>
               Danger zone
-            </h3>
+            </h2>
             <p className="text-xs mb-3" style={{ color: "var(--tf-ink-muted)" }}>
               Permanently delete your account and all associated data. This can't be undone.
             </p>

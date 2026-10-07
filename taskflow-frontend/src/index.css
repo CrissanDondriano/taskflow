@@ -2,12 +2,15 @@
 @import "tailwindcss";
 
 /*
-  Design tokens. Single dark "mission control" theme by design — components
-  reference these CSS variables rather than hardcoded hex/rgba so the token
-  layer stays swappable later without touching every file, but there's
-  currently no theme toggle exposed to the user.
+  Design tokens. Two themes built on one token layer: the dark "mission
+  control" theme is the default (:root) and the light theme overrides the
+  same tokens under [data-theme="light"]. Components reference these CSS
+  variables (plus the --tf-fill-*, --tf-*-text and --tf-bar tokens below)
+  instead of hardcoded colors, so switching themes never touches markup.
 */
 :root {
+  color-scheme: dark;
+
   --tf-primary: #2563EB;
   --tf-navy: #0F172A;
   --tf-teal: #14B8A6;
@@ -23,12 +26,99 @@
   --tf-panel-border: rgba(255, 255, 255, 0.09);
   --tf-ink: #EEF2F8;
   --tf-ink-muted: #7C8AA5;
+  /* Secondary body text — brighter than muted, used on panels/dialogs. */
+  --tf-ink-soft: #C7D2E3;
+  /* Active-row tint in the decorative dashboard mock (white text on it). */
+  --tf-mock-chip: rgba(37, 99, 235, 0.2);
   --tf-scrollbar-thumb: rgba(255, 255, 255, 0.15);
   --tf-scrollbar-thumb-hover: rgba(255, 255, 255, 0.28);
   --tf-aurora-opacity: 1;
   --tf-skeleton-base: rgba(255, 255, 255, 0.06);
   --tf-skeleton-shine: rgba(255, 255, 255, 0.14);
+
+  /* Subtle fills / hairlines used as inline styles across components
+     (formerly hardcoded rgba(255,255,255,X) literals). */
+  --tf-fill-015: rgba(255, 255, 255, 0.015);
+  --tf-fill-02: rgba(255, 255, 255, 0.02);
+  --tf-fill-03: rgba(255, 255, 255, 0.03);
+  --tf-fill-04: rgba(255, 255, 255, 0.04);
+  --tf-fill-05: rgba(255, 255, 255, 0.05);
+  --tf-fill-06: rgba(255, 255, 255, 0.06);
+  --tf-fill-08: rgba(255, 255, 255, 0.08);
+  --tf-fill-12: rgba(255, 255, 255, 0.12);
+
+  /* Frosted dark bars (sticky column headers, site header, mobile nav). */
+  --tf-sticky: rgba(5, 7, 12, 0.85);
+  --tf-header: rgba(5, 7, 12, 0.55);
+  --tf-header-scrolled: rgba(5, 7, 12, 0.92);
+  --tf-nav-panel: rgba(5, 7, 12, 0.98);
+
+  /* Status/accent text drawn on tinted backgrounds (errors, badges). */
+  --tf-danger-text: #FCA5A5;
+  --tf-info-text: #93C5FD;
+  --tf-success-text: #86EFAC;
+  --tf-accent-text: #5EEAD4;
+  --tf-warning-text: #FCD34D;
 }
+
+/* Light theme — overrides only the tokens that need to flip. */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --tf-teal: #0F766E;
+  --tf-success: #16A34A;
+  --tf-warning: #D97706;
+  --tf-danger: #DC2626;
+
+  --tf-void: #F4F6FA;
+  --tf-surface: #FFFFFF;
+  --tf-surface-translucent: rgba(255, 255, 255, 0.75);
+  --tf-overlay: rgba(15, 23, 42, 0.4);
+  --tf-panel: rgba(15, 23, 42, 0.03);
+  --tf-panel-border: rgba(15, 23, 42, 0.12);
+  --tf-ink: #0F172A;
+  --tf-ink-muted: #556379;
+  --tf-ink-soft: #334155;
+  /* Active-row tint in the decorative dashboard mock (white text on it). */
+  --tf-mock-chip: #2563EB;
+  --tf-scrollbar-thumb: rgba(15, 23, 42, 0.22);
+  --tf-scrollbar-thumb-hover: rgba(15, 23, 42, 0.4);
+  --tf-aurora-opacity: 0.4;
+  --tf-skeleton-base: rgba(15, 23, 42, 0.07);
+  --tf-skeleton-shine: rgba(15, 23, 42, 0.14);
+
+  --tf-fill-015: rgba(15, 23, 42, 0.015);
+  --tf-fill-02: rgba(15, 23, 42, 0.02);
+  --tf-fill-03: rgba(15, 23, 42, 0.03);
+  --tf-fill-04: rgba(15, 23, 42, 0.04);
+  --tf-fill-05: rgba(15, 23, 42, 0.05);
+  --tf-fill-06: rgba(15, 23, 42, 0.06);
+  --tf-fill-08: rgba(15, 23, 42, 0.08);
+  --tf-fill-12: rgba(15, 23, 42, 0.12);
+
+  /* Frosted bars become light glass instead of dark glass. */
+  --tf-sticky: rgba(255, 255, 255, 0.9);
+  --tf-header: rgba(255, 255, 255, 0.65);
+  --tf-header-scrolled: rgba(255, 255, 255, 0.94);
+  --tf-nav-panel: rgba(255, 255, 255, 0.98);
+
+  --tf-danger-text: #B91C1C;
+  --tf-info-text: #1D4ED8;
+  --tf-success-text: #15803D;
+  --tf-accent-text: #0F766E;
+  --tf-warning-text: #B45309;
+}
+
+/*
+  Light-theme remap of Tailwind's white utilities. Deliberately unlayered:
+  the cascade gives unlayered rules precedence over Tailwind's
+  @layer utilities, so these win without editing component markup.
+*/
+[data-theme="light"] .text-white { color: var(--tf-ink); }
+[data-theme="light"] .hover\:text-white:hover { color: var(--tf-ink); }
+[data-theme="light"] .bg-white { background-color: var(--tf-surface); }
+[data-theme="light"] .bg-white\/5 { background-color: var(--tf-fill-05); }
+[data-theme="light"] .hover\:bg-white\/5:hover { background-color: var(--tf-fill-05); }
 
 html, body, #root {
   height: 100%;

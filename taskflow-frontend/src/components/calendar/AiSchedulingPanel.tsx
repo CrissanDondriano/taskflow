@@ -24,12 +24,12 @@ export function AiSchedulingPanel({ dayMeetings, conflictIds, day }: { dayMeetin
       <PulseCard>
         <div className="flex items-center gap-2 mb-1">
           <Sparkles size={16} color="#14B8A6" />
-          <h3 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
+          <h2 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
             AI scheduling
-          </h3>
+          </h2>
         </div>
         <Eyebrow color="#2563EB">Live for the selected day</Eyebrow>
-        <p className="text-sm leading-snug mt-2" style={{ color: "#C7D2E3" }}>
+        <p className="text-sm leading-snug mt-2" style={{ color: "var(--tf-ink-soft)" }}>
           {computeSchedulingRecommendation(conflicting)}
         </p>
       </PulseCard>
@@ -38,9 +38,9 @@ export function AiSchedulingPanel({ dayMeetings, conflictIds, day }: { dayMeetin
         <GlassPanel className="p-4" style={{ borderColor: "rgba(239,68,68,0.35)" }}>
           <div className="flex items-center gap-1.5 mb-2">
             <AlertTriangle size={13} color="var(--tf-danger)" />
-            <h4 className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--tf-danger)" }}>
+            <h3 className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--tf-danger)" }}>
               Conflicts detected
-            </h4>
+            </h3>
           </div>
           <div className="flex flex-col gap-1.5">
             {conflicting.map((m) => (
@@ -58,9 +58,9 @@ export function AiSchedulingPanel({ dayMeetings, conflictIds, day }: { dayMeetin
       <GlassPanel className="p-4">
         <div className="flex items-center gap-1.5 mb-2">
           <Coffee size={13} color="var(--tf-teal)" />
-          <h4 className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--tf-ink-muted)" }}>
+          <h3 className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--tf-ink-muted)" }}>
             Suggested focus blocks
-          </h4>
+          </h3>
         </div>
         {focusBlocks.length === 0 ? (
           <p className="text-xs" style={{ color: "var(--tf-ink-muted)" }}>
@@ -80,9 +80,9 @@ export function AiSchedulingPanel({ dayMeetings, conflictIds, day }: { dayMeetin
       <GlassPanel className="p-4">
         <div className="flex items-center gap-1.5 mb-2">
           <Users size={13} color="#2563EB" />
-          <h4 className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--tf-ink-muted)" }}>
+          <h3 className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--tf-ink-muted)" }}>
             Best times for the whole team
-          </h4>
+          </h3>
         </div>
         {bestTimes.length === 0 ? (
           <p className="text-xs" style={{ color: "var(--tf-ink-muted)" }}>

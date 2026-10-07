@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Sparkles, User, Mail, Lock, AlertTriangle, Check } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/Button";
@@ -9,15 +9,33 @@ const REQUIREMENTS = [
   { label: "One number", test: (pw: string) => /\d/.test(pw) },
 ];
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function SignupPage() {
-  const { signup, loading, error, clearError } = useAuth();
+  const { signup, loading, error, clearError, user } = useAuth();
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<{ name?: string; email?: string; password?: string }>({});
+
+  // Already signed in? Don't show the form again — go straight to the app.
+  if (user) return <Navigate to="/dashboard" replace />;
+
+  function validate() {
+    const errs: { name?: string; email?: string; password?: string } = {};
+    if (!name.trim()) errs.name = "Enter your full name.";
+    if (!email.trim()) errs.email = "Enter your email address.";
+    else if (!EMAIL_RE.test(email.trim())) errs.email = "Enter a valid email address.";
+    if (!REQUIREMENTS.every((r) => r.test(password)))
+      errs.password = "Password must be at least 8 characters and include a number.";
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!validate()) return;
     try {
       await signup(name, email, password);
       navigate("/dashboard");
@@ -56,13 +74,13 @@ export function SignupPage() {
             </p>
 
             {error && (
-              <div className="flex items-start gap-2 text-[12px] p-3 rounded-xl mb-4" style={{ background: "rgba(239,68,68,0.1)", color: "#FCA5A5", border: "1px solid rgba(239,68,68,0.3)" }}>
+              <div role="alert" className="flex items-start gap-2 text-[12px] p-3 rounded-xl mb-4" style={{ background: "rgba(239,68,68,0.1)", color: "var(--tf-danger-text)", border: "1px solid rgba(239,68,68,0.3)" }}>
                 <AlertTriangle size={14} className="shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
               <div>
                 <label htmlFor="signup-name" className="text-[11px] font-mono block mb-1" style={{ color: "var(--tf-ink-muted)" }}>
                   Full name
@@ -75,13 +93,21 @@ export function SignupPage() {
                     value={name}
                     onChange={(e) => {
                       setName(e.target.value);
+                      setFieldErrors((prev) => ({ ...prev, name: undefined }));
                       clearError();
                     }}
+                    aria-invalid={fieldErrors.name ? true : undefined}
+                    aria-describedby={fieldErrors.name ? "signup-name-error" : undefined}
                     placeholder="Jade Santos"
                     className="w-full text-[13px] pl-9 pr-3 py-2.5 rounded-xl outline-none"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
+                    style={{ background: "var(--tf-fill-04)", border: `1px solid ${fieldErrors.name ? "rgba(239,68,68,0.5)" : "var(--tf-panel-border)"}`, color: "var(--tf-ink)" }}
                   />
                 </div>
+                {fieldErrors.name && (
+                  <p id="signup-name-error" role="alert" className="text-[11px] mt-1" style={{ color: "var(--tf-danger-text)" }}>
+                    {fieldErrors.name}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -97,13 +123,21 @@ export function SignupPage() {
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
+                      setFieldErrors((prev) => ({ ...prev, email: undefined }));
                       clearError();
                     }}
+                    aria-invalid={fieldErrors.email ? true : undefined}
+                    aria-describedby={fieldErrors.email ? "signup-email-error" : undefined}
                     placeholder="you@company.com"
                     className="w-full text-[13px] pl-9 pr-3 py-2.5 rounded-xl outline-none"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
+                    style={{ background: "var(--tf-fill-04)", border: `1px solid ${fieldErrors.email ? "rgba(239,68,68,0.5)" : "var(--tf-panel-border)"}`, color: "var(--tf-ink)" }}
                   />
                 </div>
+                {fieldErrors.email && (
+                  <p id="signup-email-error" role="alert" className="text-[11px] mt-1" style={{ color: "var(--tf-danger-text)" }}>
+                    {fieldErrors.email}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -119,14 +153,22 @@ export function SignupPage() {
                     value={password}
                     onChange={(e) => {
                       setPassword(e.target.value);
+                      setFieldErrors((prev) => ({ ...prev, password: undefined }));
                       clearError();
                     }}
+                    aria-invalid={fieldErrors.password ? true : undefined}
+                    aria-describedby={fieldErrors.password ? "signup-password-error" : "signup-password-requirements"}
                     placeholder="••••••••"
                     className="w-full text-[13px] pl-9 pr-3 py-2.5 rounded-xl outline-none"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
+                    style={{ background: "var(--tf-fill-04)", border: `1px solid ${fieldErrors.password ? "rgba(239,68,68,0.5)" : "var(--tf-panel-border)"}`, color: "var(--tf-ink)" }}
                   />
                 </div>
-                <div className="flex flex-col gap-1 mt-2">
+                {fieldErrors.password && (
+                  <p id="signup-password-error" role="alert" className="text-[11px] mt-1" style={{ color: "var(--tf-danger-text)" }}>
+                    {fieldErrors.password}
+                  </p>
+                )}
+                <div id="signup-password-requirements" className="flex flex-col gap-1 mt-2">
                   {REQUIREMENTS.map((r) => {
                     const met = r.test(password);
                     return (

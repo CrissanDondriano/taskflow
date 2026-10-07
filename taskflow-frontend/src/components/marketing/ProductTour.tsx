@@ -42,7 +42,7 @@ export function ProductTour() {
           <h3 className="font-display text-[22px] font-semibold leading-tight text-balance sm:text-[26px]">{t.title}</h3>
           <p className="mt-3 text-[15px] leading-relaxed" style={{ color: "var(--tf-ink-muted)" }}>{t.desc}</p>
         </div>
-        <div className="lg:col-span-8">{t.visual}</div>
+        <div className="min-w-0 lg:col-span-8">{t.visual}</div>
       </div>
     </div>
   );

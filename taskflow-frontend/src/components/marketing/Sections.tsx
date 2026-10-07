@@ -21,7 +21,7 @@ export function PricingCards({ level = 3 }: { level?: 2 | 3 }) {
               <p className="mt-4"><span className="font-display text-[40px] font-semibold leading-none">{p.price}</span> <span className="ml-1 text-[13px]" style={{ color: "var(--tf-ink-muted)" }}>{p.period}</span></p>
               <div className="mt-6"><ButtonLink to={p.name === "Enterprise" ? "/contact" : "/signup"} variant={p.featured ? "primary" : "ghost"}>{p.cta}</ButtonLink></div>
               <p className="mb-3 mt-7 text-[13px] font-semibold">{p.name === "Free" ? "Includes" : p.name === "Pro" ? "Everything in Free, plus" : "Everything in Pro, plus"}</p>
-              <ul className="m-0 flex list-none flex-col gap-2.5 p-0 text-[14px]" style={{ color: "#C7D2E3" }}>
+              <ul className="m-0 flex list-none flex-col gap-2.5 p-0 text-[14px]" style={{ color: "var(--tf-ink-soft)" }}>
                 {p.features.map((f) => <li key={f} className="flex items-start gap-2.5"><Check size={16} className="mt-0.5 shrink-0" color="#14B8A6" aria-hidden="true" />{f}</li>)}
               </ul>
             </section>

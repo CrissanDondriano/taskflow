@@ -82,7 +82,7 @@ export function TeamPage() {
               required
               placeholder="e.g. Priya Sharma"
               className="w-full text-sm px-3 py-2 rounded-xl outline-none"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
+              style={{ background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
             />
           </div>
           <div>
@@ -96,7 +96,7 @@ export function TeamPage() {
               required
               placeholder="priya@company.com"
               className="w-full text-sm px-3 py-2 rounded-xl outline-none"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
+              style={{ background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -109,7 +109,7 @@ export function TeamPage() {
                 name="jobTitle"
                 placeholder="e.g. QA Engineer"
                 className="w-full text-sm px-3 py-2 rounded-xl outline-none"
-                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
+                style={{ background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
               />
             </div>
             <div>
@@ -121,7 +121,7 @@ export function TeamPage() {
                 name="department"
                 placeholder="e.g. Engineering"
                 className="w-full text-sm px-3 py-2 rounded-xl outline-none"
-                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
+                style={{ background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
               />
             </div>
           </div>
@@ -189,10 +189,10 @@ export function TeamPage() {
               placeholder="Search members..."
               aria-label="Search members"
               className="pl-8 pr-3 py-2 rounded-xl text-sm outline-none w-full sm:w-56"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
+              style={{ background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
             />
           </div>
-          <div className="flex gap-1 rounded-xl p-1 w-fit" style={{ background: "rgba(255,255,255,0.03)" }}>
+          <div className="flex gap-1 rounded-xl p-1 w-fit" style={{ background: "var(--tf-fill-03)" }}>
             {departments.map((d) => (
               <button
                 key={d}

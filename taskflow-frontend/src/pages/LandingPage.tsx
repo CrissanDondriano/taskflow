@@ -55,7 +55,7 @@ export function LandingPage() {
               <li key={name} className={i === 4 ? "col-span-2 md:col-span-1" : ""}>
                 <Reveal delay={i * 80} className="h-full">
                   <div className="lift flex h-full flex-col items-center rounded-2xl px-4 py-5 text-center" style={PANEL}>
-                    <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: "rgba(37,99,235,0.14)" }}><Icon size={18} color="#93C5FD" aria-hidden="true" /></span>
+                    <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: "rgba(37,99,235,0.14)" }}><Icon size={18} color="var(--tf-info-text)" aria-hidden="true" /></span>
                     <p className="text-[14px] font-semibold">{name}</p>
                     <p className="mt-1 text-[12px] leading-snug" style={MUTED}>{desc}</p>
                   </div>
@@ -75,7 +75,7 @@ export function LandingPage() {
       </section>
 
       {/* Everything: features + steps + trust in one section */}
-      <section aria-labelledby="all-title" className="py-20 lg:py-28" style={{ background: "rgba(255,255,255,0.015)" }}>
+      <section aria-labelledby="all-title" className="py-20 lg:py-28" style={{ background: "var(--tf-fill-015)" }}>
         <Container>
           <Reveal><SectionHead id="all-title" title="Everything your team needs, from first project to finished sprint" lead="Built to remove a step, not add one, and to be trusted with your work." /></Reveal>
           <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 lg:grid-cols-3">
@@ -83,7 +83,7 @@ export function LandingPage() {
               <li key={title}>
                 <Reveal delay={i * 70} className="h-full">
                   <div className="lift h-full rounded-2xl p-6" style={PANEL}>
-                    <span className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: "rgba(37,99,235,0.14)" }}><Icon size={20} color="#93C5FD" aria-hidden="true" /></span>
+                    <span className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: "rgba(37,99,235,0.14)" }}><Icon size={20} color="var(--tf-info-text)" aria-hidden="true" /></span>
                     <h3 className="mb-2 mt-4 text-[16px] font-semibold">{title}</h3>
                     <p className="text-[13px] leading-relaxed" style={MUTED}>{desc}</p>
                   </div>
@@ -115,7 +115,7 @@ export function LandingPage() {
                   <ul className="m-0 flex list-none flex-col gap-6 p-0">
                     {SECURITY.map(({ icon: Icon, title, desc }) => (
                       <li key={title} className="flex gap-4">
-                        <Icon size={20} className="mt-0.5 shrink-0" color="#5EEAD4" aria-hidden="true" />
+                        <Icon size={20} className="mt-0.5 shrink-0" color="var(--tf-accent-text)" aria-hidden="true" />
                         <div><h4 className="text-[15px] font-semibold">{title}</h4><p className="mt-1 text-[13px] leading-relaxed" style={MUTED}>{desc}</p></div>
                       </li>
                     ))}

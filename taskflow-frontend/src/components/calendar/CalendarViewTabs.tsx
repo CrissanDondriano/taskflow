@@ -11,7 +11,7 @@ const TABS: { mode: CalendarViewMode; label: string; icon: React.ReactNode; key:
 
 export function CalendarViewTabs({ view, onChange }: { view: CalendarViewMode; onChange: (v: CalendarViewMode) => void }) {
   return (
-    <div className="flex gap-1 rounded-xl p-1 w-fit" style={{ background: "rgba(255,255,255,0.03)" }}>
+    <div className="flex gap-1 rounded-xl p-1 w-fit" style={{ background: "var(--tf-fill-03)" }}>
       {TABS.map((t) => (
         <button
           key={t.mode}

@@ -17,7 +17,7 @@ const VARIANT_STYLES: Record<ButtonVariant, { background: string; color: string;
   teal: { background: "var(--tf-teal)", color: "white", border: "1px solid transparent", boxShadow: "0 0 16px rgba(20,184,166,0.4)" },
   secondary: { background: "transparent", color: "var(--tf-ink)", border: "1px solid var(--tf-panel-border)" },
   ghost: { background: "transparent", color: "var(--tf-ink-muted)", border: "1px solid transparent" },
-  danger: { background: "rgba(239,68,68,0.1)", color: "#FCA5A5", border: "1px solid rgba(239,68,68,0.3)" },
+  danger: { background: "rgba(239,68,68,0.1)", color: "var(--tf-danger-text)", border: "1px solid rgba(239,68,68,0.3)" },
 };
 
 const SIZE_STYLES: Record<ButtonSize, string> = {

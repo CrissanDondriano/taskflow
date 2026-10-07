@@ -23,9 +23,9 @@ export function CollaborationTimeline() {
     <GlassPanel className="p-5">
       <div className="flex items-center gap-1.5 mb-4">
         <Activity size={14} color="var(--tf-ink-muted)" />
-        <h3 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
+        <h2 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
           Collaboration timeline
-        </h3>
+        </h2>
       </div>
       {notifications.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-8" style={{ color: "var(--tf-ink-muted)" }}>

@@ -42,7 +42,7 @@ export function QuickAddBar({ onCreate, defaultColumn = "Backlog" }: { onCreate:
           placeholder='Try: "Fix login bug tomorrow, critical"'
           aria-label="Quick add task with natural language"
           className="w-full text-sm pl-9 pr-20 py-2.5 rounded-xl outline-none"
-          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
+          style={{ background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
         />
         <button
           type="submit"
