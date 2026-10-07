@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
-import { Modal, Avatar } from "../ui/Primitives";
+import { Modal, Avatar, ConfirmDialog } from "../ui/Primitives";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { COLUMNS, PRIORITY_HEX } from "../../data/mockData";
-import { useTeam } from "../../context/TeamContext";
+import { COLUMNS, PRIORITIES } from "../../data/mockData";
+import { useTeamMembers } from "../../context/TeamContext";
 import type { Task, TaskColumn, Priority } from "../../types";
 
 export function TaskDetailModal({
@@ -18,9 +18,10 @@ export function TaskDetailModal({
   onSave: (id: string, patch: Partial<Task>) => void;
   onDelete: (id: string) => void;
 }) {
-  const { members } = useTeam();
+  const members = useTeamMembers();
   const [draft, setDraft] = useState<Task | null>(task);
   const [lastId, setLastId] = useState<string | null>(task?.id ?? null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   // Only sync in a new task; keep the previous one rendered while Modal's
   // close animation plays instead of unmounting instantly when task -> null.
@@ -93,7 +94,7 @@ export function TaskDetailModal({
             <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--tf-fill-08)" }}>
               <div
                 className="h-full rounded-full"
-                style={{ width: `${(draft.checklist.done / draft.checklist.total) * 100}%`, background: "var(--tf-teal)" }}
+                style={{ width: `${draft.checklist.total > 0 ? (draft.checklist.done / draft.checklist.total) * 100 : 0}%`, background: "var(--tf-teal)" }}
               />
             </div>
           </div>
@@ -111,7 +112,7 @@ export function TaskDetailModal({
               className="w-full text-sm px-3 py-2 rounded-xl outline-none"
               style={fieldStyle}
             >
-              {Object.keys(PRIORITY_HEX).map((p) => (
+              {PRIORITIES.map((p) => (
                 <option key={p} style={{ background: "var(--tf-surface)" }}>
                   {p}
                 </option>
@@ -178,9 +179,19 @@ export function TaskDetailModal({
         </div>
 
         <div className="flex justify-between items-center gap-2 mt-2">
-          <Button variant="danger" size="sm" icon={<Trash2 size={13} />} onClick={() => { if (lastId) onDelete(lastId); onClose(); }}>
+          <Button variant="danger" size="sm" icon={<Trash2 size={13} />} onClick={() => setConfirmOpen(true)}>
             Delete
           </Button>
+          <ConfirmDialog
+            open={confirmOpen}
+            onClose={() => setConfirmOpen(false)}
+            title="Delete task?"
+            message={`"${draft.title}" will be removed from the board. You'll get a short window to undo this from the notification.`}
+            onConfirm={() => {
+              if (lastId) onDelete(lastId);
+              onClose();
+            }}
+          />
           <div className="flex gap-2">
             <Button variant="secondary" onClick={onClose}>
               Cancel

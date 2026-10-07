@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Plus, MoreVertical, Sparkles, Edit3, Trash2, ArrowRightCircle, Inbox } from "lucide-react";
-import { Avatar, PriorityBadge } from "../ui/Primitives";
+import { Avatar, PriorityBadge, ConfirmDialog } from "../ui/Primitives";
 import { Badge } from "../ui/Badge";
 import { DropdownMenu } from "../ui/DropdownMenu";
 import { COLUMNS, PRIORITY_HEX } from "../../data/mockData";
-import { useTeam } from "../../context/TeamContext";
+import { useTeamMembers } from "../../context/TeamContext";
 import type { Task, TaskColumn } from "../../types";
 
-let draggingId: string | null = null;
+/** Custom drag type so foreign drags (text/files) can't land on the board. */
+const TASK_DRAG_TYPE = "text/taskflow-task";
 
 function KanbanCard({
   task,
@@ -26,7 +27,8 @@ function KanbanCard({
   onMove: (column: TaskColumn) => void;
   onDelete: () => void;
 }) {
-  const { members } = useTeam();
+  const members = useTeamMembers();
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const person = members.find((p) => p.initials === task.assignee);
   const color = PRIORITY_HEX[task.priority];
   const otherColumns = COLUMNS.filter((c) => c !== task.column);
@@ -34,10 +36,22 @@ function KanbanCard({
   return (
     <div
       draggable
-      onDragStart={onDragStart}
+      onDragStart={(e) => {
+        // Carry the id in the drag payload instead of a module-level global:
+        // state shared across instances broke when two boards existed (HMR,
+        // tests) and never worked in Firefox, which requires setData().
+        e.dataTransfer.setData(TASK_DRAG_TYPE, task.id);
+        e.dataTransfer.effectAllowed = "move";
+        onDragStart();
+      }}
       onDragEnd={onDragEnd}
       onClick={onOpen}
-      onKeyDown={(e) => e.key === "Enter" && onOpen()}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault(); // Space would also scroll the column
+          onOpen();
+        }
+      }}
       role="button"
       tabIndex={0}
       aria-label={`Open ${task.title}`}
@@ -75,11 +89,19 @@ function KanbanCard({
                 label: "Move to",
                 items: otherColumns.map((c) => ({ label: c, icon: <ArrowRightCircle size={13} />, onSelect: () => onMove(c) })),
               },
-              { items: [{ label: "Delete", icon: <Trash2 size={13} />, onSelect: onDelete, danger: true }] },
+              { items: [{ label: "Delete", icon: <Trash2 size={13} />, onSelect: () => setConfirmOpen(true), danger: true }] },
             ]}
           />
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        title="Delete task?"
+        message={`"${task.title}" will be removed from the board. You'll get a short window to undo this from the notification.`}
+        onConfirm={onDelete}
+      />
 
       <div className="text-sm font-medium mb-2 leading-snug" style={{ color: "var(--tf-ink)" }}>
         {task.title}
@@ -110,7 +132,7 @@ function KanbanCard({
             </span>
           </div>
           <div className="h-1 rounded-full overflow-hidden" style={{ background: "var(--tf-fill-08)" }}>
-            <div className="h-full rounded-full" style={{ width: `${(task.checklist.done / task.checklist.total) * 100}%`, background: "var(--tf-teal)" }} />
+            <div className="h-full rounded-full" style={{ width: `${task.checklist.total > 0 ? (task.checklist.done / task.checklist.total) * 100 : 0}%`, background: "var(--tf-teal)" }} />
           </div>
         </div>
       )}
@@ -144,9 +166,9 @@ export function KanbanBoard({
   const [dragOverCol, setDragOverCol] = useState<TaskColumn | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
 
-  function handleDrop(col: TaskColumn) {
+  function handleDrop(col: TaskColumn, taskId: string) {
     setDragOverCol(null);
-    if (draggingId) onMove(draggingId, col);
+    if (taskId) onMove(taskId, col);
   }
 
   return (
@@ -160,10 +182,14 @@ export function KanbanBoard({
             key={col}
             onDragOver={(e) => {
               e.preventDefault();
+              e.dataTransfer.dropEffect = "move";
               setDragOverCol(col);
             }}
             onDragLeave={() => setDragOverCol(null)}
-            onDrop={() => handleDrop(col)}
+            onDrop={(e) => {
+              e.preventDefault();
+              handleDrop(col, e.dataTransfer.getData(TASK_DRAG_TYPE));
+            }}
             className="w-72 shrink-0 rounded-2xl transition-colors flex flex-col max-h-[calc(100vh-320px)]"
             style={{
               background: dragOverCol === col ? "rgba(37,99,235,0.08)" : "var(--tf-fill-02)",
@@ -201,14 +227,8 @@ export function KanbanBoard({
                     key={t.id}
                     task={t}
                     isDragging={activeDragId === t.id}
-                    onDragStart={() => {
-                      draggingId = t.id;
-                      setActiveDragId(t.id);
-                    }}
-                    onDragEnd={() => {
-                      draggingId = null;
-                      setActiveDragId(null);
-                    }}
+                    onDragStart={() => setActiveDragId(t.id)}
+                    onDragEnd={() => setActiveDragId(null)}
                     onOpen={() => onOpenTask(t)}
                     onMove={(column) => onMove(t.id, column)}
                     onDelete={() => onDeleteTask(t.id)}

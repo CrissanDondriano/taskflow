@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Search, UserPlus } from "lucide-react";
-import { GlassPanel, Modal } from "../../components/ui/Primitives";
+import { GlassPanel, Modal, EmptyState } from "../../components/ui/Primitives";
 import { Button } from "../../components/ui/Button";
 import { MemberCard } from "../../components/team/MemberCard";
 import { AiWorkloadPanel } from "../../components/team/AiWorkloadPanel";
@@ -8,20 +8,24 @@ import { SharedProjectsList } from "../../components/team/SharedProjectsList";
 import { SharedCalendarPreview } from "../../components/team/SharedCalendarPreview";
 import { CollaborationTimeline } from "../../components/team/CollaborationTimeline";
 import { TeamAchievements } from "../../components/team/TeamAchievements";
-import { useTasks } from "../../context/TasksContext";
-import { useMeetings } from "../../context/MeetingsContext";
-import { useTeam } from "../../context/TeamContext";
+import { useTasksData } from "../../context/TasksContext";
+import { useMeetingsData } from "../../context/MeetingsContext";
+import { useTeamMembers, useTeamActions } from "../../context/TeamContext";
+import { useToast } from "../../context/ToastContext";
 import { withComputedWorkload } from "../../lib/team";
-
-const COLORS = ["#2563EB", "#14B8A6", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899"];
+import { ApiError } from "../../lib/api";
 
 export function TeamPage() {
-  const { members, addMember, removeMember } = useTeam();
+  const members = useTeamMembers();
+  const { inviteByEmail, removeMember, undoDelete } = useTeamActions();
+  const { toast } = useToast();
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviting, setInviting] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [department, setDepartment] = useState<string>("All");
-  const { tasks } = useTasks();
-  const { meetings } = useMeetings();
+  const tasks = useTasksData();
+  const meetings = useMeetingsData();
 
   const people = useMemo(() => withComputedWorkload(members, tasks), [members, tasks]);
 
@@ -37,54 +41,41 @@ export function TeamPage() {
   const sharedProjectCount = new Set(tasks.map((t) => t.project)).size;
   const completedCount = tasks.filter((t) => t.column === "Completed").length;
 
-  function inviteMember(e: React.FormEvent<HTMLFormElement>) {
+  async function inviteMember(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
-    const name = String(form.get("name") ?? "").trim();
     const email = String(form.get("email") ?? "").trim();
-    const jobTitle = String(form.get("jobTitle") ?? "").trim() || "Team member";
-    const dept = String(form.get("department") ?? "").trim() || "Engineering";
-    if (!name || !email) return;
+    if (!email) return;
 
-    const initials = name
-      .split(" ")
-      .map((p) => p[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase();
+    setInviting(true);
+    setInviteError(null);
+    try {
+      await inviteByEmail(email);
+      setInviteOpen(false);
+      e.currentTarget.reset();
+      toast(`${email} was added to your team.`, "success");
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 422) {
+        setInviteError("No TaskFlow account uses that email — ask them to sign up first, then invite them again.");
+      } else if (err instanceof ApiError && err.status === 403) {
+        setInviteError("Only the team owner can add members.");
+      } else {
+        setInviteError(err instanceof ApiError ? err.message : "Couldn't add the member.");
+      }
+    } finally {
+      setInviting(false);
+    }
+  }
 
-    addMember({
-      initials,
-      name,
-      email,
-      jobTitle,
-      department: dept,
-      status: "offline",
-      role: "member",
-      workloadPct: 0,
-      color: COLORS[members.length % COLORS.length],
-    });
+  function closeInvite() {
     setInviteOpen(false);
-    e.currentTarget.reset();
+    setInviteError(null);
   }
 
   return (
     <div className="flex flex-col gap-5">
-      <Modal open={inviteOpen} onClose={() => setInviteOpen(false)} title="Invite a team member">
+      <Modal open={inviteOpen} onClose={closeInvite} title="Invite a team member">
         <form onSubmit={inviteMember} className="flex flex-col gap-3">
-          <div>
-            <label htmlFor="invite-name" className="text-[11px] font-mono block mb-1" style={{ color: "var(--tf-ink-muted)" }}>
-              Name *
-            </label>
-            <input
-              id="invite-name"
-              name="name"
-              required
-              placeholder="e.g. Priya Sharma"
-              className="w-full text-sm px-3 py-2 rounded-xl outline-none"
-              style={{ background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
-            />
-          </div>
           <div>
             <label htmlFor="invite-email" className="text-[11px] font-mono block mb-1" style={{ color: "var(--tf-ink-muted)" }}>
               Email *
@@ -94,47 +85,27 @@ export function TeamPage() {
               name="email"
               type="email"
               required
+              autoFocus
               placeholder="priya@company.com"
               className="w-full text-sm px-3 py-2 rounded-xl outline-none"
               style={{ background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="invite-role" className="text-[11px] font-mono block mb-1" style={{ color: "var(--tf-ink-muted)" }}>
-                Role / title
-              </label>
-              <input
-                id="invite-role"
-                name="jobTitle"
-                placeholder="e.g. QA Engineer"
-                className="w-full text-sm px-3 py-2 rounded-xl outline-none"
-                style={{ background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
-              />
-            </div>
-            <div>
-              <label htmlFor="invite-department" className="text-[11px] font-mono block mb-1" style={{ color: "var(--tf-ink-muted)" }}>
-                Department
-              </label>
-              <input
-                id="invite-department"
-                name="department"
-                placeholder="e.g. Engineering"
-                className="w-full text-sm px-3 py-2 rounded-xl outline-none"
-                style={{ background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
-              />
-            </div>
-          </div>
           <p className="text-[11px]" style={{ color: "var(--tf-ink-muted)" }}>
-            This adds them to your local team view. To send a real invite email, wire this form to{" "}
-            <code className="font-mono">POST /api/teams/{"{team}"}/members</code> in the backend.
+            Adds an existing TaskFlow account to your team. No invite email is sent — if they haven't signed up yet,
+            they'll need to register first. Your team is created automatically if you don't have one yet.
           </p>
+          {inviteError && (
+            <p className="text-[11px]" style={{ color: "var(--tf-danger)" }}>
+              {inviteError}
+            </p>
+          )}
           <div className="flex justify-end gap-2 mt-1">
-            <Button type="button" variant="secondary" onClick={() => setInviteOpen(false)}>
+            <Button type="button" variant="secondary" onClick={closeInvite}>
               Cancel
             </Button>
-            <Button type="submit" variant="primary">
-              Send invite
+            <Button type="submit" variant="primary" loading={inviting}>
+              Add member
             </Button>
           </div>
         </form>
@@ -218,13 +189,31 @@ export function TeamPage() {
             person={p}
             assignedCount={tasks.filter((t) => t.assignee === p.initials).length}
             completedCount={tasks.filter((t) => t.assignee === p.initials && t.column === "Completed").length}
-            onRemove={() => removeMember(p.initials)}
+            onRemove={() => {
+              removeMember(p.initials);
+              toast("Member removed.", "info", { label: "Undo", run: undoDelete });
+            }}
           />
         ))}
         {filtered.length === 0 && (
-          <p className="text-sm col-span-full text-center py-8" style={{ color: "var(--tf-ink-muted)" }}>
-            No members match "{search}"{department !== "All" ? ` in ${department}` : ""}.
-          </p>
+          <div className="col-span-full">
+            <EmptyState
+              icon={<Search size={22} />}
+              message={`No members match "${search}"${department !== "All" ? ` in ${department}` : ""}.`}
+              action={
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setSearch("");
+                    setDepartment("All");
+                  }}
+                >
+                  Clear search and filters
+                </Button>
+              }
+            />
+          </div>
         )}
       </div>
 

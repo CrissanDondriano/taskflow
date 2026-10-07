@@ -1,15 +1,7 @@
 import { Activity, Inbox } from "lucide-react";
 import { GlassPanel } from "../ui/Primitives";
 import { useNotifications } from "../../context/NotificationsContext";
-
-function timeAgo(iso: string): string {
-  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
-}
+import { timeAgo } from "../../lib/format";
 
 /**
  * A real reverse-chronological feed of what's actually happened — reuses
@@ -37,7 +29,7 @@ export function CollaborationTimeline() {
           {notifications.slice(0, 8).map((n) => (
             <div key={n.id} className="text-sm">
               <span style={{ color: "var(--tf-ink)" }}>{n.message}</span>
-              <div className="text-[10px] font-mono mt-0.5" style={{ color: "#4B5A73" }}>
+              <div className="text-[10px] font-mono mt-0.5" style={{ color: "var(--tf-ink-muted)" }}>
                 {timeAgo(n.when)}
               </div>
             </div>

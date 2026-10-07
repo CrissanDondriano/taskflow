@@ -2,20 +2,23 @@ import { useMemo, useState } from "react";
 import { Sparkles, X, TrendingUp, ShieldCheck, Activity, CalendarClock, BarChart3 } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { GlassPanel, PulseCard, Eyebrow, PriorityBadge, EmptyState } from "../../components/ui/Primitives";
+import { Button } from "../../components/ui/Button";
 import { PriorityLegend } from "../../components/ui/PriorityLegend";
 import { CircularGauge } from "../../components/ui/CircularGauge";
+import { NewTaskModal } from "../../components/dashboard/NewTaskModal";
 import { MissionOrbit } from "../../components/dashboard/MissionOrbit";
 import { UrgencyList } from "../../components/dashboard/UrgencyList";
 import { COLUMNS } from "../../data/mockData";
 import { computeInsights, computeRecommendation } from "../../lib/aiAssistant";
 import { computeWeeklyTrend } from "../../lib/reports";
-import { useTasks } from "../../context/TasksContext";
-import { useTeam } from "../../context/TeamContext";
+import { useTasksData, useTaskActions } from "../../context/TasksContext";
+import { useTeamMembers } from "../../context/TeamContext";
 import { useNotifications } from "../../context/NotificationsContext";
 import { withComputedWorkload } from "../../lib/team";
 import { parseDueToAnchorDay } from "../../lib/calendar";
 import type { Task } from "../../types";
 import { useAuth } from "../../context/AuthContext";
+import { timeAgo } from "../../lib/format";
 
 function greeting() {
   const hour = new Date().getHours();
@@ -24,22 +27,15 @@ function greeting() {
   return "Good evening";
 }
 
-function timeAgo(iso: string): string {
-  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
-}
-
 export function DashboardHome() {
-  const { tasks } = useTasks();
-  const { members } = useTeam();
+  const tasks = useTasksData();
+  const { addTask } = useTaskActions();
+  const members = useTeamMembers();
   const { notifications } = useNotifications();
   const { user } = useAuth();
   const [selectedNode, setSelectedNode] = useState<Task | null>(null);
   const [hoveredId, setHoveredId] = useState<string | undefined>(undefined);
+  const [newTaskOpen, setNewTaskOpen] = useState(false);
 
   const people = useMemo(() => withComputedWorkload(members, tasks), [members, tasks]);
 
@@ -87,6 +83,7 @@ export function DashboardHome() {
 
   return (
     <div className="flex flex-col gap-5">
+      <NewTaskModal open={newTaskOpen} onClose={() => setNewTaskOpen(false)} onCreate={addTask} defaultColumn="Backlog" />
       {/* ---------- Mission Control hero ---------- */}
       <GlassPanel className="p-5 sm:p-6">
         <div className="flex flex-col lg:flex-row lg:items-center gap-6">
@@ -195,7 +192,15 @@ export function DashboardHome() {
           </div>
 
           {tasks.length === 0 ? (
-            <EmptyState icon={<Sparkles size={22} />} message="Create your first task and it'll show up here, positioned by how urgent the AI thinks it is." />
+            <EmptyState
+              icon={<Sparkles size={22} />}
+              message="Create your first task and it'll show up here, positioned by how urgent the AI thinks it is."
+              action={
+                <Button variant="primary" size="sm" icon={<Sparkles size={13} />} onClick={() => setNewTaskOpen(true)}>
+                  Create a task
+                </Button>
+              }
+            />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-[240px_1fr] gap-4 items-start">
               <MissionOrbit tasks={tasks} onSelect={setSelectedNode} selectedId={selectedNode?.id} hoveredId={hoveredId} onHover={setHoveredId} />
@@ -344,7 +349,7 @@ export function DashboardHome() {
               recentActivity.map((n) => (
                 <div key={n.id} className="text-sm">
                   <span style={{ color: "var(--tf-ink)" }}>{n.message}</span>
-                  <div className="text-xs font-mono mt-0.5" style={{ color: "#4B5A73" }}>
+                  <div className="text-xs font-mono mt-0.5" style={{ color: "var(--tf-ink-muted)" }}>
                     {timeAgo(n.when)}
                   </div>
                 </div>

@@ -3,17 +3,16 @@ import { Sparkles, Loader2 } from "lucide-react";
 import { Modal } from "../ui/Primitives";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { COLUMNS, PRIORITY_STYLE } from "../../data/mockData";
-import { useTeam } from "../../context/TeamContext";
+import { COLUMNS, PRIORITIES } from "../../data/mockData";
+import { useTeamMembers } from "../../context/TeamContext";
 import { suggestLabels } from "../../lib/nlp";
+import { api } from "../../lib/api";
 import type { Task, TaskColumn, Priority } from "../../types";
 
 /**
- * A template-based description draft, keyed off the title. This is
- * deliberately NOT presented as a real LLM call — it's a fast, honest
- * heuristic. The taskflow-api backend already has a real OpenAI-backed
- * endpoint (POST /api/ai/generate-tasks) for this; wire this button to that
- * when a backend is connected, and drop this function.
+ * Fallback description draft, keyed off the title — used when the real
+ * AI call fails (backend offline or OPENAI_API_KEY not set), so the
+ * button stays useful either way.
  */
 function draftDescription(title: string, labels: string[]): string {
   const labelNote = labels.length > 0 ? ` Tagged as ${labels.join(", ")} based on the title.` : "";
@@ -31,7 +30,7 @@ export function NewTaskModal({
   onCreate: (task: Task) => void;
   defaultColumn?: TaskColumn;
 }) {
-  const { members } = useTeam();
+  const members = useTeamMembers();
   const [title, setTitle] = useState("");
   const [project, setProject] = useState("");
   const [description, setDescription] = useState("");
@@ -44,8 +43,14 @@ export function NewTaskModal({
 
   const suggestedLabels = title.trim() ? suggestLabels(title) : [];
 
+  // Always start from a clean slate when the dialog opens — closing via
+  // Cancel / the overlay (or a failed create) must not leak the previous
+  // draft into the next session.
   useEffect(() => {
-    if (open) setColumn(defaultColumn ?? "Backlog");
+    if (open) {
+      reset();
+      setColumn(defaultColumn ?? "Backlog");
+    }
   }, [open, defaultColumn]);
 
   // Team members load asynchronously (seeded from the authenticated user);
@@ -64,13 +69,23 @@ export function NewTaskModal({
     setDue("");
   }
 
-  function draftWithAi() {
+  async function draftWithAi() {
     if (!title.trim()) return;
     setDrafting(true);
-    setTimeout(() => {
+    try {
+      // Real AI draft via the backend's OpenAI-backed /ai/ask endpoint.
+      const res = await api.post<{ answer?: string }>("/ai/ask", {
+        question: `Write a concise 1-2 sentence task description for a work item titled "${title.trim()}". Reply with only the description text.`,
+      });
+      const answer = res.answer?.trim() ?? "";
+      // The AiService returns a {"error": ...} JSON string when AI isn't configured.
+      if (!answer || /^\s*\{\s*"error"/.test(answer)) throw new Error("AI unavailable");
+      setDescription(answer);
+    } catch {
       setDescription(draftDescription(title.trim(), suggestedLabels));
+    } finally {
       setDrafting(false);
-    }, 600);
+    }
   }
 
   function toggleLabel(label: string) {
@@ -146,7 +161,7 @@ export function NewTaskModal({
               disabled={!title.trim() || drafting}
               className="flex items-center gap-1 text-[11px] disabled:opacity-40"
               style={{ color: "var(--tf-teal)" }}
-              title="Fills in a starter description based on the title — a quick heuristic, not a real AI call"
+              title="Drafts a description with the AI assistant — falls back to a quick template if AI is unavailable"
             >
               {drafting ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
               {drafting ? "Drafting..." : "Draft with AI"}
@@ -187,7 +202,7 @@ export function NewTaskModal({
               className="w-full text-[13px] px-3 py-2 rounded-xl outline-none"
               style={fieldStyle}
             >
-              {Object.keys(PRIORITY_STYLE).map((p) => (
+              {PRIORITIES.map((p) => (
                 <option key={p} style={{ background: "var(--tf-surface)" }}>
                   {p}
                 </option>

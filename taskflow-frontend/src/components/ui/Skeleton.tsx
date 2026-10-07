@@ -6,12 +6,11 @@ interface SkeletonProps {
 }
 
 /**
- * Shimmering loading placeholder. Not wired into any page yet — there's no
- * real async data-fetching in the app to justify a loading state (see
- * README: Dashboard/Kanban/Calendar still run on local mock data). This
- * gets used for real once Phase 2 wires the Dashboard to live API calls;
- * faking a timeout just to show it off would be the same "temporary data"
- * problem already flagged and fixed elsewhere in this app.
+ * Shimmering loading placeholder. Used by MeetingNotesConverter while it
+ * extracts a summary/action items (the one genuine async wait in the UI).
+ * The dashboard/kanban/calendar pages still run on local state with no
+ * fetches to wait for (see README: Phase 2 API wiring), so the card/stat
+ * presets below are ready for when those become async.
  */
 export function Skeleton({ variant = "rect", width, height, className = "" }: SkeletonProps) {
   const radius = variant === "circle" ? "9999px" : variant === "text" ? "6px" : "12px";
@@ -36,21 +35,6 @@ export function SkeletonStatCard() {
     <div className="rounded-2xl p-4" style={{ background: "var(--tf-panel)", border: "1px solid var(--tf-panel-border)" }}>
       <Skeleton variant="text" width="60%" height={11} className="mb-3" />
       <Skeleton variant="text" width="40%" height={26} />
-    </div>
-  );
-}
-
-/** Convenience preset: a kanban-card-shaped skeleton. */
-export function SkeletonCard() {
-  return (
-    <div className="rounded-xl p-3" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-panel-border)" }}>
-      <Skeleton variant="text" width="40%" height={10} className="mb-2" />
-      <Skeleton variant="text" width="90%" height={13} className="mb-1" />
-      <Skeleton variant="text" width="70%" height={13} className="mb-3" />
-      <div className="flex items-center justify-between">
-        <Skeleton variant="rect" width={50} height={16} />
-        <Skeleton variant="circle" width={22} height={22} />
-      </div>
     </div>
   );
 }

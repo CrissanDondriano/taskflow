@@ -17,6 +17,9 @@ interface NotificationsState {
   push: (items: AppNotification[]) => void;
 }
 
+/** Newest-first window: long sessions must not grow the bell's DOM forever. */
+const MAX_NOTIFICATIONS = 50;
+
 /**
  * Notifications are derived from real state changes in the tasks and
  * meetings stores — a task being created, moved to Completed, flagged
@@ -36,7 +39,7 @@ export const useNotificationsStore = create<NotificationsState>()((set) => ({
   },
 
   push(items) {
-    set((prev) => ({ notifications: [...items, ...prev.notifications] }));
+    set((prev) => ({ notifications: [...items, ...prev.notifications].slice(0, MAX_NOTIFICATIONS) }));
   },
 }));
 

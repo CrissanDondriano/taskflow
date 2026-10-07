@@ -1,10 +1,13 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
 
 export class ApiError extends Error {
   status: number;
-  constructor(message: string, status: number) {
+  /** Per-field validation messages (Laravel 422 `errors`), keyed by field name. */
+  fields?: Record<string, string>;
+  constructor(message: string, status: number, fields?: Record<string, string>) {
     super(message);
     this.status = status;
+    this.fields = fields;
   }
 }
 
@@ -26,7 +29,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     // Most common cause: the Laravel backend (php artisan serve) isn't running,
     // or VITE_API_URL doesn't match where it's actually listening.
     throw new ApiError(
-      `Couldn't reach the API at ${API_URL}. Is "php artisan serve" running?`,
+      `Couldn't reach the API at ${API_URL}. Is the backend running (XAMPP Apache or "php artisan serve")?`,
       0
     );
   }
@@ -39,7 +42,16 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       body?.message ||
       (body?.errors && Object.values(body.errors).flat().join(" ")) ||
       `Request failed with status ${response.status}`;
-    throw new ApiError(message, response.status);
+    const fields =
+      body?.errors && typeof body.errors === "object"
+        ? Object.fromEntries(
+            Object.entries(body.errors as Record<string, unknown>).map(([field, value]) => [
+              field,
+              Array.isArray(value) ? String(value[0] ?? "") : String(value),
+            ])
+          )
+        : undefined;
+    throw new ApiError(message, response.status, fields);
   }
 
   return body as T;
@@ -51,7 +63,62 @@ export const api = {
     request<T>(path, { method: "POST", body: data ? JSON.stringify(data) : undefined }),
   patch: <T>(path: string, data?: unknown) =>
     request<T>(path, { method: "PATCH", body: data ? JSON.stringify(data) : undefined }),
-  delete: <T>(path: string) => request<T>(path, { method: "DELETE" }),
+  delete: <T>(path: string, data?: unknown) =>
+    request<T>(path, { method: "DELETE", body: data ? JSON.stringify(data) : undefined }),
 };
+
+/**
+ * Fetch every page of a Laravel resource-paginated index (`{data, meta}`).
+ * Endpoints cap per_page at 100, so larger workspaces need paging; the loop
+ * stops at meta.last_page with a 10-page (1000-row) safety stop.
+ */
+export async function fetchAll<T>(path: string): Promise<T[]> {
+  const items: T[] = [];
+  const separator = path.includes("?") ? "&" : "?";
+  for (let page = 1; page <= 10; page++) {
+    const res = await request<{ data: T[]; meta?: { last_page?: number } }>(
+      `${path}${separator}per_page=100&page=${page}`,
+      { method: "GET" }
+    );
+    items.push(...res.data);
+    if (page >= (res.meta?.last_page ?? 1)) break;
+  }
+  return items;
+}
+
+/**
+ * Authenticated file download: fetches with the bearer token (plain `<a>`
+ * links can't send one), then triggers a browser save via an object URL.
+ * Throws ApiError with the server's message on failure, like every call.
+ */
+export async function download(path: string): Promise<void> {
+  const token = localStorage.getItem("taskflow_token");
+  const response = await fetch(`${API_URL}${path}`, {
+    headers: {
+      Accept: "*/*",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!response.ok) {
+    const isJson = response.headers.get("content-type")?.includes("application/json");
+    const body = isJson ? await response.json().catch(() => null) : null;
+    throw new ApiError(body?.message || `Download failed with status ${response.status}`, response.status);
+  }
+
+  const blob = await response.blob();
+  const disposition = response.headers.get("content-disposition") ?? "";
+  const filename = disposition.match(/filename="?([^";]+)"?/)?.[1];
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  if (filename) link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  // Give the browser a moment to start the save before releasing the blob.
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
 
 export { API_URL };

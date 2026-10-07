@@ -11,6 +11,8 @@ export type TaskColumn =
 export type PresenceStatus = "online" | "away" | "offline";
 
 export interface Person {
+  /** Backend user id — present when the member came from (or was persisted to) the API. */
+  id?: number;
   initials: string;
   name: string;
   color: string;
@@ -73,4 +75,33 @@ export interface AuthUser {
   name: string;
   email: string;
   role: "admin" | "manager" | "member";
+}
+
+export interface AdminStats {
+  users: number;
+  teams: number;
+  projects: number;
+  tasks: number;
+  audit_events: number;
+  ai: { insights: number; configured: boolean; model: string };
+}
+
+export interface AdminUser {
+  id: number;
+  name: string;
+  email: string;
+  role: AuthUser["role"];
+  job_title: string | null;
+  avatar_url: string | null;
+  assigned_tasks_count: number;
+  created_at: string | null;
+}
+
+export interface AuditLogEntry {
+  id: number;
+  action: string;
+  user: { id: number; name: string; email: string } | null;
+  metadata: Record<string, unknown> | null;
+  ip_address: string | null;
+  created_at: string | null;
 }

@@ -32,7 +32,8 @@ export function MissionOrbit({
   onHover?: (id: string | undefined) => void;
 }) {
   const nodesByPriority = useMemo(() => {
-    const map: Record<string, Task[]> = {};
+    // `as` is sound because the very next line seeds every ring key below.
+    const map = {} as Record<Priority, Task[]>;
     ORBIT_RINGS.forEach((r) => (map[r.priority] = []));
     tasks.forEach((t) => {
       if (t.column !== "Completed" && map[t.priority]) map[t.priority].push(t);
@@ -42,7 +43,14 @@ export function MissionOrbit({
 
   const cx = SIZE / 2;
   const cy = SIZE / 2;
-  const overallHealth = 84;
+  // Derived, not decorative: share of open tasks that aren't flagged at-risk
+  // (100% when nothing is open — the center value must be as real as the
+  // numbers rendered around it).
+  const overallHealth = useMemo(() => {
+    const open = tasks.filter((t) => t.column !== "Completed");
+    if (open.length === 0) return 100;
+    return Math.round((open.filter((t) => !t.atRisk).length / open.length) * 100);
+  }, [tasks]);
 
   return (
     <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="w-full max-w-[240px] mx-auto h-auto" role="img" aria-label="Task urgency radar">
@@ -64,13 +72,13 @@ export function MissionOrbit({
         {overallHealth}%
       </text>
 
-      {Object.entries(nodesByPriority).map(([priority, list]) => {
-        const ring = ORBIT_RINGS.find((r) => r.priority === priority)!;
+      {ORBIT_RINGS.map((ring) => {
+        const list = nodesByPriority[ring.priority];
         return list.map((task, i) => {
           const angle = ((i + 0.5) / list.length) * Math.PI * 2 - Math.PI / 2;
           const x = cx + ring.radius * Math.cos(angle);
           const y = cy + ring.radius * Math.sin(angle);
-          const color = PRIORITY_HEX[priority];
+          const color = PRIORITY_HEX[ring.priority];
           const isSelected = task.id === selectedId;
           const isHovered = task.id === hoveredId;
           const active = isSelected || isHovered;
@@ -84,7 +92,12 @@ export function MissionOrbit({
               role="button"
               tabIndex={0}
               aria-label={`${task.title}, ${task.priority} priority, due ${task.due}`}
-              onKeyDown={(e) => e.key === "Enter" && onSelect(task)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault(); // Space would also scroll the dashboard
+                  onSelect(task);
+                }
+              }}
             >
               <title>{`${task.title} — ${task.priority}, due ${task.due}`}</title>
               {task.atRisk && <circle cx={x} cy={y} r={9} fill="none" stroke={color} strokeWidth={1.5} className="orbit-risk-ring" />}

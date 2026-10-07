@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Avatar } from "../ui/Primitives";
 import { PRIORITY_HEX } from "../../data/mockData";
-import { useTeam } from "../../context/TeamContext";
+import { useTeamMembers } from "../../context/TeamContext";
 import { ANCHOR_YEAR, ANCHOR_MONTH, TODAY_DAY, formatWeekdayShort, formatHour, truncateWords } from "../../lib/calendar";
 import type { Meeting, DeadlineItem } from "../../types";
 
@@ -10,7 +10,8 @@ const DISPLAY_START = 7; // 7am
 const DISPLAY_END = 20; // 8pm
 const HOURS = Array.from({ length: DISPLAY_END - DISPLAY_START }, (_, i) => DISPLAY_START + i);
 
-let draggingMeetingId: string | null = null;
+/** Custom drag type so foreign drags (text/files) can't land on the grid. */
+const MEETING_DRAG_TYPE = "text/taskflow-meeting";
 
 export function TimeGrid({
   days,
@@ -31,17 +32,26 @@ export function TimeGrid({
   onSelectMeeting: (m: Meeting) => void;
   selectedMeetingId?: string;
 }) {
-  const { members } = useTeam();
+  const members = useTeamMembers();
   const [now, setNow] = useState(() => new Date());
   const [resizing, setResizing] = useState<{ id: string; startY: number; initialDuration: number; preview: number } | null>(null);
+
+  // Latest-value refs: the resize listeners are registered once per drag
+  // (keyed on the stable id, not the per-mousemove state object) and must
+  // still see the newest preview/callback without re-subscribing.
+  const resizingRef = useRef(resizing);
+  resizingRef.current = resizing;
+  const onResizeRef = useRef(onResizeMeeting);
+  onResizeRef.current = onResizeMeeting;
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(t);
   }, []);
 
+  const resizingId = resizing?.id ?? null;
   useEffect(() => {
-    if (!resizing) return;
+    if (!resizingId) return;
     function onMouseMove(e: MouseEvent) {
       setResizing((r) => {
         if (!r) return r;
@@ -51,10 +61,11 @@ export function TimeGrid({
       });
     }
     function onMouseUp() {
-      setResizing((r) => {
-        if (r) onResizeMeeting(r.id, r.preview);
-        return null;
-      });
+      // Side effect lives here (not inside the state updater): finish the
+      // drag with the latest values, then clear the state.
+      const r = resizingRef.current;
+      if (r) onResizeRef.current(r.id, r.preview);
+      setResizing(null);
     }
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
@@ -62,7 +73,7 @@ export function TimeGrid({
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
     };
-  }, [resizing, onResizeMeeting]);
+  }, [resizingId]);
 
   const isAnchorDate = (d: Date) => d.getFullYear() === ANCHOR_YEAR && d.getMonth() === ANCHOR_MONTH;
   // The demo's "today" is fixed to July 2, 2026, but the time-of-day shown
@@ -134,9 +145,15 @@ export function TimeGrid({
                 {HOURS.map((h) => (
                   <div
                     key={h}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={() => {
-                      if (draggingMeetingId && inAnchorMonth) onMoveMeeting(draggingMeetingId, dayNum, h);
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = "move";
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      if (!inAnchorMonth) return;
+                      const id = e.dataTransfer.getData(MEETING_DRAG_TYPE);
+                      if (id) onMoveMeeting(id, dayNum, h);
                     }}
                     style={{ height: ROW_HEIGHT, borderBottom: "1px solid var(--tf-fill-04)" }}
                   />
@@ -162,12 +179,19 @@ export function TimeGrid({
                     <div
                       key={m.id}
                       draggable
-                      onDragStart={() => (draggingMeetingId = m.id)}
-                      onDragEnd={() => (draggingMeetingId = null)}
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData(MEETING_DRAG_TYPE, m.id);
+                        e.dataTransfer.effectAllowed = "move";
+                      }}
                       onClick={() => onSelectMeeting(m)}
                       role="button"
                       tabIndex={0}
-                      onKeyDown={(e) => e.key === "Enter" && onSelectMeeting(m)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault(); // Space would also scroll the grid
+                          onSelectMeeting(m);
+                        }
+                      }}
                       aria-label={`${m.title}, ${formatHour(m.startHour)} to ${formatHour(m.startHour + duration)}${isConflict ? ", conflicts with another meeting" : ""}`}
                       className="absolute left-0.5 right-0.5 rounded-lg px-1.5 py-1 cursor-pointer overflow-hidden"
                       style={{

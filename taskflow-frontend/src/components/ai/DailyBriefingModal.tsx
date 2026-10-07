@@ -1,20 +1,35 @@
+import { useMemo } from "react";
 import { Sparkles, CheckCircle2, AlertTriangle, CalendarClock, Coffee } from "lucide-react";
 import { Modal, PriorityBadge } from "../ui/Primitives";
 import { TODAY_DAY, findFocusBlocks, formatHour } from "../../lib/calendar";
-import type { Task, Meeting } from "../../types";
+import { useTasksData } from "../../context/TasksContext";
+import { useMeetingsData } from "../../context/MeetingsContext";
 
 /**
  * A daily briefing assembled entirely from real, live state — tasks due
  * today, at-risk items, today's meetings, and a computed focus-block
- * suggestion. Nothing here is a canned paragraph; every line is derived at
- * render time from TasksContext/MeetingsContext.
+ * suggestion. Nothing here is a canned paragraph; every line is derived from
+ * the task/meeting stores. It reads that state itself (rather than receiving
+ * it as props) so the dashboard shell doesn't have to subscribe — and the
+ * derivations are memoized so an open-but-idle modal recomputes only when
+ * the underlying data actually changes.
  */
-export function DailyBriefingModal({ open, onClose, tasks, meetings }: { open: boolean; onClose: () => void; tasks: Task[]; meetings: Meeting[] }) {
-  const dueToday = tasks.filter((t) => t.due === `Jul ${TODAY_DAY}` && t.column !== "Completed");
-  const atRisk = tasks.filter((t) => t.atRisk);
-  const todaysMeetings = meetings.filter((m) => m.day === TODAY_DAY).sort((a, b) => a.startHour - b.startHour);
-  const focusBlocks = findFocusBlocks(todaysMeetings);
-  const topPriority = [...dueToday].sort((a, b) => (a.priority === "Critical" ? -1 : b.priority === "Critical" ? 1 : 0))[0];
+export function DailyBriefingModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const tasks = useTasksData();
+  const meetings = useMeetingsData();
+
+  const { dueToday, atRisk, todaysMeetings, focusBlocks, topPriority } = useMemo(() => {
+    const dueToday = tasks.filter((t) => t.due === `Jul ${TODAY_DAY}` && t.column !== "Completed");
+    const atRisk = tasks.filter((t) => t.atRisk);
+    const todaysMeetings = meetings.filter((m) => m.day === TODAY_DAY).sort((a, b) => a.startHour - b.startHour);
+    return {
+      dueToday,
+      atRisk,
+      todaysMeetings,
+      focusBlocks: findFocusBlocks(todaysMeetings),
+      topPriority: [...dueToday].sort((a, b) => (a.priority === "Critical" ? -1 : b.priority === "Critical" ? 1 : 0))[0],
+    };
+  }, [tasks, meetings]);
 
   return (
     <Modal open={open} onClose={onClose} title="Daily briefing">

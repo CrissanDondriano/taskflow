@@ -3,6 +3,9 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Sparkles, User, Mail, Lock, AlertTriangle, Check } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/Button";
+import { GlassPanel, TextField } from "../components/ui/Primitives";
+import { usePageMeta } from "../hooks/usePageMeta";
+import { ApiError } from "../lib/api";
 
 const REQUIREMENTS = [
   { label: "At least 8 characters", test: (pw: string) => pw.length >= 8 },
@@ -18,6 +21,7 @@ export function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<{ name?: string; email?: string; password?: string }>({});
+  usePageMeta("Sign up", "Create a free TaskFlow AI account and turn your next meeting notes into a prioritized board.");
 
   // Already signed in? Don't show the form again — go straight to the app.
   if (user) return <Navigate to="/dashboard" replace />;
@@ -39,8 +43,23 @@ export function SignupPage() {
     try {
       await signup(name, email, password);
       navigate("/dashboard");
-    } catch {
-      // error surfaced via useAuth().error
+    } catch (err) {
+      // Surface Laravel 422 validation errors under their fields (e.g. an
+      // email that's already taken). If every error landed inline, drop the
+      // generic banner so the same message isn't shown twice.
+      if (err instanceof ApiError && err.fields) {
+        const known: { name?: string; email?: string; password?: string } = {};
+        let allPlaced = true;
+        for (const [field, message] of Object.entries(err.fields)) {
+          if (field === "name" || field === "email" || field === "password") known[field] = message;
+          else allPlaced = false;
+        }
+        if (Object.keys(known).length > 0) {
+          setFieldErrors((prev) => ({ ...prev, ...known }));
+          if (allPlaced) clearError();
+        }
+      }
+      // Anything else is surfaced via useAuth().error.
     }
   }
 
@@ -65,7 +84,7 @@ export function SignupPage() {
           </span>
         </Link>
 
-        <div className="ai-pulse-wrap p-6 sm:p-8" style={{ background: "var(--tf-surface)" }}>
+        <GlassPanel className="p-6 sm:p-8">
           <h1 className="text-[20px] font-display font-semibold mb-1" style={{ color: "var(--tf-ink)" }}>
               Create your account
             </h1>
@@ -81,93 +100,56 @@ export function SignupPage() {
             )}
 
             <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
-              <div>
-                <label htmlFor="signup-name" className="text-[11px] font-mono block mb-1" style={{ color: "var(--tf-ink-muted)" }}>
-                  Full name
-                </label>
-                <div className="relative">
-                  <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--tf-ink-muted)" }} />
-                  <input
-                    id="signup-name"
-                    required
-                    value={name}
-                    onChange={(e) => {
-                      setName(e.target.value);
-                      setFieldErrors((prev) => ({ ...prev, name: undefined }));
-                      clearError();
-                    }}
-                    aria-invalid={fieldErrors.name ? true : undefined}
-                    aria-describedby={fieldErrors.name ? "signup-name-error" : undefined}
-                    placeholder="Jade Santos"
-                    className="w-full text-[13px] pl-9 pr-3 py-2.5 rounded-xl outline-none"
-                    style={{ background: "var(--tf-fill-04)", border: `1px solid ${fieldErrors.name ? "rgba(239,68,68,0.5)" : "var(--tf-panel-border)"}`, color: "var(--tf-ink)" }}
-                  />
-                </div>
-                {fieldErrors.name && (
-                  <p id="signup-name-error" role="alert" className="text-[11px] mt-1" style={{ color: "var(--tf-danger-text)" }}>
-                    {fieldErrors.name}
-                  </p>
-                )}
-              </div>
+              <TextField
+                id="signup-name"
+                label="Full name"
+                required
+                value={name}
+                onChange={(v) => {
+                  setName(v);
+                  setFieldErrors((prev) => ({ ...prev, name: undefined }));
+                  clearError();
+                }}
+                autoComplete="name"
+                placeholder="Jade Santos"
+                icon={<User size={14} />}
+                error={fieldErrors.name}
+              />
 
-              <div>
-                <label htmlFor="signup-email" className="text-[11px] font-mono block mb-1" style={{ color: "var(--tf-ink-muted)" }}>
-                  Email
-                </label>
-                <div className="relative">
-                  <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--tf-ink-muted)" }} />
-                  <input
-                    id="signup-email"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setFieldErrors((prev) => ({ ...prev, email: undefined }));
-                      clearError();
-                    }}
-                    aria-invalid={fieldErrors.email ? true : undefined}
-                    aria-describedby={fieldErrors.email ? "signup-email-error" : undefined}
-                    placeholder="you@company.com"
-                    className="w-full text-[13px] pl-9 pr-3 py-2.5 rounded-xl outline-none"
-                    style={{ background: "var(--tf-fill-04)", border: `1px solid ${fieldErrors.email ? "rgba(239,68,68,0.5)" : "var(--tf-panel-border)"}`, color: "var(--tf-ink)" }}
-                  />
-                </div>
-                {fieldErrors.email && (
-                  <p id="signup-email-error" role="alert" className="text-[11px] mt-1" style={{ color: "var(--tf-danger-text)" }}>
-                    {fieldErrors.email}
-                  </p>
-                )}
-              </div>
+              <TextField
+                id="signup-email"
+                label="Email"
+                type="email"
+                required
+                value={email}
+                onChange={(v) => {
+                  setEmail(v);
+                  setFieldErrors((prev) => ({ ...prev, email: undefined }));
+                  clearError();
+                }}
+                autoComplete="email"
+                placeholder="you@company.com"
+                icon={<Mail size={14} />}
+                error={fieldErrors.email}
+              />
 
-              <div>
-                <label htmlFor="signup-password" className="text-[11px] font-mono block mb-1" style={{ color: "var(--tf-ink-muted)" }}>
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--tf-ink-muted)" }} />
-                  <input
-                    id="signup-password"
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      setFieldErrors((prev) => ({ ...prev, password: undefined }));
-                      clearError();
-                    }}
-                    aria-invalid={fieldErrors.password ? true : undefined}
-                    aria-describedby={fieldErrors.password ? "signup-password-error" : "signup-password-requirements"}
-                    placeholder="••••••••"
-                    className="w-full text-[13px] pl-9 pr-3 py-2.5 rounded-xl outline-none"
-                    style={{ background: "var(--tf-fill-04)", border: `1px solid ${fieldErrors.password ? "rgba(239,68,68,0.5)" : "var(--tf-panel-border)"}`, color: "var(--tf-ink)" }}
-                  />
-                </div>
-                {fieldErrors.password && (
-                  <p id="signup-password-error" role="alert" className="text-[11px] mt-1" style={{ color: "var(--tf-danger-text)" }}>
-                    {fieldErrors.password}
-                  </p>
-                )}
+              <TextField
+                id="signup-password"
+                label="Password"
+                type="password"
+                required
+                value={password}
+                onChange={(v) => {
+                  setPassword(v);
+                  setFieldErrors((prev) => ({ ...prev, password: undefined }));
+                  clearError();
+                }}
+                autoComplete="new-password"
+                placeholder="••••••••"
+                icon={<Lock size={14} />}
+                error={fieldErrors.password}
+                hintId="signup-password-requirements"
+              >
                 <div id="signup-password-requirements" className="flex flex-col gap-1 mt-2">
                   {REQUIREMENTS.map((r) => {
                     const met = r.test(password);
@@ -178,13 +160,13 @@ export function SignupPage() {
                     );
                   })}
                 </div>
-              </div>
+              </TextField>
 
               <Button type="submit" variant="primary" loading={loading} fullWidth className="mt-2">
                 {loading ? "Creating account..." : "Create account"}
               </Button>
             </form>
-        </div>
+        </GlassPanel>
 
         <p className="text-center text-[13px] mt-6" style={{ color: "var(--tf-ink-muted)" }}>
           Already have an account?{" "}

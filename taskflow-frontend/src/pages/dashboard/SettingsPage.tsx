@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Slack, Check, AlertTriangle } from "lucide-react";
-import { GlassPanel, Avatar } from "../../components/ui/Primitives";
+import { GlassPanel, Avatar, Modal } from "../../components/ui/Primitives";
 import { Button } from "../../components/ui/Button";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
+import { useTeamStore } from "../../stores/teamStore";
 import { api, ApiError } from "../../lib/api";
+import { initialsOf } from "../../lib/format";
 
 function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
@@ -30,11 +32,16 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
 }
 
 export function SettingsPage() {
-  const { user } = useAuth();
+  const { user, updateProfile, deleteAccount } = useAuth();
   const { toast } = useToast();
+  const team = useTeamStore((s) => s.team);
   const [name, setName] = useState(user?.name ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
-  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [emailNotifs, setEmailNotifs] = useState(true);
   const [slackNotifs, setSlackNotifs] = useState(true);
@@ -48,22 +55,54 @@ export function SettingsPage() {
   const fieldStyle = { background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" };
   const labelStyle = { color: "var(--tf-ink-muted)" };
 
-  function saveProfile(e: React.FormEvent) {
+  async function saveProfile(e: React.FormEvent) {
     e.preventDefault();
-    // Wire this to PATCH /api/me (add that endpoint to AuthController) when ready.
-    setSaved(true);
-    toast("Profile changes saved.", "success");
-    setTimeout(() => setSaved(false), 2000);
+    setSaving(true);
+    try {
+      await updateProfile(name.trim(), email.trim());
+      toast("Profile updated.", "success");
+    } catch (err) {
+      // 422s (e.g. email already taken) surface the server's field message.
+      toast(err instanceof ApiError ? err.message : "Couldn't save your profile.", "error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function closeDeleteModal() {
+    setDeleteOpen(false);
+    setDeletePassword("");
+    setDeleteError(null);
+  }
+
+  async function confirmDelete(e: React.FormEvent) {
+    e.preventDefault();
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteAccount(deletePassword);
+      closeDeleteModal();
+      toast("Your account has been deleted.", "success");
+      // ProtectedRoute redirects to the login page once `user` becomes null.
+    } catch (err) {
+      setDeleteError(err instanceof ApiError ? err.message : "Couldn't delete your account.");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   async function connectSlack(e: React.FormEvent) {
     e.preventDefault();
     if (!webhookUrl.trim()) return;
+    if (!team) {
+      setSlackStatus("error");
+      setSlackError("You don't have a team yet — add a member from the Team page first.");
+      return;
+    }
     setSlackStatus("connecting");
     setSlackError(null);
     try {
-      // Requires a team ID in a real setup — this assumes team 1 for the demo seed data.
-      await api.post("/teams/1/integrations/slack", { webhook_url: webhookUrl.trim() });
+      await api.post(`/teams/${team.id}/integrations/slack`, { webhook_url: webhookUrl.trim() });
       setSlackStatus("connected");
       toast("Slack connected — check your channel for a test message.", "success");
     } catch (err) {
@@ -75,7 +114,7 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="max-w-5xl">
+    <div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
         <div className="flex flex-col gap-5">
           <GlassPanel className="p-5">
@@ -107,14 +146,9 @@ export function SettingsPage() {
                 <input id="settings-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full text-sm px-3 py-2 rounded-xl outline-none" style={fieldStyle} />
               </div>
               <div className="flex items-center gap-3 mt-1">
-                <Button type="submit" variant="primary">
+                <Button type="submit" variant="primary" loading={saving}>
                   Save changes
                 </Button>
-                {saved && (
-                  <span className="text-xs flex items-center gap-1" style={{ color: "var(--tf-teal)" }}>
-                    <Check size={13} /> Saved
-                  </span>
-                )}
               </div>
             </form>
           </GlassPanel>
@@ -190,14 +224,46 @@ export function SettingsPage() {
               Danger zone
             </h2>
             <p className="text-xs mb-3" style={{ color: "var(--tf-ink-muted)" }}>
-              Permanently delete your account and all associated data. This can't be undone.
+              Permanently delete your account. Teams you own with other members are handed to them first (their projects and tasks stay intact); anything that is only yours is removed. This can't be undone.
             </p>
-            <Button
-              variant="danger"
-              onClick={() => alert("This is a demo — wire this up to a real DELETE /api/me endpoint before using it for real.")}
-            >
+            <Button variant="danger" onClick={() => setDeleteOpen(true)}>
               Delete account
             </Button>
+            <Modal open={deleteOpen} onClose={closeDeleteModal} title="Delete account?">
+              <form onSubmit={confirmDelete} className="flex flex-col gap-3">
+                <p className="text-xs" style={{ color: "var(--tf-ink-muted)" }}>
+                  Enter your password to confirm. This signs you out everywhere and permanently removes your account — it can't be undone.
+                </p>
+                <div>
+                  <label htmlFor="delete-password" className="text-[11px] font-mono block mb-1" style={{ color: "var(--tf-ink-muted)" }}>
+                    Current password
+                  </label>
+                  <input
+                    id="delete-password"
+                    type="password"
+                    autoComplete="current-password"
+                    autoFocus
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                    className="w-full text-sm px-3 py-2 rounded-xl outline-none"
+                    style={fieldStyle}
+                  />
+                </div>
+                {deleteError && (
+                  <p className="text-xs" style={{ color: "var(--tf-danger)" }}>
+                    {deleteError}
+                  </p>
+                )}
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="secondary" onClick={closeDeleteModal}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" variant="danger" loading={deleting} disabled={!deletePassword}>
+                    Delete account
+                  </Button>
+                </div>
+              </form>
+            </Modal>
           </GlassPanel>
         </div>
       </div>
@@ -205,7 +271,3 @@ export function SettingsPage() {
   );
 }
 
-function initialsOf(name: string) {
-  if (!name) return "?";
-  return name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
-}

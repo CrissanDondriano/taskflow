@@ -1,7 +1,7 @@
 import { Clock3, Flag } from "lucide-react";
 import { Avatar, GlassPanel, PriorityBadge } from "../ui/Primitives";
 import { PRIORITY_HEX } from "../../data/mockData";
-import { useTeam } from "../../context/TeamContext";
+import { useTeamMembers } from "../../context/TeamContext";
 import { ANCHOR_MONTH, ANCHOR_YEAR, formatHour } from "../../lib/calendar";
 import type { Meeting, DeadlineItem } from "../../types";
 
@@ -12,7 +12,7 @@ interface AgendaEntry {
 }
 
 export function AgendaView({ meetings, deadlines, conflictIds }: { meetings: Meeting[]; deadlines: DeadlineItem[]; conflictIds: Set<string> }) {
-  const { members } = useTeam();
+  const members = useTeamMembers();
   const entries: AgendaEntry[] = [
     ...meetings.map((m) => ({ day: m.day, kind: "meeting" as const, data: m })),
     ...deadlines.map((d) => ({ day: d.day, kind: "deadline" as const, data: d })),

@@ -1,3 +1,4 @@
+import { useShallow } from "zustand/react/shallow";
 import { useTeamStore } from "../stores/teamStore";
 
 /**
@@ -8,4 +9,26 @@ import { useTeamStore } from "../stores/teamStore";
  */
 export function useTeam() {
   return useTeamStore();
+}
+
+/** Loading flag only — for the shell's first-load gate without subscribing to member data. */
+export function useTeamLoading() {
+  return useTeamStore((s) => s.loading);
+}
+
+/** Member list only — for components that only *read* members. */
+export function useTeamMembers() {
+  return useTeamStore((s) => s.members);
+}
+
+/** Actions without the data: for components that only *write* membership. */
+export function useTeamActions() {
+  return useTeamStore(
+    useShallow((s) => ({
+      inviteByEmail: s.inviteByEmail,
+      addMember: s.addMember,
+      removeMember: s.removeMember,
+      undoDelete: s.undoDelete,
+    }))
+  );
 }

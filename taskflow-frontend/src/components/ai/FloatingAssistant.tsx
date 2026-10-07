@@ -1,12 +1,18 @@
 import { useState } from "react";
 import { Sparkles, Send, X, MessageSquare } from "lucide-react";
-import { useTasks } from "../../context/TasksContext";
-import { useMeetings } from "../../context/MeetingsContext";
+import { useTasksData } from "../../context/TasksContext";
+import { useMeetingsData } from "../../context/MeetingsContext";
 import { answerQuestion } from "../../lib/aiAssistant";
+import { api } from "../../lib/api";
 
 interface ThreadMessage {
   role: "ai" | "user";
   text: string;
+}
+
+/** Detects the AiService "not configured" JSON that comes back as the answer string. */
+function isAiUnavailable(answer: string): boolean {
+  return !answer.trim() || /^\s*\{\s*"error"/.test(answer);
 }
 
 /**
@@ -17,19 +23,37 @@ interface ThreadMessage {
  * navigation within the dashboard.
  */
 export function FloatingAssistant() {
-  const { tasks } = useTasks();
-  const { meetings } = useMeetings();
+  const tasks = useTasksData();
+  const meetings = useMeetingsData();
   const [open, setOpen] = useState(false);
   const [question, setQuestion] = useState("");
+  const [thinking, setThinking] = useState(false);
   const [thread, setThread] = useState<ThreadMessage[]>([
     { role: "ai", text: "I'm watching your projects. Ask me what to prioritize today, or which tasks are at risk." },
   ]);
 
-  function ask(q: string) {
-    if (!q.trim()) return;
-    const answer = answerQuestion(q, tasks, meetings);
-    setThread((t) => [...t, { role: "user", text: q }, { role: "ai", text: answer }]);
+  async function ask(q: string) {
+    if (!q.trim() || thinking) return;
+    const text = q.trim();
+    setThread((t) => [...t, { role: "user", text }]);
     setQuestion("");
+    setThinking(true);
+
+    let answer: string;
+    try {
+      // Real backend answer (OpenAI-backed /ai/ask with the user's task context).
+      const res = await api.post<{ answer?: string }>("/ai/ask", { question: text });
+      const ai = res.answer?.trim() ?? "";
+      if (isAiUnavailable(ai)) throw new Error("AI unavailable");
+      answer = ai;
+    } catch {
+      // AI not configured or the API is unreachable — fall back to the
+      // local keyword heuristics so the assistant still answers.
+      answer = answerQuestion(text, tasks, meetings);
+    }
+
+    setThinking(false);
+    setThread((t) => [...t, { role: "ai", text: answer }]);
   }
 
   return (
@@ -68,6 +92,15 @@ export function FloatingAssistant() {
                 {m.text}
               </div>
             ))}
+            {thinking && (
+              <div
+                className="text-sm px-3 py-2 rounded-xl self-start animate-pulse"
+                style={{ background: "var(--tf-fill-05)", color: "var(--tf-ink-muted)" }}
+                aria-live="polite"
+              >
+                Thinking…
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2 p-3 shrink-0" style={{ borderTop: "1px solid var(--tf-panel-border)" }}>
@@ -75,16 +108,18 @@ export function FloatingAssistant() {
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && ask(question)}
+              disabled={thinking}
               placeholder="What should I work on today?"
               aria-label="Ask the AI task assistant"
               autoFocus
-              className="flex-1 text-sm px-3 py-2 rounded-xl outline-none"
+              className="flex-1 text-sm px-3 py-2 rounded-xl outline-none disabled:opacity-60"
               style={{ background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
             />
             <button
               onClick={() => ask(question)}
+              disabled={thinking}
               aria-label="Send"
-              className="w-9 h-9 rounded-xl text-white flex items-center justify-center shrink-0"
+              className="w-9 h-9 rounded-xl text-white flex items-center justify-center shrink-0 disabled:opacity-50"
               style={{ background: "var(--tf-primary)", boxShadow: "0 0 16px rgba(37,99,235,0.35)" }}
             >
               <Send size={15} />

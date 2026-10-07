@@ -1,3 +1,4 @@
+import { useShallow } from "zustand/react/shallow";
 import { useMeetingsStore } from "../stores/meetingsStore";
 
 /**
@@ -9,4 +10,22 @@ import { useMeetingsStore } from "../stores/meetingsStore";
  */
 export function useMeetings() {
   return useMeetingsStore();
+}
+
+/** Meeting list only — for components that only *read* meetings. */
+export function useMeetingsData() {
+  return useMeetingsStore((s) => s.meetings);
+}
+
+/** Actions without the data: for components that only *write* meetings. */
+export function useMeetingsActions() {
+  return useMeetingsStore(
+    useShallow((s) => ({
+      moveMeeting: s.moveMeeting,
+      resizeMeeting: s.resizeMeeting,
+      updateMeeting: s.updateMeeting,
+      deleteMeeting: s.deleteMeeting,
+      undoDelete: s.undoDelete,
+    }))
+  );
 }

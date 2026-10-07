@@ -1,6 +1,6 @@
 import { Sparkles, AlertTriangle, Coffee, Users } from "lucide-react";
 import { GlassPanel, PulseCard, Eyebrow, Avatar } from "../ui/Primitives";
-import { useTeam } from "../../context/TeamContext";
+import { useTeamMembers } from "../../context/TeamContext";
 import { findFocusBlocks, findBestMeetingTimes, formatHour, computeSchedulingRecommendation } from "../../lib/calendar";
 import type { Meeting } from "../../types";
 
@@ -10,7 +10,7 @@ import type { Meeting } from "../../types";
  * from the actual meeting list for the selected day, not decorative text.
  */
 export function AiSchedulingPanel({ dayMeetings, conflictIds, day }: { dayMeetings: Meeting[]; conflictIds: Set<string>; day: number }) {
-  const { members } = useTeam();
+  const members = useTeamMembers();
   const conflicting = dayMeetings.filter((m) => conflictIds.has(m.id));
   const focusBlocks = findFocusBlocks(dayMeetings);
   const bestTimes = findBestMeetingTimes(

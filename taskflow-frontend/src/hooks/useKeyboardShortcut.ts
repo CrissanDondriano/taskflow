@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 interface ShortcutOptions {
   /** Require Cmd (Mac) or Ctrl (Windows/Linux) to be held. */
@@ -17,6 +17,12 @@ interface ShortcutOptions {
 export function useKeyboardShortcut(key: string, callback: () => void, options: ShortcutOptions = {}) {
   const { meta = false, preventDefault = true, allowInInputs = false } = options;
 
+  // Latest-callback ref: callers pass inline arrows, and without this the
+  // effect would remove/add the document listener on every parent render
+  // (DashboardLayout and CalendarPage re-render on each store change).
+  const callbackRef = useRef(callback);
+  callbackRef.current = callback;
+
   useEffect(() => {
     function handler(e: KeyboardEvent) {
       const targetTag = (e.target as HTMLElement)?.tagName;
@@ -28,10 +34,10 @@ export function useKeyboardShortcut(key: string, callback: () => void, options: 
       if (!meta && (e.metaKey || e.ctrlKey)) return;
 
       if (preventDefault) e.preventDefault();
-      callback();
+      callbackRef.current();
     }
 
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [key, callback, meta, preventDefault, allowInInputs]);
+  }, [key, meta, preventDefault, allowInInputs]);
 }

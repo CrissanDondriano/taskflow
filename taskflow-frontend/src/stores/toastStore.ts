@@ -2,19 +2,27 @@ import { create } from "zustand";
 
 export type ToastVariant = "success" | "error" | "info";
 
+export interface ToastAction {
+  label: string;
+  run: () => void;
+}
+
 export interface ToastItem {
   id: number;
   message: string;
   variant: ToastVariant;
+  /** Optional inline action (e.g. "Undo" after a delete). */
+  action?: ToastAction;
 }
 
 interface ToastState {
   toasts: ToastItem[];
-  toast: (message: string, variant?: ToastVariant) => void;
+  toast: (message: string, variant?: ToastVariant, action?: ToastAction) => void;
   dismiss: (id: number) => void;
 }
 
 const AUTO_DISMISS_MS = 4000;
+const WITH_ACTION_MS = 8000;
 const timers = new Map<number, number>();
 let nextId = 1;
 
@@ -22,15 +30,15 @@ let nextId = 1;
 export const useToastStore = create<ToastState>()((set) => ({
   toasts: [],
 
-  toast(message, variant = "info") {
+  toast(message, variant = "info", action) {
     const id = nextId++;
-    set((prev) => ({ toasts: [...prev.toasts, { id, message, variant }] }));
+    set((prev) => ({ toasts: [...prev.toasts, { id, message, variant, action }] }));
     timers.set(
       id,
       window.setTimeout(() => {
         timers.delete(id);
         set((prev) => ({ toasts: prev.toasts.filter((t) => t.id !== id) }));
-      }, AUTO_DISMISS_MS)
+      }, action ? WITH_ACTION_MS : AUTO_DISMISS_MS)
     );
   },
 

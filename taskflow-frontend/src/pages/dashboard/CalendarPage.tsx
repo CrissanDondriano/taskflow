@@ -5,15 +5,19 @@ import { TimeGrid } from "../../components/calendar/TimeGrid";
 import { AgendaView } from "../../components/calendar/AgendaView";
 import { AiSchedulingPanel } from "../../components/calendar/AiSchedulingPanel";
 import { MeetingDetailModal } from "../../components/calendar/MeetingDetailModal";
-import { useTasks } from "../../context/TasksContext";
-import { useMeetings } from "../../context/MeetingsContext";
+import { useTasksData } from "../../context/TasksContext";
+import { useMeetingsData, useMeetingsActions } from "../../context/MeetingsContext";
+import { GlassPanel } from "../../components/ui/Primitives";
 import { useKeyboardShortcut } from "../../hooks/useKeyboardShortcut";
+import { useToast } from "../../context/ToastContext";
 import { detectConflicts, getWeekDates, parseDueToAnchorDay, dateForDay, TODAY_DAY } from "../../lib/calendar";
 import type { Meeting, DeadlineItem } from "../../types";
 
 export function CalendarPage() {
-  const { tasks } = useTasks();
-  const { meetings, moveMeeting, resizeMeeting, updateMeeting, deleteMeeting } = useMeetings();
+  const tasks = useTasksData();
+  const meetings = useMeetingsData();
+  const { moveMeeting, resizeMeeting, updateMeeting, deleteMeeting, undoDelete } = useMeetingsActions();
+  const { toast } = useToast();
   const [view, setView] = useState<CalendarViewMode>("week");
   const [selectedDay, setSelectedDay] = useState(TODAY_DAY);
   const [monthOffset, setMonthOffset] = useState(0);
@@ -75,7 +79,15 @@ export function CalendarPage() {
         </p>
       </div>
 
-      <MeetingDetailModal meeting={openMeeting} onClose={() => setOpenMeeting(null)} onSave={updateMeeting} onDelete={deleteMeeting} />
+      <MeetingDetailModal
+        meeting={openMeeting}
+        onClose={() => setOpenMeeting(null)}
+        onSave={updateMeeting}
+        onDelete={(id) => {
+          deleteMeeting(id);
+          toast("Meeting deleted.", "info", { label: "Undo", run: undoDelete });
+        }}
+      />
 
       {view === "month" && (
         <MonthView
@@ -90,7 +102,7 @@ export function CalendarPage() {
 
       {(view === "week" || view === "day") && (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
-          <div className="lg:col-span-3 rounded-2xl p-4" style={{ background: "var(--tf-panel)", border: "1px solid var(--tf-panel-border)" }}>
+          <GlassPanel className="lg:col-span-3 p-4">
             <TimeGrid
               days={view === "week" ? weekDates : dayDates}
               meetings={meetings}
@@ -101,7 +113,7 @@ export function CalendarPage() {
               onSelectMeeting={selectMeeting}
               selectedMeetingId={selectedMeetingId}
             />
-          </div>
+          </GlassPanel>
           <div className="lg:col-span-1">
             <AiSchedulingPanel dayMeetings={selectedDayMeetings} conflictIds={conflictIds} day={selectedDay} />
           </div>

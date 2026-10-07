@@ -1,9 +1,10 @@
+import { useState } from "react";
 import { Mail, MoreVertical, X } from "lucide-react";
-import { Avatar, GlassPanel } from "../ui/Primitives";
+import { Avatar, GlassPanel, ConfirmDialog } from "../ui/Primitives";
 import { Badge } from "../ui/Badge";
 import { CircularGauge } from "../ui/CircularGauge";
 import { DropdownMenu } from "../ui/DropdownMenu";
-import { useMeetings } from "../../context/MeetingsContext";
+import { useMeetingsData } from "../../context/MeetingsContext";
 import { isPersonBusyNow, nextFreeHour, formatHour } from "../../lib/calendar";
 import type { Person } from "../../types";
 
@@ -24,7 +25,8 @@ export function MemberCard({
   completedCount: number;
   onRemove: () => void;
 }) {
-  const { meetings } = useMeetings();
+  const meetings = useMeetingsData();
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const currentMeeting = isPersonBusyNow(person.initials, meetings);
   const freeAt = currentMeeting ? nextFreeHour(person.initials, meetings) : null;
 
@@ -56,7 +58,15 @@ export function MemberCard({
               <MoreVertical size={15} />
             </button>
           }
-          groups={[{ items: [{ label: "Remove from team", icon: <X size={13} />, onSelect: onRemove, danger: true }] }]}
+          groups={[{ items: [{ label: "Remove from team", icon: <X size={13} />, onSelect: () => setConfirmOpen(true), danger: true }] }]}
+        />
+        <ConfirmDialog
+          open={confirmOpen}
+          onClose={() => setConfirmOpen(false)}
+          title="Remove from team?"
+          message={`${person.name} will be removed from the team. You'll get a short window to undo this from the notification.`}
+          confirmLabel="Remove"
+          onConfirm={onRemove}
         />
       </div>
 

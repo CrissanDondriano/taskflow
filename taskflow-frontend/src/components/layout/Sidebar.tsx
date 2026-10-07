@@ -7,62 +7,94 @@ import {
   BarChart3,
   Settings,
   Sparkles,
+  Shield,
   X,
   LogOut,
+  type LucideIcon,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Avatar } from "../ui/Primitives";
 import { useAuth } from "../../context/AuthContext";
+import { initialsOf } from "../../lib/format";
 
-const NAV = [
-  { to: "/dashboard", label: "Mission control", icon: LayoutDashboard, end: true },
-  { to: "/dashboard/kanban", label: "Kanban board", icon: KanbanSquare },
-  { to: "/dashboard/calendar", label: "Calendar", icon: CalendarIcon },
-  { to: "/dashboard/meeting-notes", label: "Meeting notes", icon: FileText },
-  { to: "/dashboard/team", label: "Team", icon: Users },
-  { to: "/dashboard/reports", label: "Reports", icon: BarChart3 },
-  { to: "/dashboard/settings", label: "Settings", icon: Settings },
+interface NavItem {
+  to: string;
+  label: string;
+  icon: LucideIcon;
+  end?: boolean;
+  /** Only shown to users whose role is admin. */
+  adminOnly?: boolean;
+}
+
+const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
+  {
+    label: "Workspace",
+    items: [
+      { to: "/dashboard", label: "Mission control", icon: LayoutDashboard, end: true },
+      { to: "/dashboard/kanban", label: "Kanban board", icon: KanbanSquare },
+      { to: "/dashboard/calendar", label: "Calendar", icon: CalendarIcon },
+      { to: "/dashboard/meeting-notes", label: "Meeting notes", icon: FileText },
+    ],
+  },
+  {
+    label: "Management",
+    items: [
+      { to: "/dashboard/team", label: "Team", icon: Users },
+      { to: "/dashboard/reports", label: "Reports", icon: BarChart3 },
+      { to: "/dashboard/admin", label: "Admin", icon: Shield, adminOnly: true },
+      { to: "/dashboard/settings", label: "Settings", icon: Settings },
+    ],
+  },
 ];
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+
   return (
-    <nav className="flex flex-col gap-1">
-      {NAV.map((n) => {
-        const Icon = n.icon;
+    <nav aria-label="Dashboard" className="flex-1 min-h-0 overflow-y-auto tf-scroll flex flex-col gap-4 pr-1">
+      {NAV_GROUPS.map((group) => {
+        const items = group.items.filter((item) => !item.adminOnly || isAdmin);
+        if (items.length === 0) return null;
+
         return (
-          <NavLink
-            key={n.to}
-            to={n.to}
-            end={n.end}
-            onClick={onNavigate}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium relative transition-colors ${
-                isActive ? "text-white" : ""
-              }`
-            }
-            style={({ isActive }) => ({
-              color: isActive ? "white" : "var(--tf-ink-muted)",
-              background: isActive ? "rgba(37,99,235,0.18)" : "transparent",
+          <div key={group.label} className="flex flex-col gap-1">
+            <span className="px-3 pb-1 text-[10px] font-mono uppercase tracking-[0.18em]" style={{ color: "var(--tf-ink-muted)" }}>
+              {group.label}
+            </span>
+            {items.map((n) => {
+              const Icon = n.icon;
+              return (
+                <NavLink
+                  key={n.to}
+                  to={n.to}
+                  end={n.end}
+                  onClick={onNavigate}
+                  className={({ isActive }) =>
+                    `relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
+                      isActive
+                        ? "bg-[rgba(37,99,235,0.14)] text-[var(--tf-ink)]"
+                        : "text-[var(--tf-ink-muted)] hover:bg-[var(--tf-fill-04)] hover:text-[var(--tf-ink)]"
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      {isActive && (
+                        <span
+                          aria-hidden="true"
+                          className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-full"
+                          style={{ background: "var(--tf-teal)" }}
+                        />
+                      )}
+                      <Icon size={16} aria-hidden="true" />
+                      {n.label}
+                    </>
+                  )}
+                </NavLink>
+              );
             })}
-          >
-            {({ isActive }) =>
-              isActive ? (
-                <>
-                  <span
-                    className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-full"
-                    style={{ background: "var(--tf-teal)", boxShadow: "0 0 8px var(--tf-teal)" }}
-                  />
-                  <Icon size={16} />
-                  {n.label}
-                </>
-              ) : (
-                <>
-                  <Icon size={16} />
-                  {n.label}
-                </>
-              )
-            }
-          </NavLink>
+          </div>
         );
       })}
     </nav>
@@ -85,8 +117,8 @@ function Brand() {
   );
 }
 
-export function DesktopSidebar() {
-  const { user, logout } = useAuth();
+export function DesktopSidebar({ onRequestLogout }: { onRequestLogout: () => void }) {
+  const { user } = useAuth();
 
   return (
     <div
@@ -116,7 +148,7 @@ export function DesktopSidebar() {
             {user?.role ?? ""}
           </div>
         </div>
-        <button onClick={logout} aria-label="Log out" className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ color: "var(--tf-ink-muted)" }}>
+        <button onClick={onRequestLogout} aria-label="Log out" className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ color: "var(--tf-ink-muted)" }}>
           <LogOut size={15} />
         </button>
       </div>
@@ -124,8 +156,8 @@ export function DesktopSidebar() {
   );
 }
 
-export function MobileSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { user, logout } = useAuth();
+export function MobileSidebar({ open, onClose, onRequestLogout }: { open: boolean; onClose: () => void; onRequestLogout: () => void }) {
+  const { user } = useAuth();
   if (!open) return null;
 
   return (
@@ -150,7 +182,7 @@ export function MobileSidebar({ open, onClose }: { open: boolean; onClose: () =>
               {user?.name ?? "Guest"}
             </div>
           </div>
-          <button onClick={logout} aria-label="Log out" className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ color: "var(--tf-ink-muted)" }}>
+          <button onClick={onRequestLogout} aria-label="Log out" className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ color: "var(--tf-ink-muted)" }}>
             <LogOut size={15} />
           </button>
         </div>
@@ -159,12 +191,3 @@ export function MobileSidebar({ open, onClose }: { open: boolean; onClose: () =>
   );
 }
 
-function initialsOf(name?: string) {
-  if (!name) return "?";
-  return name
-    .split(" ")
-    .map((p) => p[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { api, ApiError } from "../lib/api";
+import { useAdminStore } from "./adminStore";
 import type { AuthUser } from "../types";
 
 interface AuthState {
@@ -11,6 +12,10 @@ interface AuthState {
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   clearError: () => void;
+  /** Persists profile edits (PATCH /me) and swaps the user in on success. */
+  updateProfile: (name: string, email: string) => Promise<void>;
+  /** Permanently deletes the account (DELETE /me, password-confirmed). */
+  deleteAccount: (password: string) => Promise<void>;
   /** Restores a saved session on first load (called once by AuthProvider). */
   bootstrap: () => Promise<void>;
 }
@@ -68,10 +73,28 @@ export const useAuthStore = create<AuthState>()((set) => ({
     });
     localStorage.removeItem("taskflow_token");
     set({ user: null });
+    // Admin data is account-scoped and privileged: wiping it here stops the
+    // next login from rendering the previous account's user directory and
+    // audit trail from cache (adminStore.reset was previously never called).
+    useAdminStore.getState().reset();
   },
 
   clearError() {
     set({ error: null });
+  },
+
+  async updateProfile(name, email) {
+    const user = await api.patch<AuthUser>("/me", { name, email });
+    set({ user });
+  },
+
+  async deleteAccount(password) {
+    await api.delete("/me", { password });
+    // Same cleanup as logout, minus the POST /logout — the server already
+    // revoked every token for this account inside the DELETE call.
+    localStorage.removeItem("taskflow_token");
+    set({ user: null });
+    useAdminStore.getState().reset();
   },
 
   async bootstrap() {
@@ -83,8 +106,14 @@ export const useAuthStore = create<AuthState>()((set) => ({
     try {
       const user = await api.get<AuthUser>("/me");
       set({ user, bootstrapping: false });
-    } catch {
-      localStorage.removeItem("taskflow_token");
+    } catch (err) {
+      // Only discard the session when the server explicitly rejects the
+      // token (401/403). Transient failures — MySQL restarting, the API
+      // server bouncing, a network blip — must not destroy a valid login;
+      // keeping the token lets the next load restore the session.
+      if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+        localStorage.removeItem("taskflow_token");
+      }
       set({ bootstrapping: false });
     }
   },

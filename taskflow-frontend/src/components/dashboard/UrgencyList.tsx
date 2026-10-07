@@ -1,5 +1,5 @@
 import { Avatar, PriorityBadge } from "../ui/Primitives";
-import { useTeam } from "../../context/TeamContext";
+import { useTeamMembers } from "../../context/TeamContext";
 import type { Task, Priority } from "../../types";
 
 const PRIORITY_ORDER: Record<Priority, number> = { Critical: 0, High: 1, Medium: 2, Low: 3 };
@@ -23,7 +23,7 @@ export function UrgencyList({
   onSelect: (task: Task) => void;
   onHover?: (id: string | undefined) => void;
 }) {
-  const { members } = useTeam();
+  const members = useTeamMembers();
   const open = tasks
     .filter((t) => t.column !== "Completed")
     .sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]);

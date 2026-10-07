@@ -38,7 +38,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || loading}
-        className={`inline-flex items-center justify-center rounded-xl font-medium transition-opacity disabled:opacity-50 disabled:cursor-not-allowed ${SIZE_STYLES[size]} ${fullWidth ? "w-full" : ""} ${className}`}
+        className={`inline-flex items-center justify-center rounded-xl font-medium transition-opacity hover:opacity-90 active:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed ${SIZE_STYLES[size]} ${fullWidth ? "w-full" : ""} ${className}`}
         style={{ background: v.background, color: v.color, border: v.border, boxShadow: v.boxShadow, ...style }}
         {...rest}
       >

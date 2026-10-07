@@ -3,6 +3,8 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Sparkles, Mail, Lock, AlertTriangle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/Button";
+import { GlassPanel, TextField } from "../components/ui/Primitives";
+import { usePageMeta } from "../hooks/usePageMeta";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -12,6 +14,7 @@ export function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
+  usePageMeta("Log in", "Sign in to your TaskFlow AI workspace and pick up where your mission control left off.");
 
   // Already signed in? Don't show the form again — go straight to the app.
   if (user) return <Navigate to="/dashboard" replace />;
@@ -36,11 +39,6 @@ export function LoginPage() {
     }
   }
 
-  function fillDemo() {
-    setEmail("admin@taskflow.ai");
-    setPassword("password");
-  }
-
   return (
     <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden p-4" style={{ background: "var(--tf-void)" }}>
       <div
@@ -62,7 +60,7 @@ export function LoginPage() {
           </span>
         </Link>
 
-        <div className="ai-pulse-wrap p-6 sm:p-8" style={{ background: "var(--tf-surface)" }}>
+        <GlassPanel className="p-6 sm:p-8">
           <div>
             <h1 className="text-[20px] font-display font-semibold mb-1" style={{ color: "var(--tf-ink)" }}>
               Welcome back
@@ -79,64 +77,44 @@ export function LoginPage() {
             )}
 
             <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
-              <div>
-                <label htmlFor="login-email" className="text-[11px] font-mono block mb-1" style={{ color: "var(--tf-ink-muted)" }}>
-                  Email
-                </label>
-                <div className="relative">
-                  <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--tf-ink-muted)" }} />
-                  <input
-                    id="login-email"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setFieldErrors((prev) => ({ ...prev, email: undefined }));
-                      clearError();
-                    }}
-                    aria-invalid={fieldErrors.email ? true : undefined}
-                    aria-describedby={fieldErrors.email ? "login-email-error" : undefined}
-                    placeholder="you@company.com"
-                    className="w-full text-[13px] pl-9 pr-3 py-2.5 rounded-xl outline-none"
-                    style={{ background: "var(--tf-fill-04)", border: `1px solid ${fieldErrors.email ? "rgba(239,68,68,0.5)" : "var(--tf-panel-border)"}`, color: "var(--tf-ink)" }}
-                  />
-                </div>
-                {fieldErrors.email && (
-                  <p id="login-email-error" role="alert" className="text-[11px] mt-1" style={{ color: "var(--tf-danger-text)" }}>
-                    {fieldErrors.email}
-                  </p>
-                )}
-              </div>
+              <TextField
+                id="login-email"
+                label="Email"
+                type="email"
+                required
+                value={email}
+                onChange={(v) => {
+                  setEmail(v);
+                  setFieldErrors((prev) => ({ ...prev, email: undefined }));
+                  clearError();
+                }}
+                autoComplete="email"
+                placeholder="you@company.com"
+                icon={<Mail size={14} />}
+                error={fieldErrors.email}
+              />
 
-              <div>
-                <label htmlFor="login-password" className="text-[11px] font-mono block mb-1" style={{ color: "var(--tf-ink-muted)" }}>
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--tf-ink-muted)" }} />
-                  <input
-                    id="login-password"
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      setFieldErrors((prev) => ({ ...prev, password: undefined }));
-                      clearError();
-                    }}
-                    aria-invalid={fieldErrors.password ? true : undefined}
-                    aria-describedby={fieldErrors.password ? "login-password-error" : undefined}
-                    placeholder="••••••••"
-                    className="w-full text-[13px] pl-9 pr-3 py-2.5 rounded-xl outline-none"
-                    style={{ background: "var(--tf-fill-04)", border: `1px solid ${fieldErrors.password ? "rgba(239,68,68,0.5)" : "var(--tf-panel-border)"}`, color: "var(--tf-ink)" }}
-                  />
-                </div>
-                {fieldErrors.password && (
-                  <p id="login-password-error" role="alert" className="text-[11px] mt-1" style={{ color: "var(--tf-danger-text)" }}>
-                    {fieldErrors.password}
-                  </p>
-                )}
+              <TextField
+                id="login-password"
+                label="Password"
+                type="password"
+                required
+                value={password}
+                onChange={(v) => {
+                  setPassword(v);
+                  setFieldErrors((prev) => ({ ...prev, password: undefined }));
+                  clearError();
+                }}
+                autoComplete="current-password"
+                placeholder="••••••••"
+                icon={<Lock size={14} />}
+                error={fieldErrors.password}
+              />
+
+              <div className="flex justify-end -mt-1">
+                <Link to="/forgot-password" className="text-[12px]" style={{ color: "var(--tf-teal)" }}>
+                  Forgot password?
+                </Link>
               </div>
 
               <Button type="submit" variant="primary" loading={loading} fullWidth className="mt-2">
@@ -144,11 +122,8 @@ export function LoginPage() {
               </Button>
             </form>
 
-            <button onClick={fillDemo} className="w-full text-center text-[12px] mt-4" style={{ color: "var(--tf-ink-muted)" }}>
-              Use demo admin account
-            </button>
           </div>
-        </div>
+        </GlassPanel>
 
         <p className="text-center text-[13px] mt-6" style={{ color: "var(--tf-ink-muted)" }}>
           Don't have an account?{" "}

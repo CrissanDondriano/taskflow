@@ -1,7 +1,5 @@
 import { useEffect } from "react";
 
-const SITE = "https://taskflow-frontend-liard-eight.vercel.app"; // production domain
-
 function upsert(selector: string, make: () => HTMLElement, set: (el: HTMLElement) => void) {
   let el = document.head.querySelector<HTMLElement>(selector);
   if (!el) { el = make(); document.head.appendChild(el); }
@@ -14,7 +12,9 @@ const meta = (attr: "name" | "property", key: string, content: string) =>
 export function usePageMeta(title: string, description: string) {
   useEffect(() => {
     const full = title === "Home" ? "TaskFlow AI" : `${title} | TaskFlow AI`;
-    const url = SITE + window.location.pathname;
+    // Runtime origin: canonical/OG URLs stay correct on localhost, staging,
+    // or any deployment domain — a hardcoded production host never would.
+    const url = window.location.origin + window.location.pathname;
     document.title = full;
     meta("name", "description", description);
     meta("property", "og:title", full);

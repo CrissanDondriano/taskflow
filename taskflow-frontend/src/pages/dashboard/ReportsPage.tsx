@@ -1,12 +1,14 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { Download, FileSpreadsheet, FileText as FileTextIcon, TrendingUp } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { GlassPanel, EmptyState } from "../../components/ui/Primitives";
-import { useTasks } from "../../context/TasksContext";
-import { useTeam } from "../../context/TeamContext";
+import { useTasksData } from "../../context/TasksContext";
+import { useTeamMembers } from "../../context/TeamContext";
 import { withComputedWorkload } from "../../lib/team";
 import { computeWeeklyTrend, computeProjectStatus } from "../../lib/reports";
-import { API_URL } from "../../lib/api";
+import { API_URL, ApiError, download } from "../../lib/api";
+import { useToast } from "../../context/ToastContext";
 
 function statusColor(status: string) {
   if (status === "Active") return { bg: "rgba(37,99,235,0.1)", fg: "var(--tf-info-text)" };
@@ -14,25 +16,41 @@ function statusColor(status: string) {
   return { bg: "var(--tf-fill-06)", fg: "var(--tf-ink-muted)" };
 }
 
-function ExportButton({ label, icon, href }: { label: string; icon: React.ReactNode; href: string }) {
+function ExportButton({ label, icon, path }: { label: string; icon: React.ReactNode; path: string }) {
+  const { toast } = useToast();
+  const [busy, setBusy] = useState(false);
+
+  // Authenticated download: the export endpoints sit behind sanctum, which a
+  // plain <a href> can't satisfy — fetch with the bearer token instead.
+  async function run() {
+    setBusy(true);
+    try {
+      await download(path);
+    } catch (err) {
+      toast(err instanceof ApiError ? err.message : "Couldn't download the export.", "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
+    <button
+      type="button"
+      onClick={() => void run()}
+      disabled={busy}
       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px]"
       style={{ border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink-muted)" }}
       title={`Downloads from ${API_URL}`}
     >
-      {icon} {label}
-    </a>
+      {icon} {busy ? "Preparing..." : label}
+    </button>
   );
 }
 
 export function ReportsPage() {
   const [tab, setTab] = useState<"projects" | "team">("projects");
-  const { tasks } = useTasks();
-  const { members } = useTeam();
+  const tasks = useTasksData();
+  const members = useTeamMembers();
 
   const trendData = useMemo(() => computeWeeklyTrend(tasks), [tasks]);
   const hasTrend = trendData.some((d) => d.done > 0);
@@ -42,7 +60,7 @@ export function ReportsPage() {
   return (
     <div className="flex flex-col gap-5">
       <GlassPanel className="p-5">
-        <h2 className="text-[14px] font-semibold mb-4" style={{ color: "var(--tf-ink)" }}>
+        <h2 className="text-sm font-semibold font-display mb-4" style={{ color: "var(--tf-ink)" }}>
           Weekly completion trend
         </h2>
         {hasTrend ? (
@@ -61,7 +79,15 @@ export function ReportsPage() {
             </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <EmptyState icon={<TrendingUp size={22} />} message="Complete a task to start building this trend." />
+          <EmptyState
+            icon={<TrendingUp size={22} />}
+            message="Complete a task to start building this trend."
+            action={
+              <Link to="/dashboard/kanban" className="text-[13px] font-medium" style={{ color: "var(--tf-primary)" }}>
+                Open the Kanban board →
+              </Link>
+            }
+          />
         )}
       </GlassPanel>
 
@@ -86,14 +112,18 @@ export function ReportsPage() {
             <ExportButton
               label="PDF"
               icon={<FileTextIcon size={13} />}
-              href={`${API_URL}/reports/project-status/export?format=pdf`}
+              path="/reports/project-status/export?format=pdf"
             />
             <ExportButton
               label="Excel"
               icon={<FileSpreadsheet size={13} />}
-              href={`${API_URL}/reports/${tab === "projects" ? "project-status" : "team-performance"}/export?format=xlsx`}
+              path={`/reports/${tab === "projects" ? "project-status" : "team-performance"}/export?format=xlsx`}
             />
-            <ExportButton label="CSV" icon={<Download size={13} />} href={`${API_URL}/reports/${tab === "projects" ? "project-status" : "team-performance"}/export?format=csv`} />
+            <ExportButton
+              label="CSV"
+              icon={<Download size={13} />}
+              path={`/reports/${tab === "projects" ? "project-status" : "team-performance"}/export?format=csv`}
+            />
           </div>
         </div>
 
@@ -187,8 +217,8 @@ export function ReportsPage() {
         )}
 
         <p className="text-[11px] mt-4" style={{ color: "var(--tf-ink-muted)" }}>
-          Export buttons link straight to your backend's export endpoints — they'll download a real file once{" "}
-          <code className="font-mono">php artisan serve</code> is running.
+          Export buttons download real files from your backend's report exports, authenticated with your signed-in
+          session.
         </p>
       </GlassPanel>
     </div>

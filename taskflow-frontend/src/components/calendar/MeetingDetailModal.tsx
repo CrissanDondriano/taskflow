@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
-import { Modal, Avatar } from "../ui/Primitives";
+import { Modal, Avatar, ConfirmDialog } from "../ui/Primitives";
 import { Button } from "../ui/Button";
-import { PRIORITY_HEX } from "../../data/mockData";
-import { useTeam } from "../../context/TeamContext";
+import { PRIORITIES } from "../../data/mockData";
+import { useTeamMembers } from "../../context/TeamContext";
 import type { Meeting, Priority } from "../../types";
 
 export function MeetingDetailModal({
@@ -17,9 +17,10 @@ export function MeetingDetailModal({
   onSave: (id: string, patch: Partial<Meeting>) => void;
   onDelete: (id: string) => void;
 }) {
-  const { members } = useTeam();
+  const members = useTeamMembers();
   const [draft, setDraft] = useState<Meeting | null>(meeting);
   const [lastId, setLastId] = useState<string | null>(meeting?.id ?? null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   // Only sync in a new meeting; keep the previous one rendered while Modal's
   // close animation plays instead of unmounting instantly when meeting -> null.
@@ -123,7 +124,7 @@ export function MeetingDetailModal({
             className="w-full text-sm px-3 py-2 rounded-xl outline-none"
             style={fieldStyle}
           >
-            {Object.keys(PRIORITY_HEX).map((p) => (
+            {PRIORITIES.map((p) => (
               <option key={p} style={{ background: "var(--tf-surface)" }}>
                 {p}
               </option>
@@ -154,9 +155,19 @@ export function MeetingDetailModal({
         </div>
 
         <div className="flex justify-between items-center gap-2 mt-2">
-          <Button variant="danger" size="sm" icon={<Trash2 size={13} />} onClick={() => { if (lastId) onDelete(lastId); onClose(); }}>
+          <Button variant="danger" size="sm" icon={<Trash2 size={13} />} onClick={() => setConfirmOpen(true)}>
             Delete
           </Button>
+          <ConfirmDialog
+            open={confirmOpen}
+            onClose={() => setConfirmOpen(false)}
+            title="Delete meeting?"
+            message={`"${draft.title}" will be removed from the calendar. You'll get a short window to undo this from the notification.`}
+            onConfirm={() => {
+              if (lastId) onDelete(lastId);
+              onClose();
+            }}
+          />
           <div className="flex gap-2">
             <Button variant="secondary" onClick={onClose}>
               Cancel

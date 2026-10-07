@@ -11,10 +11,6 @@ export function dateForDay(day: number, month = ANCHOR_MONTH, year = ANCHOR_YEAR
   return new Date(year, month, day);
 }
 
-export function isAnchorMonth(d: Date): boolean {
-  return d.getFullYear() === ANCHOR_YEAR && d.getMonth() === ANCHOR_MONTH;
-}
-
 /** "Jul 4" -> 4. Any other month, or an unparseable string, returns null. */
 export function parseDueToAnchorDay(due: string): number | null {
   const match = due.match(/^Jul (\d{1,2})$/);

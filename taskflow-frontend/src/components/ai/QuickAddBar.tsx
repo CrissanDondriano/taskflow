@@ -3,6 +3,8 @@ import { Sparkles, Plus } from "lucide-react";
 import { PriorityBadge } from "../ui/Primitives";
 import { Badge } from "../ui/Badge";
 import { parseQuickAdd, formatDueDay } from "../../lib/nlp";
+import { initialsOf } from "../../lib/format";
+import { useAuthStore } from "../../stores/authStore";
 import type { Task, TaskColumn } from "../../types";
 
 /**
@@ -14,6 +16,7 @@ import type { Task, TaskColumn } from "../../types";
  */
 export function QuickAddBar({ onCreate, defaultColumn = "Backlog" }: { onCreate: (task: Task) => void; defaultColumn?: TaskColumn }) {
   const [text, setText] = useState("");
+  const user = useAuthStore((s) => s.user);
   const parsed = text.trim() ? parseQuickAdd(text) : null;
 
   function submit(e: React.FormEvent) {
@@ -24,7 +27,9 @@ export function QuickAddBar({ onCreate, defaultColumn = "Backlog" }: { onCreate:
       title: parsed.title,
       project: "General",
       priority: parsed.priority,
-      assignee: "MR",
+      // Assign to whoever is actually signed in (never a hardcoded person),
+      // so workload/reports count the task instead of orphaning it.
+      assignee: user ? initialsOf(user.name) : "",
       due: formatDueDay(parsed.dueDay),
       column: defaultColumn,
       labels: parsed.labels.length ? parsed.labels : undefined,

@@ -6,6 +6,23 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     port: 5173,
+    // HMR disabled: adding hooks to a component (the loading gate) made the
+    // dev client swap module versions between renders, which React flags as
+    // a hook-order change and crashes on. A full page reload is the correct
+    // way to pick up hook-list changes; HMR can't reconcile them.
+    hmr: false,
+    // Dev-only same-origin API: /api/* is forwarded to the Laravel app as
+    // served by XAMPP Apache (parallel handling, always on with XAMPP).
+    // Same origin means no CORS preflight (OPTIONS) round-trip before
+    // every authenticated request — roughly halves API latency in dev.
+    // (Absolute VITE_API_URL values bypass this proxy.)
+    proxy: {
+      "/api": {
+        target: "http://localhost",
+        rewrite: (path) =>
+          path.replace(/^\/api/, "/project/taskflow/taskflow-api/public/api"),
+      },
+    },
   },
   build: {
     rollupOptions: {

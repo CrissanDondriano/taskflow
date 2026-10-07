@@ -1,12 +1,12 @@
 import { CalendarClock } from "lucide-react";
 import { Avatar, GlassPanel, PriorityBadge } from "../ui/Primitives";
-import { useTeam } from "../../context/TeamContext";
+import { useTeamMembers } from "../../context/TeamContext";
 import { TODAY_DAY, formatHour, truncateWords } from "../../lib/calendar";
 import type { Meeting } from "../../types";
 
 /** Next few meetings from the shared MeetingsContext — reflects live edits made on the Calendar page. */
 export function SharedCalendarPreview({ meetings }: { meetings: Meeting[] }) {
-  const { members } = useTeam();
+  const members = useTeamMembers();
   const upcoming = meetings
     .filter((m) => m.day >= TODAY_DAY)
     .sort((a, b) => (a.day !== b.day ? a.day - b.day : a.startHour - b.startHour))

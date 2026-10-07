@@ -231,7 +231,7 @@ This phase touches every "AI" feature named in the brief — and for each one, t
 | Command palette task/meeting search | Real substring search against live data, not semantic search |
 | Meeting-conflict notifications | Real — reuses Phase 4's actual conflict-detection algorithm |
 
-**Deliberately not built:** connecting any of this to the real OpenAI-backed backend endpoints. Every mock/heuristic function above names the specific backend endpoint it should eventually call — wiring them up is a contained, page-by-page job once a live backend is available to test against, same reasoning as every other "not yet connected" note in this README.
+**Deliberately not built:** the local heuristics above (keyword-routed assistant answers, template descriptions) still stand in for real OpenAI calls — but the two endpoints that *are* wired (`/ai/ask` for the floating assistant, `/ai/meeting-notes` for the converter) hit the real backend, and everything else names the endpoint it would call.
 
 ## Latest round of fixes
 
@@ -315,7 +315,7 @@ npm run lint
 
 ## Next steps worth doing
 
-1. Wire Dashboard/Kanban/Calendar/Team to real `GET /api/tasks`, `/api/teams/{team}` calls instead of mock data
-2. Add a project picker (right now everything assumes one implicit project/team)
+1. ~~Wire Dashboard/Kanban/Calendar/Team to real `GET /api/tasks`, `/api/teams/{team}` calls instead of mock data~~ **Done** — tasks, projects, teams, reports and exports are API-backed (see `src/lib/taskAdapter.ts`); meetings stay local-only by design (the calendar is anchored to July 2026)
+2. Add a project picker (right now projects are created on the fly from whatever name the task modal/Quick Add uses)
 3. Real-time notifications via the Reverb setup from the backend (Echo client, see backend README)
 4. Code-splitting — the build warned the JS bundle is ~640KB; lazy-load the dashboard routes with `React.lazy()` since landing-page visitors don't need Kanban/Calendar code yet

@@ -2,16 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Bell, Check, Inbox } from "lucide-react";
 import { useNotifications } from "../../context/NotificationsContext";
-
-function timeAgo(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
-}
+import { timeAgo } from "../../lib/format";
 
 /**
  * Renders the dropdown panel through a React portal into document.body,
@@ -34,7 +25,13 @@ export function NotificationsBell() {
     setOpen((o) => !o);
   }
 
+  // Listeners only while the panel is open: outside click and Escape close
+  // it (Escape returns focus to the bell), and scrolling/resize anywhere
+  // except inside the panel itself closes it — otherwise the fixed panel
+  // would drift away from the bell it belongs to.
   useEffect(() => {
+    if (!open) return;
+
     function onClickOutside(e: MouseEvent) {
       if (
         panelRef.current &&
@@ -45,16 +42,29 @@ export function NotificationsBell() {
         setOpen(false);
       }
     }
-    function onScrollOrResize() {
+    function onEscape(e: KeyboardEvent) {
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      buttonRef.current?.focus();
+    }
+    function onScrollOrResize(e: Event) {
+      const target = e.target instanceof Node ? e.target : null;
+      // Scrolling the notification list inside the panel is expected — only
+      // scrolling the page (or a resize) should dismiss it.
+      if (target && panelRef.current?.contains(target)) return;
       setOpen(false);
     }
     document.addEventListener("mousedown", onClickOutside);
+    document.addEventListener("keydown", onEscape);
     window.addEventListener("resize", onScrollOrResize);
+    window.addEventListener("scroll", onScrollOrResize, true);
     return () => {
       document.removeEventListener("mousedown", onClickOutside);
+      document.removeEventListener("keydown", onEscape);
       window.removeEventListener("resize", onScrollOrResize);
+      window.removeEventListener("scroll", onScrollOrResize, true);
     };
-  }, []);
+  }, [open]);
 
   return (
     <>
@@ -62,6 +72,7 @@ export function NotificationsBell() {
         ref={buttonRef}
         onClick={openPanel}
         aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications"}
+        aria-haspopup="dialog"
         aria-expanded={open}
         className="relative w-9 h-9 rounded-xl flex items-center justify-center"
         style={{ border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink-muted)" }}
@@ -81,6 +92,8 @@ export function NotificationsBell() {
         createPortal(
           <div
             ref={panelRef}
+            role="dialog"
+            aria-label="Notifications"
             className="fixed w-80 max-w-[calc(100vw-2rem)] rounded-2xl overflow-hidden"
             style={{
               top: coords.top,

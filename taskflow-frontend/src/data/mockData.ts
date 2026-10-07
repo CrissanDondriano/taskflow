@@ -9,23 +9,29 @@
 // the AI conversion does before pasting their own notes. Nothing else in
 // this file is injected automatically.
 
-import type { Task } from "../types";
+import type { Priority, Task } from "../types";
 
 export const COLUMNS: Task["column"][] = ["Backlog", "To Do", "In Progress", "Review", "Testing", "Completed"];
 
-export const PRIORITY_HEX: Record<string, string> = {
+export const PRIORITY_HEX: Record<Priority, string> = {
   Low: "#14B8A6",
   Medium: "#F59E0B",
   High: "#2563EB",
   Critical: "#EF4444",
 };
 
-export const PRIORITY_STYLE: Record<string, string> = {
+export const PRIORITY_STYLE: Record<Priority, string> = {
   Low: "bg-[#14B8A6]/10 text-[color:var(--tf-accent-text)] border border-[#14B8A6]/30",
   Medium: "bg-[#F59E0B]/10 text-[color:var(--tf-warning-text)] border border-[#F59E0B]/30",
   High: "bg-[#2563EB]/10 text-[color:var(--tf-info-text)] border border-[#2563EB]/30",
   Critical: "bg-[#EF4444]/10 text-[color:var(--tf-danger-text)] border border-[#EF4444]/30",
 };
+
+/**
+ * The priorities in display order, derived from the record above — iterate
+ * this instead of Object.keys() so every select/legend is typed as Priority.
+ */
+export const PRIORITIES = Object.keys(PRIORITY_HEX) as Priority[];
 
 export const SAMPLE_MEETING_NOTES = `Sprint sync - July 2
 

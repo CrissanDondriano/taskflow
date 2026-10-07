@@ -32,6 +32,7 @@ export function Toaster() {
     >
       {toasts.map((t) => {
         const v = VARIANT_STYLE[t.variant];
+        const action = t.action;
         return (
           <div
             key={t.id}
@@ -51,6 +52,18 @@ export function Toaster() {
             <p className="flex-1 text-[12.5px] leading-snug" style={{ color: "var(--tf-ink)" }}>
               {t.message}
             </p>
+            {action && (
+              <button
+                onClick={() => {
+                  action.run();
+                  dismiss(t.id);
+                }}
+                className="shrink-0 text-[11px] font-semibold px-2 py-1 rounded-md transition-colors hover:bg-white/5"
+                style={{ color: v.accent }}
+              >
+                {action.label}
+              </button>
+            )}
             <button
               onClick={() => dismiss(t.id)}
               aria-label="Dismiss notification"

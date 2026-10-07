@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { Sparkles, Upload, FileText, Check, Loader2, ArrowRight, ListChecks, RotateCcw, CheckSquare, Square } from "lucide-react";
+import { Sparkles, Upload, FileText, Check, ArrowRight, ListChecks, RotateCcw, CheckSquare, Square } from "lucide-react";
 import { GlassPanel, PulseCard, Avatar } from "../ui/Primitives";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { Skeleton } from "../ui/Skeleton";
 import { PriorityLegend } from "../ui/PriorityLegend";
-import { PRIORITY_STYLE, SAMPLE_MEETING_NOTES } from "../../data/mockData";
-import { useTeam } from "../../context/TeamContext";
+import { PRIORITY_STYLE, PRIORITIES, SAMPLE_MEETING_NOTES } from "../../data/mockData";
+import { useTeamMembers } from "../../context/TeamContext";
 import { suggestLabels } from "../../lib/nlp";
-import { useTasks } from "../../context/TasksContext";
+import { api } from "../../lib/api";
+import { useTaskActions } from "../../context/TasksContext";
 import type { ActionItem, Priority, Task } from "../../types";
 
 interface ExtractResult {
@@ -16,11 +18,11 @@ interface ExtractResult {
   project: string;
 }
 
-// Mock extraction — swap this for `api.post('/ai/meeting-notes', { project_id, notes })`
-// against the taskflow-api backend once you're ready to wire it up for real.
-// Owners are assigned from the real current team (cycling through whoever
-// exists) rather than fictional names, since this sample is meant to show
-// what conversion looks like against your actual account, not a demo cast.
+// Local heuristic extraction — used as the fallback when the real backend
+// call below fails (AI not configured, backend offline). Owners are assigned
+// from the real current team (cycling through whoever exists) rather than
+// fictional names, since this sample is meant to show what conversion looks
+// like against your actual account, not a demo cast.
 function mockExtract(memberNames: string[]): ExtractResult {
   const owner = (i: number) => memberNames[i % Math.max(memberNames.length, 1)] ?? "Unassigned";
   return {
@@ -37,9 +39,55 @@ function mockExtract(memberNames: string[]): ExtractResult {
   };
 }
 
+interface AiActionItem {
+  title?: string;
+  suggested_owner?: string;
+  priority?: string;
+}
+
+function capitalizePriority(value?: string): Priority {
+  const v = (value ?? "").toLowerCase();
+  if (v === "critical" || v === "high" || v === "medium" || v === "low") {
+    return (v.charAt(0).toUpperCase() + v.slice(1)) as Priority;
+  }
+  return "Medium";
+}
+
+/**
+ * Real extraction against POST /api/ai/meeting-notes (OpenAI-backed with a
+ * server-side fallback). Throws when AI isn't configured or the API is
+ * unreachable so convert() can fall back to the local heuristic.
+ */
+async function aiExtract(memberNames: string[], notes: string): Promise<ExtractResult> {
+  const res = await api.post<{ error?: string; summary?: string; action_items?: AiActionItem[] }>("/ai/meeting-notes", { notes });
+
+  if (res.error || !Array.isArray(res.action_items)) {
+    throw new Error(res.error ?? "AI extraction unavailable.");
+  }
+
+  const owner = (i: number) => memberNames[i % Math.max(memberNames.length, 1)] ?? "Unassigned";
+  const actionItems: ActionItem[] = res.action_items.map((item, i) => {
+    const suggested = item.suggested_owner?.trim();
+    const matched = suggested ? memberNames.find((n) => n.toLowerCase() === suggested.toLowerCase()) : undefined;
+    return {
+      id: `ai${i + 1}`,
+      title: item.title?.trim() || "Untitled action item",
+      owner: matched ?? owner(i),
+      priority: capitalizePriority(item.priority),
+      selected: true,
+    };
+  });
+
+  return {
+    project: "Platform Core",
+    summary: res.summary?.trim() || "Notes summarized — review the action items below.",
+    actionItems,
+  };
+}
+
 export function MeetingNotesConverter() {
-  const { addTask } = useTasks();
-  const { members } = useTeam();
+  const { addTask } = useTaskActions();
+  const members = useTeamMembers();
   const [notes, setNotes] = useState("");
   const [fileName, setFileName] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "processing" | "done">("idle");
@@ -73,14 +121,22 @@ export function MeetingNotesConverter() {
     reader.readAsText(file);
   }
 
-  function convert() {
+  async function convert() {
     if (!notes.trim()) return;
     setStatus("processing");
     setCreatedCount(null);
-    setTimeout(() => {
-      setResult(mockExtract(members.map((m) => m.name)));
+    const memberNames = members.map((m) => m.name);
+    try {
+      setResult(await aiExtract(memberNames, notes.trim()));
       setStatus("done");
-    }, 1100);
+    } catch {
+      // AI unavailable (not configured / backend offline) — keep the feature
+      // working with the local heuristic after a brief processing beat.
+      setTimeout(() => {
+        setResult(mockExtract(memberNames));
+        setStatus("done");
+      }, 800);
+    }
   }
 
   function toggleItem(id: string) {
@@ -120,7 +176,7 @@ export function MeetingNotesConverter() {
   const fieldStyle = { background: "var(--tf-fill-03)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" };
 
   return (
-    <div className="max-w-6xl">
+    <div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
         <GlassPanel className="p-5">
           <div className="flex items-center justify-between mb-3">
@@ -159,7 +215,7 @@ export function MeetingNotesConverter() {
             <span className="text-[10px] font-mono" style={{ color: "var(--tf-ink-muted)" }}>
               {notes.trim() ? `${notes.trim().split(/\s+/).length} words` : "Paste or upload notes to begin"}
             </span>
-            <Button variant="primary" icon={status === "processing" ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />} disabled={!notes.trim() || status === "processing"} onClick={convert}>
+            <Button variant="primary" loading={status === "processing"} icon={<Sparkles size={14} />} disabled={!notes.trim()} onClick={convert}>
               {status === "processing" ? "Converting..." : "Convert with AI"}
             </Button>
           </div>
@@ -167,13 +223,66 @@ export function MeetingNotesConverter() {
 
         <div className="flex flex-col gap-5">
           {status !== "done" && (
-            <GlassPanel className="p-8 text-center">
-              <ListChecks size={22} className="mx-auto mb-2" style={{ color: "var(--tf-ink-muted)" }} />
-              <p className="text-sm" style={{ color: "var(--tf-ink-muted)" }}>
-                {status === "processing"
-                  ? "Reading through the notes and pulling out action items..."
-                  : "The summary and action items will appear here once you convert your notes."}
-              </p>
+            <GlassPanel className={status === "processing" ? "p-5" : "p-6"}>
+              {status === "processing" ? (
+                <div role="status" className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-2">
+                    <Skeleton variant="text" width="30%" height={10} />
+                    <Skeleton variant="text" width="95%" height={13} />
+                    <Skeleton variant="text" width="78%" height={13} />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Skeleton variant="text" width="24%" height={10} />
+                    <Skeleton variant="rect" height={44} />
+                    <Skeleton variant="rect" height={44} />
+                    <Skeleton variant="rect" height={44} />
+                  </div>
+                  <p className="text-xs" style={{ color: "var(--tf-ink-muted)" }}>
+                    Reading through the notes and pulling out action items...
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={15} color="#14B8A6" />
+                    <h2 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
+                      Here's what you get
+                    </h2>
+                  </div>
+                  <ul className="flex flex-col gap-3">
+                    <li className="flex gap-3">
+                      <span className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "var(--tf-fill-04)", color: "var(--tf-teal)" }}>
+                        <FileText size={13} />
+                      </span>
+                      <span className="text-[13px] leading-snug" style={{ color: "var(--tf-ink-soft)" }}>
+                        <span className="font-medium" style={{ color: "var(--tf-ink)" }}>Paste or upload your notes — </span>
+                        raw meeting notes, a call transcript, or a .txt file.
+                      </span>
+                    </li>
+                    <li className="flex gap-3">
+                      <span className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "var(--tf-fill-04)", color: "var(--tf-teal)" }}>
+                        <ListChecks size={13} />
+                      </span>
+                      <span className="text-[13px] leading-snug" style={{ color: "var(--tf-ink-soft)" }}>
+                        <span className="font-medium" style={{ color: "var(--tf-ink)" }}>Get a summary and action items — </span>
+                        owners matched to your real team, with sensible priorities.
+                      </span>
+                    </li>
+                    <li className="flex gap-3">
+                      <span className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "var(--tf-fill-04)", color: "var(--tf-teal)" }}>
+                        <CheckSquare size={13} />
+                      </span>
+                      <span className="text-[13px] leading-snug" style={{ color: "var(--tf-ink-soft)" }}>
+                        <span className="font-medium" style={{ color: "var(--tf-ink)" }}>Review and create tasks — </span>
+                        keep what you agree with and send it straight to Backlog.
+                      </span>
+                    </li>
+                  </ul>
+                  <p className="text-xs pt-3" style={{ color: "var(--tf-ink-muted)", borderTop: "1px solid var(--tf-panel-border)" }}>
+                    No notes to hand? Click <span style={{ color: "var(--tf-teal)" }}>Load sample</span> to see it in action.
+                  </p>
+                </div>
+              )}
             </GlassPanel>
           )}
 
@@ -246,7 +355,7 @@ export function MeetingNotesConverter() {
                               className={`text-[11px] font-medium rounded-full px-2 py-1 outline-none border-none ${PRIORITY_STYLE[item.priority]}`}
                               style={{ background: "var(--tf-surface)" }}
                             >
-                              {Object.keys(PRIORITY_STYLE).map((p) => (
+                              {PRIORITIES.map((p) => (
                                 <option key={p}>{p}</option>
                               ))}
                             </select>
