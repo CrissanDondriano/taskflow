@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AiAssistantController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CalendarIntegrationController;
@@ -24,10 +25,13 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middle
 Route::get('/integrations/google-calendar/callback', [CalendarIntegrationController::class, 'handleGoogleCallback']);
 Route::get('/integrations/outlook/callback', [CalendarIntegrationController::class, 'handleOutlookCallback']);
 
-// Authenticated
-Route::middleware('auth:sanctum')->group(function () {
+// Authenticated — 60 req/min per user, plus a tighter dedicated limiter on
+// /ai/* since every call there can spend paid OpenAI tokens.
+Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    Route::patch('/me', [AuthController::class, 'updateProfile']);
+    Route::delete('/me', [AuthController::class, 'destroy']); // account deletion (password-confirmed)
 
     Route::apiResource('teams', TeamController::class)->only(['index', 'store']);
     Route::post('/teams/{team}/members', [TeamController::class, 'addMember']);
@@ -41,10 +45,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/tasks/{task}/attachments', [TaskController::class, 'addAttachment']);
 
     // AI features
-    Route::post('/ai/ask', [AiAssistantController::class, 'ask']);
-    Route::post('/ai/generate-tasks', [AiAssistantController::class, 'generateTasks']);
-    Route::get('/ai/risks', [AiAssistantController::class, 'risks']);
-    Route::post('/ai/meeting-notes', [AiAssistantController::class, 'meetingNotes']);
+    Route::prefix('ai')->middleware('throttle:ai')->group(function () {
+        Route::post('/ask', [AiAssistantController::class, 'ask']);
+        Route::post('/generate-tasks', [AiAssistantController::class, 'generateTasks']);
+        Route::get('/risks', [AiAssistantController::class, 'risks']);
+        Route::post('/meeting-notes', [AiAssistantController::class, 'meetingNotes']);
+    });
 
     // Reports
     Route::get('/reports/project-status', [ReportController::class, 'projectStatus']);
@@ -72,4 +78,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::patch('/notifications/{id}/read', [NotificationController::class, 'markRead']);
     Route::patch('/notifications/read-all', [NotificationController::class, 'markAllRead']);
+});
+
+// Admin only — EnsureAdmin throws AuthorizationException (403) for non-admins
+Route::prefix('admin')->middleware(['auth:sanctum', 'admin', 'throttle:30,1'])->group(function () {
+    Route::get('/stats', [AdminController::class, 'stats']);
+    Route::get('/users', [AdminController::class, 'users']);
+    Route::patch('/users/{user}/role', [AdminController::class, 'updateRole']);
+    Route::get('/audit-logs', [AdminController::class, 'auditLogs']);
 });

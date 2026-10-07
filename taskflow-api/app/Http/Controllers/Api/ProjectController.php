@@ -15,15 +15,18 @@ class ProjectController extends Controller
     public function index(Request $request)
     {
         $projects = Project::query()
+            ->visibleTo($request->user())
             ->when($request->status, fn ($q) => $q->where('status', $request->status))
             ->when($request->team_id, fn ($q) => $q->where('team_id', $request->team_id))
-            ->withCount('tasks')
+            ->withCount(['tasks', 'tasks as completed_tasks_count' => fn ($q) => $q->where('status', 'completed')])
             ->latest()
-            ->paginate(20);
+            ->paginate($this->perPage($request));
 
+        // progressPercent() reads the counts above — no per-project queries.
         $projects->getCollection()->transform(function ($project) {
             $project->progress_percent = $project->progressPercent();
             $project->is_overdue = $project->isOverdue();
+
             return $project;
         });
 
@@ -45,6 +48,8 @@ class ProjectController extends Controller
 
     public function show(Project $project)
     {
+        $this->authorize('view', $project);
+
         $project->load(['tasks.assignee:id,name', 'team', 'insights']);
         $project->progress_percent = $project->progressPercent();
         $project->is_overdue = $project->isOverdue();

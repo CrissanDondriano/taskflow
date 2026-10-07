@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Integration;
 use App\Models\Team;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Http\Request;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -23,7 +24,7 @@ class CalendarIntegrationController extends Controller
         $url = Socialite::driver('google')
             ->stateless()
             ->scopes(['https://www.googleapis.com/auth/calendar.events'])
-            ->with(['access_type' => 'offline', 'prompt' => 'consent', 'state' => encrypt($team->id)])
+            ->with(['access_type' => 'offline', 'prompt' => 'consent', 'state' => $this->stateFor($team)])
             ->redirect()
             ->getTargetUrl();
 
@@ -32,7 +33,11 @@ class CalendarIntegrationController extends Controller
 
     public function handleGoogleCallback(Request $request)
     {
-        $team = Team::findOrFail(decrypt($request->query('state')));
+        if ($request->query('error')) {
+            return response()->json(['message' => 'Calendar connection was cancelled or denied.'], 400);
+        }
+
+        $team = $this->teamFromState($request);
 
         $googleUser = Socialite::driver('google')->stateless()->user();
 
@@ -66,7 +71,7 @@ class CalendarIntegrationController extends Controller
         $url = Socialite::driver('azure')
             ->stateless()
             ->scopes(['offline_access', 'Calendars.ReadWrite'])
-            ->with(['state' => encrypt($team->id)])
+            ->with(['state' => $this->stateFor($team)])
             ->redirect()
             ->getTargetUrl();
 
@@ -75,7 +80,11 @@ class CalendarIntegrationController extends Controller
 
     public function handleOutlookCallback(Request $request)
     {
-        $team = Team::findOrFail(decrypt($request->query('state')));
+        if ($request->query('error')) {
+            return response()->json(['message' => 'Calendar connection was cancelled or denied.'], 400);
+        }
+
+        $team = $this->teamFromState($request);
 
         $msUser = Socialite::driver('azure')->stateless()->user();
 
@@ -95,5 +104,49 @@ class CalendarIntegrationController extends Controller
         );
 
         return response()->json(['message' => 'Outlook Calendar connected.']);
+    }
+
+    /**
+     * Signed, expiring state for the OAuth round-trip. 15 minutes is plenty
+     * for a human to finish consenting on Google/Microsoft's side, and stops
+     * a captured callback URL from being replayed forever.
+     */
+    private function stateFor(Team $team): string
+    {
+        return encrypt(json_encode([
+            'team_id' => $team->id,
+            'exp' => now()->addMinutes(15)->getTimestamp(),
+        ]));
+    }
+
+    /**
+     * Resolve + validate the state param. A missing/corrupt/expired state
+     * must return 400 JSON instead of a raw 500 from decrypt()/findOrFail().
+     */
+    private function teamFromState(Request $request): Team
+    {
+        $state = $request->query('state');
+
+        if (! is_string($state) || $state === '') {
+            abort(response()->json(['message' => 'Missing OAuth state parameter.'], 400));
+        }
+
+        try {
+            $payload = decrypt($state);
+        } catch (DecryptException) {
+            abort(response()->json(['message' => 'Invalid OAuth state parameter.'], 400));
+        }
+
+        $teamId = is_array($payload) ? ($payload['team_id'] ?? null) : $payload;
+
+        if (is_array($payload) && (int) ($payload['exp'] ?? 0) < now()->getTimestamp()) {
+            abort(response()->json(['message' => 'OAuth state has expired. Please retry the connection.'], 400));
+        }
+
+        if (! is_numeric($teamId)) {
+            abort(response()->json(['message' => 'Invalid OAuth state parameter.'], 400));
+        }
+
+        return Team::findOrFail($teamId);
     }
 }

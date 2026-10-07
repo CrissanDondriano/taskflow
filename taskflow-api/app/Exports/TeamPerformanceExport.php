@@ -9,13 +9,19 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class TeamPerformanceExport implements FromCollection, WithHeadings, WithMapping
 {
+    public function __construct(protected User $viewer) {}
+
     public function collection()
     {
-        return User::withCount([
-            'assignedTasks',
-            'assignedTasks as completed_tasks_count' => fn ($q) => $q->where('status', 'completed'),
-            'assignedTasks as overdue_tasks_count' => fn ($q) => $q->where('due_date', '<', now())->where('status', '!=', 'completed'),
-        ])->get();
+        // Managers get the whole directory; members get themselves plus
+        // shared-team colleagues (same rule as the JSON report).
+        return User::query()
+            ->performanceFor($this->viewer)
+            ->withCount([
+                'assignedTasks',
+                'assignedTasks as completed_tasks_count' => fn ($q) => $q->where('status', 'completed'),
+                'assignedTasks as overdue_tasks_count' => fn ($q) => $q->where('due_date', '<', now())->where('status', '!=', 'completed'),
+            ])->get();
     }
 
     public function headings(): array

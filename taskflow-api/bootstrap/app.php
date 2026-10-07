@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\ForceHttps;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -23,6 +24,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append([
             ForceHttps::class,
             SecurityHeaders::class,
+        ]);
+
+        $middleware->alias([
+            'admin' => EnsureAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

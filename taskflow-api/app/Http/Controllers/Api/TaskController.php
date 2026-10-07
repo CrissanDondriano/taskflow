@@ -35,6 +35,7 @@ class TaskController extends Controller
     public function index(Request $request)
     {
         $tasks = Task::query()
+            ->visibleTo($request->user())
             ->when($request->project_id, fn ($q) => $q->where('project_id', $request->project_id))
             ->when($request->status, fn ($q) => $q->where('status', $request->status))
             ->when($request->assignee_id, fn ($q) => $q->where('assignee_id', $request->assignee_id))
@@ -42,7 +43,7 @@ class TaskController extends Controller
             ->whereNull('parent_task_id')
             ->with(['assignee:id,name,avatar_url', 'subtasks'])
             ->orderBy('position')
-            ->paginate(20);
+            ->paginate($this->perPage($request));
 
         return TaskResource::collection($tasks);
     }
@@ -51,27 +52,39 @@ class TaskController extends Controller
     {
         $data = $request->validated();
 
+        // A task created directly into the Completed column (the board's "+"
+        // button there) still needs its completion timestamp — until now
+        // only update()/move() handled that.
+        if (($data['status'] ?? null) === 'completed') {
+            $data['completed_at'] = now();
+        }
+
         $task = DB::transaction(function () use ($data, $request) {
             $task = Task::create([...$data, 'created_by' => $request->user()->id]);
             $task->load('assignee:id,name,avatar_url', 'project.team');
 
             ActivityLog::record('created', $task, "{$request->user()->name} created task \"{$task->title}\"");
 
-            if ($task->assignee_id) {
-                $this->slack->taskAssigned($task);
-                $task->assignee->notify(new TaskAssignedNotification($task));
-            }
-
-            $this->syncCalendars($task);
-
             return $task;
         });
+
+        // External side effects (Slack, notifications, calendar APIs) run after
+        // the commit so a rollback can't leave messages about a task that
+        // doesn't exist, and slow HTTP calls don't hold the transaction open.
+        if ($task->assignee_id) {
+            $this->slack->taskAssigned($task);
+            $task->assignee->notify(new TaskAssignedNotification($task));
+        }
+
+        $this->syncCalendars($task);
 
         return (new TaskResource($task))->response()->setStatusCode(201);
     }
 
     public function show(Task $task)
     {
+        $this->authorize('view', $task);
+
         return new TaskResource($task->load(['assignee', 'creator', 'subtasks', 'comments.user', 'attachments']));
     }
 
@@ -84,30 +97,36 @@ class TaskController extends Controller
         $wasAssignee = $task->assignee_id;
         $wasCompleted = $task->status === 'completed';
 
-        if (($data['status'] ?? null) === 'completed' && ! $wasCompleted) {
-            $data['completed_at'] = now();
+        if (array_key_exists('status', $data)) {
+            if ($data['status'] === 'completed' && ! $wasCompleted) {
+                $data['completed_at'] = now();
+            } elseif ($data['status'] !== 'completed' && $wasCompleted) {
+                // Reopening must clear the timestamp, otherwise reports and
+                // exports keep counting the task as completed forever.
+                $data['completed_at'] = null;
+            }
         }
 
-        $task = DB::transaction(function () use ($task, $data, $request, $wasAssignee, $wasCompleted) {
+        $task = DB::transaction(function () use ($task, $data, $request) {
             $task->update($data);
             $task->load('project.team', 'assignee:id,name,avatar_url');
             ActivityLog::record('updated', $task, "{$request->user()->name} updated task \"{$task->title}\"");
 
-            if ($task->assignee_id && $task->assignee_id !== $wasAssignee) {
-                $this->slack->taskAssigned($task);
-                $task->assignee->notify(new TaskAssignedNotification($task));
-            }
-
-            if ($task->status === 'completed' && ! $wasCompleted) {
-                $this->slack->taskCompleted($task);
-            }
-
-            if (array_key_exists('due_date', $data)) {
-                $this->syncCalendars($task);
-            }
-
             return $task;
         });
+
+        if ($task->assignee_id && $task->assignee_id !== $wasAssignee) {
+            $this->slack->taskAssigned($task);
+            $task->assignee->notify(new TaskAssignedNotification($task));
+        }
+
+        if ($task->status === 'completed' && ! $wasCompleted) {
+            $this->slack->taskCompleted($task);
+        }
+
+        if (array_key_exists('due_date', $data)) {
+            $this->syncCalendars($task);
+        }
 
         return new TaskResource($task);
     }
@@ -130,22 +149,24 @@ class TaskController extends Controller
         $task = DB::transaction(function () use ($task, $data, $request, $wasCompleted) {
             $task->update([
                 ...$data,
-                'completed_at' => $data['status'] === 'completed' && ! $wasCompleted ? now() : $task->completed_at,
+                'completed_at' => $data['status'] === 'completed'
+                    ? ($wasCompleted ? $task->completed_at : now())
+                    : null,
             ]);
 
             ActivityLog::record(
                 'moved',
                 $task,
-                "{$request->user()->name} moved \"{$task->title}\" to " . str_replace('_', ' ', $data['status'])
+                "{$request->user()->name} moved \"{$task->title}\" to ".str_replace('_', ' ', $data['status'])
             );
-
-            if ($data['status'] === 'completed' && ! $wasCompleted) {
-                $task->load('project.team');
-                $this->slack->taskCompleted($task);
-            }
 
             return $task;
         });
+
+        if ($data['status'] === 'completed' && ! $wasCompleted) {
+            $task->load('project.team');
+            $this->slack->taskCompleted($task);
+        }
 
         return new TaskResource($task);
     }
@@ -162,6 +183,8 @@ class TaskController extends Controller
 
     public function addComment(Request $request, Task $task)
     {
+        $this->authorize('view', $task);
+
         $data = $request->validate(['body' => ['required', 'string']]);
 
         $comment = $task->comments()->create([
@@ -169,12 +192,21 @@ class TaskController extends Controller
             'body' => $data['body'],
         ]);
 
-        return response()->json($comment->load('user:id,name,avatar_url'), 201);
+        return response()->json(['data' => $comment->load('user:id,name,avatar_url')], 201);
     }
 
     public function addAttachment(Request $request, Task $task)
     {
-        $request->validate(['file' => ['required', 'file', 'max:10240']]);
+        $this->authorize('view', $task);
+
+        // Whitelist by content type: attachments live on the public disk, so
+        // allowing .html/.svg would let anyone host scripts on our origin.
+        $request->validate([
+            'file' => [
+                'required', 'file', 'max:10240',
+                'mimes:pdf,jpg,jpeg,png,webp,zip,txt,csv,doc,docx,xls,xlsx,ppt,pptx',
+            ],
+        ]);
 
         $file = $request->file('file');
         $path = $file->store("tasks/{$task->id}", 'public');
@@ -187,6 +219,6 @@ class TaskController extends Controller
             'size' => $file->getSize(),
         ]);
 
-        return response()->json($attachment, 201);
+        return response()->json(['data' => $attachment], 201);
     }
 }

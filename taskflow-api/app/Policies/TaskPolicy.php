@@ -7,6 +7,15 @@ use App\Models\User;
 
 class TaskPolicy
 {
+    public function view(User $user, Task $task): bool
+    {
+        if ($user->isManager() || $task->assignee_id === $user->id || $task->created_by === $user->id) {
+            return true;
+        }
+
+        return $task->project !== null && $task->project->isVisibleTo($user);
+    }
+
     public function update(User $user, Task $task): bool
     {
         return $user->isManager()

@@ -3,19 +3,25 @@
 namespace App\Exports;
 
 use App\Models\Project;
+use App\Models\User;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
 class ProjectStatusExport implements FromCollection, WithHeadings, WithMapping
 {
+    public function __construct(protected User $viewer) {}
+
     public function collection()
     {
-        return Project::withCount([
-            'tasks',
-            'tasks as completed_tasks_count' => fn ($q) => $q->where('status', 'completed'),
-            'tasks as overdue_tasks_count' => fn ($q) => $q->where('due_date', '<', now())->where('status', '!=', 'completed'),
-        ])->get();
+        // Only projects the requester may see (same rule as the JSON report).
+        return Project::query()
+            ->visibleTo($this->viewer)
+            ->withCount([
+                'tasks',
+                'tasks as completed_tasks_count' => fn ($q) => $q->where('status', 'completed'),
+                'tasks as overdue_tasks_count' => fn ($q) => $q->where('due_date', '<', now())->where('status', '!=', 'completed'),
+            ])->get();
     }
 
     public function headings(): array

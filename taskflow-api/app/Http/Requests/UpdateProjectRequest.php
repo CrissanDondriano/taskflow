@@ -19,7 +19,7 @@ class UpdateProjectRequest extends FormRequest
             'status' => ['sometimes', 'in:active,completed,archived'],
             'priority' => ['sometimes', 'in:low,medium,high,critical'],
             'start_date' => ['nullable', 'date'],
-            'deadline' => ['nullable', 'date'],
+            'deadline' => ['nullable', 'date', 'after_or_equal:start_date'],
         ];
     }
 }

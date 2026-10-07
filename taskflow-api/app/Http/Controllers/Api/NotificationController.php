@@ -9,9 +9,21 @@ class NotificationController extends Controller
 {
     public function index(Request $request)
     {
-        return response()->json(
-            $request->user()->notifications()->latest()->paginate(20)
-        );
+        $paginator = $request->user()->notifications()->latest()->paginate(20);
+
+        // Resource-style {data, meta} envelope instead of the raw paginator's
+        // flat shape, matching every other index endpoint in the API.
+        return response()->json([
+            'data' => $paginator->items(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'from' => $paginator->firstItem(),
+                'to' => $paginator->lastItem(),
+            ],
+        ]);
     }
 
     public function unreadCount(Request $request)
@@ -24,7 +36,7 @@ class NotificationController extends Controller
         $notification = $request->user()->notifications()->findOrFail($id);
         $notification->markAsRead();
 
-        return response()->json($notification);
+        return response()->json(['data' => $notification]);
     }
 
     public function markAllRead(Request $request)

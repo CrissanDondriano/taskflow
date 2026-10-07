@@ -63,6 +63,23 @@ class Task extends Model
         return $this->hasMany(TaskAttachment::class);
     }
 
+    /**
+     * A task is visible when its project is (see Project::isVisibleTo), or
+     * when the user is directly its assignee/creator — matching TaskPolicy::view.
+     */
+    public function scopeVisibleTo($query, User $user)
+    {
+        if ($user->isManager()) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($user) {
+            $q->where('assignee_id', $user->id)
+                ->orWhere('created_by', $user->id)
+                ->orWhereHas('project', fn ($p) => $p->visibleTo($user));
+        });
+    }
+
     public function isOverdue(): bool
     {
         return $this->due_date && $this->due_date->isPast() && $this->status !== 'completed';

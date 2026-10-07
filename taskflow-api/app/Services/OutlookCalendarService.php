@@ -33,16 +33,18 @@ class OutlookCalendarService
         $token = $integration->fresh()->credentials['access_token'];
 
         $response = Http::withToken($token)
+            ->timeout(5)
             ->post('https://graph.microsoft.com/v1.0/me/events', [
                 'subject' => "[TaskFlow] {$task->title}",
                 'body' => ['contentType' => 'text', 'content' => $task->description ?? ''],
-                'start' => ['dateTime' => $task->due_date->toDateString() . 'T09:00:00', 'timeZone' => 'UTC'],
-                'end' => ['dateTime' => $task->due_date->toDateString() . 'T09:30:00', 'timeZone' => 'UTC'],
+                'start' => ['dateTime' => $task->due_date->toDateString().'T09:00:00', 'timeZone' => 'UTC'],
+                'end' => ['dateTime' => $task->due_date->toDateString().'T09:30:00', 'timeZone' => 'UTC'],
                 'isAllDay' => true,
             ]);
 
         if ($response->failed()) {
             Log::error('OutlookCalendarService: event creation failed', ['body' => $response->body()]);
+
             return false;
         }
 
@@ -57,7 +59,7 @@ class OutlookCalendarService
             return;
         }
 
-        $response = Http::asForm()->post('https://login.microsoftonline.com/common/oauth2/v2.0/token', [
+        $response = Http::asForm()->timeout(5)->post('https://login.microsoftonline.com/common/oauth2/v2.0/token', [
             'client_id' => config('services.microsoft.client_id'),
             'client_secret' => config('services.microsoft.client_secret'),
             'refresh_token' => $creds['refresh_token'],

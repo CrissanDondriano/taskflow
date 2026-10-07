@@ -12,9 +12,7 @@ class TaskAtRiskNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(protected Project $project, protected string $summary, protected string $severity)
-    {
-    }
+    public function __construct(protected Project $project, protected string $summary, protected string $severity) {}
 
     public function via($notifiable): array
     {

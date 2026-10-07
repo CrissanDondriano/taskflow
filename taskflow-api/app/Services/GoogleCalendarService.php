@@ -32,6 +32,7 @@ class GoogleCalendarService
         $token = $integration->fresh()->credentials['access_token'];
 
         $response = Http::withToken($token)
+            ->timeout(5)
             ->post('https://www.googleapis.com/calendar/v3/calendars/primary/events', [
                 'summary' => "[TaskFlow] {$task->title}",
                 'description' => $task->description ?? "Task in project {$task->project->name}",
@@ -41,6 +42,7 @@ class GoogleCalendarService
 
         if ($response->failed()) {
             Log::error('GoogleCalendarService: event creation failed', ['body' => $response->body()]);
+
             return false;
         }
 
@@ -55,7 +57,7 @@ class GoogleCalendarService
             return; // still valid
         }
 
-        $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
+        $response = Http::asForm()->timeout(5)->post('https://oauth2.googleapis.com/token', [
             'client_id' => config('services.google.client_id'),
             'client_secret' => config('services.google.client_secret'),
             'refresh_token' => $creds['refresh_token'],

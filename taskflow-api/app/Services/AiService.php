@@ -9,11 +9,15 @@ use Illuminate\Support\Facades\Log;
 class AiService
 {
     protected string $apiKey;
+
     protected string $model;
 
     public function __construct()
     {
-        $this->apiKey = config('services.openai.key');
+        // config() returns null when OPENAI_API_KEY isn't set — cast so the
+        // empty-key fallback in complete() below can actually run instead of
+        // TypeErrors on the typed property.
+        $this->apiKey = (string) config('services.openai.key');
         $this->model = config('services.openai.model', 'gpt-4o-mini');
     }
 
@@ -23,11 +27,11 @@ class AiService
      */
     public function ask(string $question, array $context = []): string
     {
-        $system = "You are the AI Task Assistant inside TaskFlow AI, a task management platform. "
-            . "Answer using only the context provided. Be concise and actionable. "
-            . "Reference specific task titles and due dates when relevant.";
+        $system = 'You are the AI Task Assistant inside TaskFlow AI, a task management platform. '
+            .'Answer using only the context provided. Be concise and actionable. '
+            .'Reference specific task titles and due dates when relevant.';
 
-        $prompt = "Context (JSON):\n" . json_encode($context) . "\n\nQuestion: " . $this->sanitizeInput($question);
+        $prompt = "Context (JSON):\n".json_encode($context)."\n\nQuestion: ".$this->sanitizeInput($question);
 
         return $this->complete($system, $prompt);
     }
@@ -38,12 +42,12 @@ class AiService
      */
     public function generateTaskBreakdown(string $goal, string $requirements): array
     {
-        $system = "You are a project planning assistant. Given a project goal and requirements, "
-            . "output ONLY valid JSON (no markdown, no prose) matching this shape: "
-            . '{"tasks": [{"title": "", "description": "", "priority": "low|medium|high|critical", '
-            . '"estimated_days": 0, "category": "", "suggested_role": ""}], "milestones": [{"title": "", "day_offset": 0}]}';
+        $system = 'You are a project planning assistant. Given a project goal and requirements, '
+            .'output ONLY valid JSON (no markdown, no prose) matching this shape: '
+            .'{"tasks": [{"title": "", "description": "", "priority": "low|medium|high|critical", '
+            .'"estimated_days": 0, "category": "", "suggested_role": ""}], "milestones": [{"title": "", "day_offset": 0}]}';
 
-        $prompt = "Goal: " . $this->sanitizeInput($goal) . "\n\nRequirements: " . $this->sanitizeInput($requirements);
+        $prompt = 'Goal: '.$this->sanitizeInput($goal)."\n\nRequirements: ".$this->sanitizeInput($requirements);
 
         $raw = $this->complete($system, $prompt);
 
@@ -69,8 +73,8 @@ class AiService
                 'is_overdue' => $t->isOverdue(),
             ]);
 
-        $system = "You are a delivery-risk analyst. Given a list of open tasks, output ONLY valid JSON: "
-            . '{"risks": [{"severity": "low|medium|high", "type": "deadline|overload|conflict", "summary": ""}]}';
+        $system = 'You are a delivery-risk analyst. Given a list of open tasks, output ONLY valid JSON: '
+            .'{"risks": [{"severity": "low|medium|high", "type": "deadline|overload|conflict", "summary": ""}]}';
 
         $raw = $this->complete($system, json_encode($tasks));
 
@@ -82,8 +86,8 @@ class AiService
      */
     public function summarizeMeetingNotes(string $notes): array
     {
-        $system = "You convert meeting notes into a summary and action items. Output ONLY valid JSON: "
-            . '{"summary": "", "action_items": [{"title": "", "suggested_owner": "", "priority": "low|medium|high|critical"}]}';
+        $system = 'You convert meeting notes into a summary and action items. Output ONLY valid JSON: '
+            .'{"summary": "", "action_items": [{"title": "", "suggested_owner": "", "priority": "low|medium|high|critical"}]}';
 
         $raw = $this->complete($system, $this->sanitizeInput($notes));
 
@@ -95,8 +99,8 @@ class AiService
      */
     public function weeklySummary(array $stats): string
     {
-        $system = "You write short, encouraging weekly productivity summaries for a project management tool. "
-            . "Keep it under 120 words. No markdown headers.";
+        $system = 'You write short, encouraging weekly productivity summaries for a project management tool. '
+            .'Keep it under 120 words. No markdown headers.';
 
         return $this->complete($system, json_encode($stats));
     }
@@ -108,6 +112,7 @@ class AiService
     {
         if (empty($this->apiKey)) {
             Log::warning('AiService: OPENAI_API_KEY is not set, returning stub response.');
+
             return '{"error": "AI is not configured. Set OPENAI_API_KEY in .env."}';
         }
 
@@ -124,6 +129,7 @@ class AiService
 
         if ($response->failed()) {
             Log::error('AiService: OpenAI request failed', ['body' => $response->body()]);
+
             return '{"error": "AI request failed."}';
         }
 

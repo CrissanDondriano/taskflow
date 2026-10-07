@@ -13,29 +13,32 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $admin = User::create([
+        // Demo data (with known credentials) must never reach a real
+        // deployment — seeding in production would ship a default admin.
+        if (app()->environment('production')) {
+            return;
+        }
+
+        $admin = $this->makeUser([
             'name' => 'Alex Rivera',
             'email' => 'admin@taskflow.ai',
             'password' => Hash::make('password'),
-            'role' => 'admin',
             'job_title' => 'Administrator',
-        ]);
+        ], 'admin');
 
-        $manager = User::create([
+        $manager = $this->makeUser([
             'name' => 'Maya Reyes',
             'email' => 'manager@taskflow.ai',
             'password' => Hash::make('password'),
-            'role' => 'manager',
             'job_title' => 'Project Manager',
-        ]);
+        ], 'manager');
 
-        $member = User::create([
+        $member = $this->makeUser([
             'name' => 'Daniel Cruz',
             'email' => 'member@taskflow.ai',
             'password' => Hash::make('password'),
-            'role' => 'member',
             'job_title' => 'Full-stack Developer',
-        ]);
+        ], 'member');
 
         $team = Team::create([
             'name' => 'Platform Team',
@@ -73,5 +76,17 @@ class DatabaseSeeder extends Seeder
             'status' => 'in_progress',
             'due_date' => now(),
         ]);
+    }
+
+    /**
+     * 'role' isn't mass-assignable on purpose (see User::$fillable), so the
+     * seeder — the one trusted place that mints demo roles — sets it directly.
+     */
+    private function makeUser(array $attributes, string $role): User
+    {
+        $user = User::create($attributes);
+        $user->forceFill(['role' => $role])->save();
+
+        return $user;
     }
 }

@@ -29,6 +29,7 @@ class SlackService
 
         if (! $webhookUrl) {
             Log::warning("SlackService: team {$team->id} has a Slack integration with no webhook_url.");
+
             return false;
         }
 
@@ -54,7 +55,7 @@ class SlackService
 
         return $this->notify(
             $task->project->team,
-            ":inbox_tray: *{$task->assignee?->name}* was assigned *{$task->title}* in {$task->project->name}" .
+            ":inbox_tray: *{$task->assignee?->name}* was assigned *{$task->title}* in {$task->project->name}".
                 ($task->due_date ? " (due {$task->due_date->format('M j')})" : '')
         );
     }

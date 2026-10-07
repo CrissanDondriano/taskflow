@@ -9,6 +9,8 @@ use App\Notifications\TaskAtRiskNotification;
 use App\Services\AiService;
 use App\Services\SlackService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class AiAssistantController extends Controller
 {
@@ -29,6 +31,8 @@ class AiAssistantController extends Controller
 
         if (! empty($data['project_id'])) {
             $project = Project::with('tasks:id,project_id,title,status,priority,due_date,assignee_id')->find($data['project_id']);
+            // The AI must not read projects outside the requester's teams.
+            $this->authorize('view', $project);
             $context = $project?->toArray() ?? [];
         } else {
             $context = $request->user()->assignedTasks()
@@ -57,19 +61,12 @@ class AiAssistantController extends Controller
         ]);
 
         $project = Project::findOrFail($data['project_id']);
+        $this->authorize('view', $project);
+
         $breakdown = $this->ai->generateTaskBreakdown($data['goal'], $data['requirements'] ?? '');
 
         if (! empty($data['create'])) {
-            foreach ($breakdown['tasks'] ?? [] as $t) {
-                $project->tasks()->create([
-                    'title' => $t['title'] ?? 'Untitled task',
-                    'description' => $t['description'] ?? null,
-                    'priority' => $t['priority'] ?? 'medium',
-                    'category' => $t['category'] ?? null,
-                    'created_by' => $request->user()->id,
-                    'ai_generated' => true,
-                ]);
-            }
+            $this->persistGeneratedTasks($project, $breakdown['tasks'] ?? [], $request->user()->id);
         }
 
         return response()->json($breakdown);
@@ -83,18 +80,24 @@ class AiAssistantController extends Controller
         $data = $request->validate(['project_id' => ['required', 'exists:projects,id']]);
 
         $project = Project::with('team')->findOrFail($data['project_id']);
+        $this->authorize('view', $project);
+
         $result = $this->ai->detectRisks($project);
 
         foreach ($result['risks'] ?? [] as $risk) {
-            AiInsight::create([
-                'project_id' => $project->id,
-                'type' => 'risk',
-                'content' => $risk['summary'] ?? '',
-                'meta' => $risk,
-            ]);
+            // Dedupe: refreshing the endpoint must not re-insert the same
+            // insight or re-notify the team about a risk we already reported.
+            $insight = AiInsight::updateOrCreate(
+                [
+                    'project_id' => $project->id,
+                    'type' => 'risk',
+                    'content' => $risk['summary'] ?? '',
+                ],
+                ['meta' => $risk]
+            );
 
-            if (($risk['severity'] ?? null) === 'high' && $project->team) {
-                $this->slack->notify($project->team, ":warning: AI risk alert for *{$project->name}*: " . ($risk['summary'] ?? ''));
+            if ($insight->wasRecentlyCreated && ($risk['severity'] ?? null) === 'high' && $project->team) {
+                $this->slack->notify($project->team, ":warning: AI risk alert for *{$project->name}*: ".($risk['summary'] ?? ''));
                 $project->creator->notify(new TaskAtRiskNotification($project, $risk['summary'] ?? '', $risk['severity']));
             }
         }
@@ -109,32 +112,74 @@ class AiAssistantController extends Controller
     public function meetingNotes(Request $request)
     {
         $data = $request->validate([
-            'project_id' => ['required', 'exists:projects,id'],
+            // Optional: the frontend converter works outside any project
+            // context; ai_insights.project_id is nullable.
+            'project_id' => ['nullable', 'exists:projects,id'],
             'notes' => ['required', 'string'],
             'create_tasks' => ['sometimes', 'boolean'],
         ]);
 
-        $project = Project::findOrFail($data['project_id']);
+        if (! empty($data['create_tasks']) && empty($data['project_id'])) {
+            return response()->json(['message' => 'project_id is required when create_tasks is set.'], 422);
+        }
+
+        $project = isset($data['project_id']) ? Project::findOrFail($data['project_id']) : null;
+
+        if ($project) {
+            $this->authorize('view', $project);
+        }
+
         $result = $this->ai->summarizeMeetingNotes($data['notes']);
 
-        AiInsight::create([
-            'project_id' => $project->id,
-            'type' => 'summary',
-            'content' => $result['summary'] ?? '',
-            'meta' => $result,
-        ]);
+        // Only persist real results — a failed/unconfigured AI call comes
+        // back as {error} and shouldn't create an empty insight row.
+        if (! empty($result['summary']) || ! empty($result['action_items'])) {
+            AiInsight::create([
+                'project_id' => $project?->id,
+                'type' => 'summary',
+                'content' => $result['summary'] ?? '',
+                'meta' => $result,
+            ]);
+        }
 
         if (! empty($data['create_tasks'])) {
-            foreach ($result['action_items'] ?? [] as $item) {
-                $project->tasks()->create([
-                    'title' => $item['title'] ?? 'Untitled task',
-                    'priority' => $item['priority'] ?? 'medium',
-                    'created_by' => $request->user()->id,
-                    'ai_generated' => true,
-                ]);
-            }
+            $this->persistGeneratedTasks($project, $result['action_items'] ?? [], $request->user()->id);
         }
 
         return response()->json($result);
+    }
+
+    /**
+     * Persist AI-produced task items inside one transaction, normalizing the
+     * untrusted model output first: titles/categories are length-capped and
+     * priority must be one of the enum values, so a bad model response can't
+     * abort a half-written batch with a SQL error.
+     */
+    private function persistGeneratedTasks(Project $project, array $items, int $userId): void
+    {
+        DB::transaction(function () use ($project, $items, $userId) {
+            foreach ($items as $item) {
+                if (! is_array($item)) {
+                    continue;
+                }
+
+                $title = trim((string) ($item['title'] ?? ''));
+
+                $project->tasks()->create([
+                    'title' => Str::limit($title !== '' ? $title : 'Untitled task', 255, ''),
+                    'description' => isset($item['description']) && $item['description'] !== null
+                        ? (string) $item['description']
+                        : null,
+                    'priority' => in_array($item['priority'] ?? null, ['low', 'medium', 'high', 'critical'], true)
+                        ? $item['priority']
+                        : 'medium',
+                    'category' => isset($item['category']) && $item['category'] !== null
+                        ? Str::limit((string) $item['category'], 100, '')
+                        : null,
+                    'created_by' => $userId,
+                    'ai_generated' => true,
+                ]);
+            }
+        });
     }
 }

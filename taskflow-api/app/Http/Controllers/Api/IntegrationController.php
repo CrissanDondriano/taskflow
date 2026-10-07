@@ -14,9 +14,9 @@ class IntegrationController extends Controller
     {
         $this->authorize('update', $team);
 
-        return response()->json(
-            $team->integrations()->get(['id', 'provider', 'is_active', 'connected_at'])
-        );
+        return response()->json([
+            'data' => $team->integrations()->get(['id', 'provider', 'is_active', 'connected_at']),
+        ]);
     }
 
     /**
@@ -48,10 +48,11 @@ class IntegrationController extends Controller
 
         if (! $ok) {
             $integration->update(['is_active' => false]);
+
             return response()->json(['message' => 'Could not reach that Slack webhook. Double-check the URL.'], 422);
         }
 
-        return response()->json($integration);
+        return response()->json(['data' => $integration]);
     }
 
     public function disconnect(Request $request, Team $team, string $provider)
@@ -60,6 +61,6 @@ class IntegrationController extends Controller
 
         Integration::where('team_id', $team->id)->where('provider', $provider)->delete();
 
-        return response()->json(['message' => ucfirst($provider) . ' disconnected.']);
+        return response()->json(['message' => ucfirst($provider).' disconnected.']);
     }
 }
