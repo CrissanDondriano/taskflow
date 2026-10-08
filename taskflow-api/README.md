@@ -22,6 +22,65 @@ You can process pending jobs manually with:
 php artisan queue:work --tries=3
 ```
 
+## AI Plan Imports
+
+Upload a project plan (PDF, DOCX, TXT, MD ≤ 10MB) from the Kanban page's
+"Import plan" button. The API stores the file privately, extracts its text
+(`smalot/pdfparser` for PDF, `phpoffice/phpword` for DOCX), and queues a
+`ProcessPlanImport` job that asks OpenAI for a strict-JSON task list,
+matches each row to a member by job title (`TaskAssignmentService`), and
+marks the import `ready`. The review screen then lets you edit every row
+before `POST /api/plan-imports/{id}/approve` creates the real tasks in one
+transaction (dependencies become subtasks via `parent_task_id`).
+
+Setup:
+
+```bash
+# 1. Text extraction needs GD (already enabled in C:\xampp\php\php.ini):
+php -m | findstr gd
+# 2. Migrate + an OpenAI key:
+php artisan migrate
+# OPENAI_API_KEY=sk-... in .env (OPENAI_MODEL defaults to gpt-4o-mini)
+# 3. Run a queue worker — without one, imports sit at "pending":
+php artisan queue:work --tries=1
+```
+
+Status changes broadcast on the private `team.{teamId}` channel as
+`plan-import.status` (Reverb). The SPA polls `GET /api/plan-imports/{id}`
+every 2s while processing, so it works with or without a live Reverb
+server. To run Reverb locally:
+
+```bash
+php artisan reverb:start
+```
+
+Without `OPENAI_API_KEY`, imports fail fast with a friendly message
+instead of hanging — set the key to use the feature for real.
+
+## Billing (Stripe test mode only)
+
+Plans and limits live in `config/billing.php` (auto-provisioned into the
+`plans` table + `PlanSeeder`). Billing attaches to teams (the workspace).
+
+```bash
+# 1. Test keys only — never commit live keys:
+# STRIPE_KEY=pk_test_...
+# STRIPE_SECRET=sk_test_...
+# STRIPE_WEBHOOK_SECRET=whsec_...
+# 2. Create test products/prices (prints STRIPE_PRICE_* lines for .env):
+php artisan billing:sync-plans
+# 3. Forward webhooks while developing (the webhook is the source of truth
+#    for subscription state — never trust the frontend redirect):
+stripe listen --forward-to localhost:8000/api/webhooks/stripe
+# 4. Run a queue worker (plan imports) and the API:
+php artisan queue:work --tries=1
+```
+
+Test cards: `4242 4242 4242 4242` (any future expiry, any CVC) succeeds;
+`4000 0000 0000 0002` always fails (use it to see the past-due state on
+the billing page). Going live later = swap the keys + price IDs for live
+values (the `isTestMode` banner disappears on its own); no code changes.
+
 ## Setup
 
 ```bash

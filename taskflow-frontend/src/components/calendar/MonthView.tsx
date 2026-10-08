@@ -44,7 +44,7 @@ export function MonthView({
               onClick={() => onMonthOffsetChange(Math.max(MIN_OFFSET, monthOffset - 1))}
               disabled={monthOffset <= MIN_OFFSET}
               aria-label="Previous month"
-              className="w-7 h-7 rounded-lg flex items-center justify-center disabled:opacity-30"
+              className="w-7 h-7 rounded-lg flex items-center justify-center disabled:opacity-30 transition-colors hover:bg-white/5"
               style={{ border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink-muted)" }}
             >
               <ChevronLeft size={14} />
@@ -53,7 +53,7 @@ export function MonthView({
               onClick={() => onMonthOffsetChange(Math.min(MAX_OFFSET, monthOffset + 1))}
               disabled={monthOffset >= MAX_OFFSET}
               aria-label="Next month"
-              className="w-7 h-7 rounded-lg flex items-center justify-center disabled:opacity-30"
+              className="w-7 h-7 rounded-lg flex items-center justify-center disabled:opacity-30 transition-colors hover:bg-white/5"
               style={{ border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink-muted)" }}
             >
               <ChevronRight size={14} />
@@ -66,7 +66,7 @@ export function MonthView({
         {!isAnchorMonth && (
           <div className="mb-3 px-3 py-2 rounded-lg text-xs" style={{ background: "var(--tf-fill-03)", color: "var(--tf-ink-muted)" }}>
             No demo meetings or deadlines outside July 2026.{" "}
-            <button onClick={() => onMonthOffsetChange(0)} className="underline" style={{ color: "var(--tf-teal)" }}>
+            <button onClick={() => onMonthOffsetChange(0)} className="underline hover:opacity-80" style={{ color: "var(--tf-teal)" }}>     
               Jump back to July
             </button>
           </div>

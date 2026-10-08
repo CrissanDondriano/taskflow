@@ -112,7 +112,7 @@ export function LoginPage() {
               />
 
               <div className="flex justify-end -mt-1">
-                <Link to="/forgot-password" className="text-[12px]" style={{ color: "var(--tf-teal)" }}>
+                <Link to="/forgot-password" className="text-[12px] hover:underline" style={{ color: "var(--tf-teal)" }}>
                   Forgot password?
                 </Link>
               </div>
@@ -127,7 +127,7 @@ export function LoginPage() {
 
         <p className="text-center text-[13px] mt-6" style={{ color: "var(--tf-ink-muted)" }}>
           Don't have an account?{" "}
-          <Link to="/signup" className="font-medium" style={{ color: "var(--tf-teal)" }}>
+          <Link to="/signup" className="font-medium hover:underline" style={{ color: "var(--tf-teal)" }}>
             Sign up
           </Link>
         </p>

@@ -185,11 +185,11 @@ export function MeetingNotesConverter() {
             </span>
             <div className="flex items-center gap-2">
               {notes && (
-                <button onClick={startOver} className="flex items-center gap-1 text-xs" style={{ color: "var(--tf-ink-muted)" }}>
+                <button onClick={startOver} className="flex items-center gap-1 text-xs hover:underline" style={{ color: "var(--tf-ink-muted)" }}>
                   <RotateCcw size={11} /> Start over
                 </button>
               )}
-              <button onClick={loadSample} className="text-xs" style={{ color: "var(--tf-ink-muted)" }}>
+              <button onClick={loadSample} className="text-xs hover:underline" style={{ color: "var(--tf-ink-muted)" }}>
                 Load sample
               </button>
               <label className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg cursor-pointer" style={{ border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink-muted)" }}>
@@ -308,7 +308,7 @@ export function MeetingNotesConverter() {
                       Action items
                     </h2>
                   </div>
-                  <button onClick={() => toggleAll(!allSelected)} className="flex items-center gap-1.5 text-xs" style={{ color: "var(--tf-ink-muted)" }}>
+                  <button onClick={() => toggleAll(!allSelected)} className="flex items-center gap-1.5 text-xs hover:underline" style={{ color: "var(--tf-ink-muted)" }}>
                     {allSelected ? <CheckSquare size={13} /> : <Square size={13} />}
                     {allSelected ? "Deselect all" : "Select all"}
                   </button>

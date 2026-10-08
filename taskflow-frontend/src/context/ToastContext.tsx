@@ -49,7 +49,7 @@ export function Toaster() {
             <span className="shrink-0 mt-0.5" style={{ color: v.accent }}>
               {v.icon}
             </span>
-            <p className="flex-1 text-[12.5px] leading-snug" style={{ color: "var(--tf-ink)" }}>
+            <p className="flex-1 text-[13px] leading-snug" style={{ color: "var(--tf-ink)" }}>
               {t.message}
             </p>
             {action && (

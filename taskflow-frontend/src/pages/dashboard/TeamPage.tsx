@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useDeferredValue } from "react";
 import { Search, UserPlus } from "lucide-react";
-import { GlassPanel, Modal, EmptyState } from "../../components/ui/Primitives";
+import { GlassPanel, Modal, EmptyState, ConfirmDialog } from "../../components/ui/Primitives";
+import type { Person } from "../../types";
 import { Button } from "../../components/ui/Button";
 import { MemberCard } from "../../components/team/MemberCard";
 import { AiWorkloadPanel } from "../../components/team/AiWorkloadPanel";
@@ -10,20 +11,26 @@ import { CollaborationTimeline } from "../../components/team/CollaborationTimeli
 import { TeamAchievements } from "../../components/team/TeamAchievements";
 import { useTasksData } from "../../context/TasksContext";
 import { useMeetingsData } from "../../context/MeetingsContext";
-import { useTeamMembers, useTeamActions } from "../../context/TeamContext";
+import { useTeamMembers, useTeamActions, useCanManageTeam } from "../../context/TeamContext";
 import { useToast } from "../../context/ToastContext";
+import { isUpgradeRequired } from "../../lib/billing";
 import { withComputedWorkload } from "../../lib/team";
 import { ApiError } from "../../lib/api";
 
 export function TeamPage() {
   const members = useTeamMembers();
-  const { inviteByEmail, removeMember, undoDelete } = useTeamActions();
+  const { inviteByEmail, setMemberTitle, removeMember, undoDelete } = useTeamActions();
+  const canManage = useCanManageTeam();
   const { toast } = useToast();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviting, setInviting] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [department, setDepartment] = useState<string>("All");
+  // One confirm for the whole grid instead of a hidden Modal tree per card.
+  const [removeTarget, setRemoveTarget] = useState<Person | null>(null);
+  // Defer the filtered-list computation so typing stays responsive.
+  const deferredSearch = useDeferredValue(search);
   const tasks = useTasksData();
   const meetings = useMeetingsData();
 
@@ -32,7 +39,7 @@ export function TeamPage() {
   const departments = useMemo(() => ["All", ...Array.from(new Set(people.map((p) => p.department)))], [people]);
 
   const filtered = people.filter((p) => {
-    const matchesSearch = `${p.name} ${p.jobTitle} ${p.department}`.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = `${p.name} ${p.jobTitle} ${p.department}`.toLowerCase().includes(deferredSearch.toLowerCase());
     const matchesDept = department === "All" || p.department === department;
     return matchesSearch && matchesDept;
   });
@@ -55,7 +62,13 @@ export function TeamPage() {
       e.currentTarget.reset();
       toast(`${email} was added to your team.`, "success");
     } catch (err) {
-      if (err instanceof ApiError && err.status === 422) {
+      if (isUpgradeRequired(err)) {
+        setInviteOpen(false);
+        toast(err instanceof ApiError ? err.message : "Member limit reached.", "error", {
+          label: "View plans",
+          run: () => (window.location.href = "/dashboard/billing"),
+        });
+      } else if (err instanceof ApiError && err.status === 422) {
         setInviteError("No TaskFlow account uses that email — ask them to sign up first, then invite them again.");
       } else if (err instanceof ApiError && err.status === 403) {
         setInviteError("Only the team owner can add members.");
@@ -182,40 +195,64 @@ export function TeamPage() {
       </div>
 
       {/* member grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 300px" }}>
         {filtered.map((p) => (
           <MemberCard
             key={p.initials}
             person={p}
             assignedCount={tasks.filter((t) => t.assignee === p.initials).length}
             completedCount={tasks.filter((t) => t.assignee === p.initials && t.column === "Completed").length}
-            onRemove={() => {
-              removeMember(p.initials);
-              toast("Member removed.", "info", { label: "Undo", run: undoDelete });
-            }}
+            onRemove={setRemoveTarget}
+            canManage={canManage}
+            onSaveTitle={(initials, title) => setMemberTitle(initials, title)}
           />
         ))}
         {filtered.length === 0 && (
           <div className="col-span-full">
             <EmptyState
               icon={<Search size={22} />}
-              message={`No members match "${search}"${department !== "All" ? ` in ${department}` : ""}.`}
+              message={
+                search || department !== "All"
+                  ? `No members match "${search}"${department !== "All" ? ` in ${department}` : ""}.`
+                  : "Nobody here yet — invite your first teammate."
+              }
               action={
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => {
-                    setSearch("");
-                    setDepartment("All");
-                  }}
-                >
-                  Clear search and filters
-                </Button>
+                search || department !== "All" ? (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      setSearch("");
+                      setDepartment("All");
+                    }}
+                  >
+                    Clear search and filters
+                  </Button>
+                ) : (
+                  <Button variant="primary" size="sm" onClick={() => setInviteOpen(true)}>
+                    Invite a member
+                  </Button>
+                )
               }
             />
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={removeTarget !== null}
+        onClose={() => setRemoveTarget(null)}
+        title="Remove from team?"
+        message={removeTarget ? `${removeTarget.name} will be removed from the team. You'll get a short window to undo this from the notification.` : ""}
+        confirmLabel="Remove"
+        onConfirm={() => {
+          if (removeTarget) {
+            removeMember(removeTarget.initials);
+            toast("Member removed.", "info", { label: "Undo", run: undoDelete });
+          }
+          setRemoveTarget(null);
+        }}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <SharedProjectsList tasks={tasks} />

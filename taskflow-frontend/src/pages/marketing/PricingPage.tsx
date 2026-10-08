@@ -1,4 +1,4 @@
-import { Download, KanbanSquare, Sparkles } from "lucide-react";
+import { Download, KanbanSquare, Sparkles, Check, Minus } from "lucide-react";
 import { Container, SectionHead, Faq } from "../../components/marketing/Bits";
 import { Reveal } from "../../components/marketing/Reveal";
 import { PageHero } from "../../components/marketing/PageHero";
@@ -8,9 +8,66 @@ import { FAQS } from "../../data/marketing";
 
 const INCLUDED = [
   { icon: KanbanSquare, title: "Board and calendar", desc: "Kanban and calendar views on every plan." },
-  { icon: Sparkles, title: "AI assistant", desc: "5 queries a day on Free, the full suite on Pro." },
+  { icon: Sparkles, title: "AI assistant", desc: "50 messages a month on Free, the full suite on Pro." },
   { icon: Download, title: "Data export", desc: "Take your tasks, reports and files with you any time." },
 ];
+
+const COMPARE: { label: string; values: (string | boolean)[] }[] = [
+  { label: "Projects", values: ["3", "25", "Custom"] },
+  { label: "Team seats", values: ["3", "15", "Custom"] },
+  { label: "Plan imports per month", values: ["2", "50", "Custom"] },
+  { label: "AI messages per month", values: ["50", "1,000", "Custom"] },
+  { label: "Kanban board + calendar", values: [true, true, true] },
+  { label: "Meeting notes converter", values: [false, true, true] },
+  { label: "Risk detection and alerts", values: [false, true, true] },
+  { label: "Slack, Calendar, Outlook", values: [false, true, true] },
+  { label: "SSO + audit logs", values: [false, false, true] },
+  { label: "Dedicated support", values: [false, false, true] },
+];
+
+function CompareTable() {
+  return (
+    <div className="overflow-x-auto tf-scroll">
+      <table className="w-full min-w-[560px] text-[14px]">
+        <caption className="sr-only">Feature comparison by plan</caption>
+        <thead>
+          <tr style={{ borderBottom: "1px solid var(--tf-panel-border)" }}>
+            <th scope="col" className="py-3 pr-4 text-left font-normal" style={{ color: "var(--tf-ink-muted)" }}>
+              <span className="sr-only">Feature</span>
+            </th>
+            {["Free", "Pro", "Enterprise"].map((p) => (
+              <th key={p} scope="col" className="px-4 py-3 text-center font-semibold">
+                {p}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {COMPARE.map((row) => (
+            <tr key={row.label} style={{ borderBottom: "1px solid var(--tf-panel-border)" }}>
+              <th scope="row" className="py-3 pr-4 text-left font-normal" style={{ color: "var(--tf-ink-soft)" }}>
+                {row.label}
+              </th>
+              {row.values.map((v, i) => (
+                <td key={i} className="px-4 py-3 text-center" style={{ color: "var(--tf-ink-soft)" }}>
+                  {typeof v === "boolean" ? (
+                    v ? (
+                      <Check size={16} className="mx-auto" color="#14B8A6" aria-label="Included" />
+                    ) : (
+                      <Minus size={16} className="mx-auto" aria-label="Not included" style={{ color: "var(--tf-ink-muted)" }} />
+                    )
+                  ) : (
+                    v
+                  )}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 export function PricingPage() {
   usePageMeta("Pricing", "Start free with 3 projects. Upgrade to Pro at $14 per user per month, or contact us for Enterprise.");
@@ -35,6 +92,13 @@ export function PricingPage() {
               </li>
             ))}
           </ul>
+        </Container>
+      </section>
+
+      <section aria-labelledby="compare" className="py-16 lg:py-24">
+        <Container className="max-w-4xl">
+          <Reveal><SectionHead id="compare" title="Compare plans side by side" /></Reveal>
+          <Reveal delay={100}><CompareTable /></Reveal>
         </Container>
       </section>
 

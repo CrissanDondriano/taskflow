@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { Badge } from "./Badge";
@@ -28,7 +29,7 @@ export function GlassPanel({
 }) {
   return (
     <div
-      className={`rounded-2xl backdrop-blur-lg ${className}`}
+      className={`rounded-2xl ${className}`}
       style={{ background: "var(--tf-panel)", border: "1px solid var(--tf-panel-border)", ...style }}
     >
       {children}
@@ -80,11 +81,14 @@ export function Modal({
   onClose,
   title,
   children,
+  wide = false,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   children: ReactNode;
+  /** Review-table style dialogs need room — max-w-4xl instead of max-w-md. */
+  wide?: boolean;
 }) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const restoreFocusRef = useRef<HTMLElement | null>(null);
@@ -160,17 +164,20 @@ export function Modal({
     }
   }
 
-  return (
+  // Portal to document.body: keeps the overlay out of glass/blurred
+  // ancestors (which create stacking contexts) and out of the page's
+  // render subtree, so opening a modal never re-renders the page behind it.
+  return createPortal(
     <AnimatePresence>
       {open && (
         <motion.div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: "var(--tf-overlay)", backdropFilter: "blur(4px)" }}
+          style={{ background: "var(--tf-overlay)" }}
           onClick={onClose}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
+          transition={{ duration: 0.12 }}
         >
           <motion.div
             ref={dialogRef}
@@ -180,12 +187,12 @@ export function Modal({
             tabIndex={-1}
             onClick={(e) => e.stopPropagation()}
             onKeyDown={trapTab}
-            className="w-full max-w-md rounded-2xl p-5 max-h-[90vh] overflow-y-auto tf-scroll"
+            className={`w-full ${wide ? "max-w-4xl" : "max-w-md"} rounded-2xl p-5 max-h-[90vh] overflow-y-auto tf-scroll`}
             style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-panel-border)" }}
-            initial={{ opacity: 0, scale: 0.96, y: 8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 8 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.12 }}
           >
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-[16px] font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
@@ -194,7 +201,7 @@ export function Modal({
               <button
                 onClick={onClose}
                 aria-label="Close"
-                className="w-7 h-7 rounded-lg flex items-center justify-center"
+                className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5"
                 style={{ color: "var(--tf-ink-muted)" }}
               >
                 <X size={15} />
@@ -204,7 +211,8 @@ export function Modal({
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
 

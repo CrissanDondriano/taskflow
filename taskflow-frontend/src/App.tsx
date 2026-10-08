@@ -25,10 +25,14 @@ const KanbanPage = lazy(() => import("./pages/dashboard/KanbanPage").then((m) =>
 const CalendarPage = lazy(() => import("./pages/dashboard/CalendarPage").then((m) => ({ default: m.CalendarPage })));
 const MeetingNotesPage = lazy(() => import("./pages/dashboard/MeetingNotesPage").then((m) => ({ default: m.MeetingNotesPage })));
 const TeamPage = lazy(() => import("./pages/dashboard/TeamPage").then((m) => ({ default: m.TeamPage })));
+const TeamChatPage = lazy(() => import("./pages/dashboard/TeamChatPage").then((m) => ({ default: m.TeamChatPage })));
 const ReportsPage = lazy(() => import("./pages/dashboard/ReportsPage").then((m) => ({ default: m.ReportsPage })));
 const SettingsPage = lazy(() => import("./pages/dashboard/SettingsPage").then((m) => ({ default: m.SettingsPage })));
 
 const AdminPage = lazy(() => import("./pages/dashboard/AdminPage").then((m) => ({ default: m.AdminPage })));
+const BillingPage = lazy(() => import("./pages/dashboard/BillingPage").then((m) => ({ default: m.BillingPage })));
+const BillingSuccessPage = lazy(() => import("./pages/billing/BillingSuccessPage").then((m) => ({ default: m.BillingSuccessPage })));
+const BillingCancelPage = lazy(() => import("./pages/billing/BillingCancelPage").then((m) => ({ default: m.BillingCancelPage })));
 
 export default function App() {
   return (
@@ -45,6 +49,8 @@ export default function App() {
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />
+            <Route path="/billing/success" element={<BillingSuccessPage />} />
+            <Route path="/billing/cancel" element={<BillingCancelPage />} />
             {/* Any other URL (/112, /features/abc, ...) lands on the 404 page */}
             <Route path="*" element={<NotFoundPage />} />
           </Route>
@@ -67,6 +73,7 @@ export default function App() {
             <Route path="calendar" element={<CalendarPage />} />
             <Route path="meeting-notes" element={<MeetingNotesPage />} />
             <Route path="team" element={<TeamPage />} />
+            <Route path="chat" element={<TeamChatPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route
               path="admin"
@@ -77,6 +84,7 @@ export default function App() {
               }
             />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="billing" element={<BillingPage />} />
             <Route path="*" element={<NotFoundPage compact />} />
           </Route>
         </Routes>

@@ -61,7 +61,7 @@ export function ContactPage() {
                 <CheckCircle2 size={36} color="#2DD4BF" aria-hidden="true" />
                 <h2 className="font-display text-[24px] font-semibold">Your message is ready to send</h2>
                 <p className="max-w-[48ch] text-[14px] leading-relaxed" style={MUTED}>Your email app should have opened with the message filled in. If nothing opened, write to <a href="mailto:hello@taskflow.ai" className="underline underline-offset-4">hello@taskflow.ai</a>.</p>
-                <button type="button" onClick={() => setSent(false)} className={`min-h-11 rounded-xl px-5 text-[14px] font-medium ${FOCUS}`} style={{ border: "1px solid var(--tf-panel-border)" }}>Write another message</button>
+                <button type="button" onClick={() => setSent(false)} className={`min-h-11 rounded-xl px-5 text-[14px] font-medium transition-opacity hover:opacity-90 ${FOCUS}`} style={{ border: "1px solid var(--tf-panel-border)" }}>Write another message</button>
               </div>
             ) : (
               <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5 rounded-2xl p-6 sm:p-8" style={PANEL}>

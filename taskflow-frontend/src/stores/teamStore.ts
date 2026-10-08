@@ -12,18 +12,20 @@ interface ApiMember {
   id: number;
   name: string;
   email: string;
+  job_title: string | null;
   role_in_team: "lead" | "member";
 }
 
 interface ApiTeam {
   id: number;
   name: string;
+  owner_id: number;
   members?: ApiMember[];
 }
 
 interface TeamState {
   /** The SPA's single active team (first team the account belongs to). */
-  team: { id: number; name: string } | null;
+  team: { id: number; name: string; ownerId: number } | null;
   members: Person[];
   /** True while the first API load runs (DashboardLayout gates pages on it). */
   loading: boolean;
@@ -33,6 +35,12 @@ interface TeamState {
   load: () => Promise<void>;
   /** Adds an existing account to the team by email; creates the team first if needed. Throws ApiError. */
   inviteByEmail: (email: string) => Promise<void>;
+  /**
+   * Sets a member's job title (PATCH /teams/{team}/members/{user}).
+   * Owner/admin only — the server refuses anyone else. Optimistic with
+   * rollback; throws ApiError so the editor can show the error inline.
+   */
+  setMemberTitle: (initials: string, jobTitle: string | null) => Promise<void>;
   addMember: (person: Person) => void;
   removeMember: (initials: string) => void;
   /** Restores the member removed by the most recent removeMember call. */
@@ -47,7 +55,8 @@ function toastError(message: string) {
   useToastStore.getState().toast(message, "error");
 }
 
-/** API member row → Person (display fields the schema doesn't store get sensible defaults). */
+/** API member row → Person. jobTitle is the real value (or null) — display
+ *  layers decide the fallback, so an unset title is never stored as a lie. */
 function mapMember(m: ApiMember, index: number): Person {
   const lead = m.role_in_team === "lead";
   return {
@@ -57,7 +66,7 @@ function mapMember(m: ApiMember, index: number): Person {
     email: m.email,
     color: COLORS[index % COLORS.length],
     role: lead ? "manager" : "member",
-    jobTitle: lead ? "Team lead" : "Team member",
+    jobTitle: m.job_title,
     department: "General",
     status: "offline",
     workloadPct: 0,
@@ -65,14 +74,15 @@ function mapMember(m: ApiMember, index: number): Person {
 }
 
 /** The account's team, creating one on the fly (the SPA assumes an implicit team). */
-async function ensureTeam(): Promise<{ id: number; name: string }> {
+async function ensureTeam(): Promise<{ id: number; name: string; ownerId: number }> {
   const existing = useTeamStore.getState().team;
   if (existing) return existing;
   const user = useAuthStore.getState().user;
   const created = await api.post<{ data: ApiTeam }>("/teams", {
     name: user ? `${user.name}'s team` : "My team",
   });
-  const team = { id: created.data.id, name: created.data.name };
+  // A just-created team is owned by its creator.
+  const team = { id: created.data.id, name: created.data.name, ownerId: user?.id ?? 0 };
   useTeamStore.setState({ team });
   return team;
 }
@@ -95,7 +105,7 @@ export const useTeamStore = create<TeamState>()((set, get) => ({
       const teams = await fetchAll<ApiTeam>("/teams");
       const first = teams[0] ?? null;
       set({
-        team: first ? { id: first.id, name: first.name } : null,
+        team: first ? { id: first.id, name: first.name, ownerId: first.owner_id } : null,
         members: first ? (first.members ?? []).map(mapMember) : [],
         loading: false,
         lastDeleted: null,
@@ -113,6 +123,35 @@ export const useTeamStore = create<TeamState>()((set, get) => ({
     const res = await api.post<{ data: ApiTeam }>(`/teams/${team.id}/members`, { email });
     set({ members: (res.data.members ?? []).map(mapMember), lastDeleted: null });
     get().syncSelf(useAuthStore.getState().user);
+  },
+
+  async setMemberTitle(initials, jobTitle) {
+    const { team, members } = get();
+    const person = members.find((p) => p.initials === initials);
+    if (!team || !person?.id) {
+      throw new ApiError("Couldn't save the title — the team hasn't loaded yet.", 0);
+    }
+    const previous = person.jobTitle;
+    set((prev) => ({
+      members: prev.members.map((p) => (p.initials === initials ? { ...p, jobTitle } : p)),
+    }));
+    try {
+      const res = await api.patch<{ data: ApiTeam }>(`/teams/${team.id}/members/${person.id}`, {
+        job_title: jobTitle,
+      });
+      // Adopt the server's row (source of truth) rather than the optimistic one.
+      const saved = (res.data.members ?? []).find((m) => m.id === person.id);
+      set((prev) => ({
+        members: prev.members.map((p) =>
+          p.initials === initials ? { ...p, jobTitle: saved ? saved.job_title : jobTitle } : p
+        ),
+      }));
+    } catch (err) {
+      set((prev) => ({
+        members: prev.members.map((p) => (p.initials === initials ? { ...p, jobTitle: previous } : p)),
+      }));
+      throw err instanceof ApiError ? err : new ApiError("Couldn't save the title.", 0);
+    }
   },
 
   addMember(person) {
@@ -166,12 +205,22 @@ export const useTeamStore = create<TeamState>()((set, get) => ({
   syncSelf(user) {
     if (!user) return;
     set((prev) => {
+      const existing = prev.members.find((p) => p.email === user.email);
       const self: Person = {
         id: user.id,
         initials: initialsOf(user.name),
         name: user.name,
         email: user.email,
-        jobTitle: user.role === "admin" ? "Administrator" : user.role === "manager" ? "Project Manager" : "Team member",
+        // A member row's title (real value or explicitly empty) always wins;
+        // the role-based label only applies to brand-new accounts with no
+        // team row yet, matching the old display behavior for them.
+        jobTitle: existing
+          ? existing.jobTitle
+          : user.role === "admin"
+            ? "Administrator"
+            : user.role === "manager"
+              ? "Project Manager"
+              : "Team member",
         department: "General",
         status: "online",
         role: user.role,

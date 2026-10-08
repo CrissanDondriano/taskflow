@@ -32,7 +32,43 @@ Authorization: Bearer <token>
 | GET | `/teams` | List teams (all for admins, own teams otherwise). Paginated, 20/page (`?per_page=` up to 100) |
 | POST | `/teams` | Create team. Body: `name`, `description?` |
 | POST | `/teams/{team}/members` | Add member. Body: `user_id` **or** `email` (an existing account — the SPA invite form uses email), `role_in_team?` (`lead`\|`member`) |
+| PATCH | `/teams/{team}/members/{userId}` | Set a member's job title. Owner/admin only. Body: `job_title` (one of `Designer`, `Developer`, `Accountant`, `Project Manager`, `Marketing`, `QA`, `Support`, or any custom string ≤100 chars; `null` clears). Returns the team with members |
 | DELETE | `/teams/{team}/members/{userId}` | Remove member |
+
+## Team chat
+
+One shared room per team (latest 100 messages, oldest first). New messages broadcast on the private `team.{team}` channel as `team-message.sent` when Reverb is configured; the SPA polls every 4s so nothing is missed either way.
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/teams/{team}/messages` | List messages (team members only, strangers get 404) |
+| POST | `/teams/{team}/messages` | Send. Body: `body` (≤2000 chars). Throttled 30/min |
+| DELETE | `/teams/{team}/messages/{message}` | Delete own message (managers: anyone's) |
+
+## Billing (Stripe test mode)
+
+Plans live in `config/billing.php` and auto-provision into the `plans` table: **Free** (3 members, 3 projects, 2 imports/mo, 50 AI msgs/mo), **Pro** ($14/user/mo, 15/25/50/1000), **Team** ($29/user/mo, 50/100/200/5000). Billing attaches to the user's first team (the SPA's implicit workspace).
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| GET | `/billing` | Bearer | `{ data: { plan, test_mode, subscription?, usage, can_manage } }` — usage shows used vs limit per metric |
+| POST | `/billing/checkout` | Bearer (owner) | Body: `plan` (`pro`\|`team`), `interval?` (`monthly`\|`yearly`). New subscribers get `{ url }` (Stripe Checkout); already-subscribed teams get an in-place prorated swap (`{ switched: true }`) |
+| POST | `/billing/portal` | Bearer (owner) | `{ url }` — Stripe Customer Portal (manage/cancel/update card) |
+| POST | `/billing/cancel` | Bearer (owner) | Cancel at period end → `{ ends_at }` |
+| GET | `/billing/invoices` | Bearer (owner) | `{ data: [{ id, amount, currency, status, date, url }] }` |
+| POST | `/webhooks/stripe` | Public (signature) | Signature-verified + idempotent. Handles `checkout.session.completed`, `customer.subscription.created/updated/deleted`, `invoice.paid`, `invoice.payment_failed` — the webhook (not the redirect) is the source of truth for plan state |
+
+Over-limit writes answer **402** with `{ message, upgrade_required, metric, used, limit, plan }`: adding members, creating projects, uploading plan imports and AI messages past quota.
+
+## AI Plan Imports
+
+| Method | Endpoint | Auth | Rate Limit | Description |
+|---|---|---|---|---|
+| POST | `/teams/{team}/members` | Bearer (member) | 10/min | Upload a plan: `file` (PDF/DOCX/TXT/MD ≤ 10MB, stored privately). Queues AI extraction, returns `{ data: { id, status } }` with `status: pending` |
+| GET | `/plan-imports/{id}` | Bearer (member) | — | Pollable `{ data: { status, tasks, error_message } }` — `pending` → `processing` → `ready`/`failed`. Other teams get 404 |
+| POST | `/plan-imports/{id}/approve` | Bearer (member) | — | Body: `project_id` (must be visible to you) + reviewed `tasks[]` (`title`, `description?`, `priority?` incl. `urgent`→`critical`, `assignee_id?` must be a team member, `due_date?` or `suggested_due_offset_days?`, `depends_on?` titles). Creates real tasks in one transaction (dependencies become subtasks), marks the import `approved`. Only a `ready` import, exactly once |
+
+Extracted rows carry `required_role`, `estimated_days`, `depends_on`, plus the assignment suggestion (`assignee_id`/`assignee_name` or `needs_assignee: true`). Status changes also broadcast on the private `team.{teamId}` channel as `plan-import.status` (Reverb).
 
 ---
 
@@ -57,7 +93,9 @@ Authorization: Bearer <token>
 | GET | `/tasks/{task}` | Detail with assignee, creator, subtasks, comments, attachments |
 | PUT/PATCH | `/tasks/{task}` | Update |
 | PATCH | `/tasks/{task}/move` | Kanban move. Body: `status`, `position` |
-| POST | `/tasks/{task}/comments` | Add comment. Body: `body` |
+| GET | `/tasks/{task}/comments` | List comments, oldest first |
+| POST | `/tasks/{task}/comments` | Add comment. Body: `body` (≤2000 chars) |
+| DELETE | `/tasks/{task}/comments/{comment}` | Delete own comment (managers: anyone's) |
 | POST | `/tasks/{task}/attachments` | Upload file (multipart, max 10MB) |
 | DELETE | `/tasks/{task}` | Soft delete (recoverable) |
 

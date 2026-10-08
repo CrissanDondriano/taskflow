@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Billing\EnforcePlanLimits;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Http\Resources\ProjectResource;
 use App\Models\ActivityLog;
 use App\Models\Project;
+use App\Models\Team;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
@@ -38,6 +40,16 @@ class ProjectController extends Controller
         $this->authorize('create', Project::class);
 
         $data = $request->validated();
+
+        // Plan quota is per workspace: the target team when given, else the
+        // requester's own implicit workspace (first team) for personal
+        // projects. No team at all means nothing to bill against — allow.
+        $team = ! empty($data['team_id'])
+            ? Team::find($data['team_id'])
+            : $request->user()->ownedTeams()->first() ?? $request->user()->teams()->first();
+        if ($team) {
+            EnforcePlanLimits::for($team)->check('projects');
+        }
 
         $project = Project::create([...$data, 'created_by' => $request->user()->id]);
 

@@ -159,7 +159,7 @@ export function NewTaskModal({
               type="button"
               onClick={draftWithAi}
               disabled={!title.trim() || drafting}
-              className="flex items-center gap-1 text-[11px] disabled:opacity-40"
+              className="flex items-center gap-1 text-[11px] disabled:opacity-40 hover:underline"
               style={{ color: "var(--tf-teal)" }}
               title="Drafts a description with the AI assistant — falls back to a quick template if AI is unavailable"
             >
@@ -182,7 +182,7 @@ export function NewTaskModal({
                 Suggested:
               </span>
               {suggestedLabels.map((l) => (
-                <button key={l} type="button" onClick={() => toggleLabel(l)}>
+                <button key={l} type="button" onClick={() => toggleLabel(l)} className="hover:opacity-80 transition-opacity">
                   <Badge color={labels.includes(l) ? "var(--tf-teal)" : "var(--tf-ink-muted)"}>{labels.includes(l) ? `✓ ${l}` : l}</Badge>
                 </button>
               ))}
@@ -243,7 +243,7 @@ export function NewTaskModal({
             >
               {members.map((p) => (
                 <option key={p.initials} value={p.initials} style={{ background: "var(--tf-surface)" }}>
-                  {p.name}
+                  {p.jobTitle ? `${p.name} — ${p.jobTitle}` : p.name}
                 </option>
               ))}
             </select>

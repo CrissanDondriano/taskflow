@@ -74,13 +74,13 @@ export function NotificationsBell() {
         aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications"}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className="relative w-9 h-9 rounded-xl flex items-center justify-center"
+        className="relative w-9 h-9 rounded-xl flex items-center justify-center transition-colors hover:bg-white/5"
         style={{ border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink-muted)" }}
       >
         <Bell size={16} />
         {unreadCount > 0 && (
           <span
-            className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full text-[9px] font-mono flex items-center justify-center text-white"
+            className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full text-[10px] font-mono flex items-center justify-center text-white"
             style={{ background: "var(--tf-danger)", boxShadow: "0 0 6px var(--tf-danger)" }}
           >
             {unreadCount > 9 ? "9+" : unreadCount}
@@ -109,7 +109,7 @@ export function NotificationsBell() {
                 Notifications
               </span>
               {unreadCount > 0 && (
-                <button onClick={markAllRead} className="text-xs flex items-center gap-1" style={{ color: "var(--tf-teal)" }}>
+                <button onClick={markAllRead} className="text-xs flex items-center gap-1 hover:underline" style={{ color: "var(--tf-teal)" }}>
                   <Check size={12} /> Mark all read
                 </button>
               )}
@@ -126,7 +126,7 @@ export function NotificationsBell() {
                   <button
                     key={n.id}
                     onClick={() => markRead(n.id)}
-                    className="w-full text-left px-4 py-3 flex items-start gap-2.5 transition-colors"
+                    className="w-full text-left px-4 py-3 flex items-start gap-2.5 transition-colors hover:bg-white/5"
                     style={{ borderBottom: "1px solid var(--tf-panel-border)", background: n.read ? "transparent" : "rgba(37,99,235,0.06)" }}
                   >
                     <span
@@ -134,7 +134,7 @@ export function NotificationsBell() {
                       style={{ background: n.read ? "transparent" : "var(--tf-primary)", boxShadow: n.read ? "none" : "0 0 6px var(--tf-primary)" }}
                     />
                     <div className="min-w-0">
-                      <p className="text-[12.5px] leading-snug" style={{ color: n.read ? "var(--tf-ink-muted)" : "var(--tf-ink)" }}>
+                      <p className="text-[13px] leading-snug" style={{ color: n.read ? "var(--tf-ink-muted)" : "var(--tf-ink)" }}>
                         {n.message}
                       </p>
                       <p className="text-[10px] font-mono mt-0.5" style={{ color: "var(--tf-ink-muted)" }}>

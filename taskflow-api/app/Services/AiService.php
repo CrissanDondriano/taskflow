@@ -95,6 +95,50 @@ class AiService
     }
 
     /**
+     * Extract a structured task list from one chunk of a project plan.
+     * Uses JSON mode (temperature 0) and returns the decoded payload, or
+     * null when the model didn't return usable JSON (the caller retries
+     * once). Throws AiUnavailableException when OpenAI can't be reached at
+     * all — retrying that is pointless.
+     *
+     * @param  array<int, string>  $knownRoles  Titles already in use by the
+     *                                          team; the model must pick required_role from these when possible.
+     * @return array<string, mixed>|null
+     */
+    public function extractPlanTasks(string $chunk, array $knownRoles): ?array
+    {
+        $roles = $knownRoles !== []
+            ? 'Choose required_role from this list whenever one fits: '.implode(', ', $knownRoles).'. '
+            : '';
+
+        $system = 'You turn project plan text into a task list. Output ONLY valid JSON, no markdown, no prose, '
+            .'matching this exact shape: {"tasks": [{"title": "", "description": "", '
+            .'"required_role": "", "priority": "low|medium|high|urgent", "estimated_days": 0, '
+            .'"depends_on": ["exact title of another task in this list"], "suggested_due_offset_days": 0}]}. '
+            .$roles
+            .'Rules: every task needs a non-empty title; priority defaults to medium when unclear; '
+            .'depends_on holds titles from THIS list only (empty array when independent); '
+            .'suggested_due_offset_days counts working days from project start (0 when unknown).';
+
+        $raw = $this->completeJson($system, $this->sanitizeInput($chunk));
+
+        if ($raw === null) {
+            throw new AiUnavailableException(
+                'The AI service is unreachable right now — check OPENAI_API_KEY and try the import again in a minute.'
+            );
+        }
+
+        $clean = trim((string) preg_replace('/^```json|```$/m', '', $raw));
+        $decoded = json_decode($clean, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($decoded)) {
+            return null;
+        }
+
+        return $decoded;
+    }
+
+    /**
      * Produce a plain-language weekly productivity summary for a project or team.
      */
     public function weeklySummary(array $stats): string
@@ -134,6 +178,41 @@ class AiService
         }
 
         return $response->json('choices.0.message.content', '');
+    }
+
+    /**
+     * JSON-mode variant of complete(): forces the model into JSON output at
+     * temperature 0. Returns the raw string, or null when OpenAI can't be
+     * reached at all (missing key or failed request — the caller must fail
+     * the operation, not retry it).
+     */
+    protected function completeJson(string $system, string $user): ?string
+    {
+        if (empty($this->apiKey)) {
+            Log::warning('AiService: OPENAI_API_KEY is not set, extraction aborted.');
+
+            return null;
+        }
+
+        $response = Http::withToken($this->apiKey)
+            ->timeout(60)
+            ->post('https://api.openai.com/v1/chat/completions', [
+                'model' => $this->model,
+                'messages' => [
+                    ['role' => 'system', 'content' => $system],
+                    ['role' => 'user', 'content' => $user],
+                ],
+                'temperature' => 0,
+                'response_format' => ['type' => 'json_object'],
+            ]);
+
+        if ($response->failed()) {
+            Log::error('AiService: OpenAI JSON request failed', ['body' => $response->body()]);
+
+            return null;
+        }
+
+        return $response->json('choices.0.message.content');
     }
 
     protected function safeJsonDecode(string $raw, array $fallback): array

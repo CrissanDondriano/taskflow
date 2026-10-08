@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useDeferredValue } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -36,7 +36,22 @@ const GROUP_ORDER: Command["group"][] = ["Actions", "Tasks", "Meetings", "Naviga
  * distinction worth keeping, since real semantic search needs embeddings
  * and a backend, not client-side string matching.
  */
-export function CommandPalette({
+export function CommandPalette(props: {
+  open: boolean;
+  onClose: () => void;
+  onNewTask: () => void;
+  onOpenBriefing: () => void;
+  onShowShortcuts: () => void;
+  onRequestLogout: () => void;
+}) {
+  // Only mount the inner component (which subscribes to task/meeting data)
+  // when the palette is open — otherwise it would re-render on every data
+  // change while closed.
+  if (!props.open) return null;
+  return <CommandPaletteInner {...props} />;
+}
+
+function CommandPaletteInner({
   open,
   onClose,
   onNewTask,
@@ -56,6 +71,8 @@ export function CommandPalette({
   const meetings = useMeetingsData();
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
+  // Defer the filtered-list computation so typing stays responsive.
+  const q = useDeferredValue(query).trim().toLowerCase();
 
   const staticCommands: Command[] = useMemo(
     () => [
@@ -72,8 +89,6 @@ export function CommandPalette({
     ],
     [navigate, onRequestLogout, onNewTask, onOpenBriefing]
   );
-
-  const q = query.trim().toLowerCase();
 
   const taskResults: Command[] = useMemo(() => {
     if (!q) return [];
@@ -153,7 +168,7 @@ export function CommandPalette({
   return (
     <div
       className="fixed inset-0 z-[60] flex items-start justify-center pt-24 px-4"
-      style={{ background: "var(--tf-overlay)", backdropFilter: "blur(4px)" }}
+      style={{ background: "var(--tf-overlay)" }}
       onClick={onClose}
       role="presentation"
     >
@@ -164,7 +179,7 @@ export function CommandPalette({
         onClick={(e) => e.stopPropagation()}
         onKeyDown={handleKeyDown}
         className="w-full max-w-lg rounded-2xl overflow-hidden"
-        style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-panel-border)", boxShadow: "0 24px 60px rgba(0,0,0,0.4)" }}
+        style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-panel-border)", boxShadow: "0 16px 40px rgba(0,0,0,0.35)" }}
       >
         <div className="flex items-center gap-2.5 px-4 py-3" style={{ borderBottom: "1px solid var(--tf-panel-border)" }}>
           <Search size={15} style={{ color: "var(--tf-ink-muted)" }} />

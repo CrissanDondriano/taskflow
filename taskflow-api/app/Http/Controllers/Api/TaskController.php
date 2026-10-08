@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateTaskRequest;
 use App\Http\Resources\TaskResource;
 use App\Models\ActivityLog;
 use App\Models\Task;
+use App\Models\TaskComment;
 use App\Notifications\TaskAssignedNotification;
 use App\Services\GoogleCalendarService;
 use App\Services\OutlookCalendarService;
@@ -185,14 +186,55 @@ class TaskController extends Controller
     {
         $this->authorize('view', $task);
 
-        $data = $request->validate(['body' => ['required', 'string']]);
+        $data = $request->validate(['body' => ['required', 'string', 'max:2000']]);
 
         $comment = $task->comments()->create([
             'user_id' => $request->user()->id,
-            'body' => $data['body'],
+            'body' => trim($data['body']),
         ]);
 
         return response()->json(['data' => $comment->load('user:id,name,avatar_url')], 201);
+    }
+
+    /**
+     * GET /api/v1/tasks/{task}/comments
+     * Oldest first (conversation order). Same visibility as the task itself.
+     */
+    public function comments(Request $request, Task $task)
+    {
+        $this->authorize('view', $task);
+
+        $comments = $task->comments()
+            ->with('user:id,name,avatar_url')
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->limit(200)
+            ->get();
+
+        return response()->json(['data' => $comments]);
+    }
+
+    /**
+     * DELETE /api/v1/tasks/{task}/comments/{comment}
+     * Authors can remove their own comments; platform managers can remove
+     * anyone's (moderation).
+     */
+    public function deleteComment(Request $request, Task $task, TaskComment $comment)
+    {
+        $this->authorize('view', $task);
+
+        if ($comment->task_id !== $task->id) {
+            return response()->json(['message' => 'Comment not found.'], 404);
+        }
+
+        $user = $request->user();
+        if ($comment->user_id !== $user->id && ! $user->isManager()) {
+            return response()->json(['message' => 'You can only delete your own comments.'], 403);
+        }
+
+        $comment->delete();
+
+        return response()->json(['message' => 'Comment deleted.']);
     }
 
     public function addAttachment(Request $request, Task $task)

@@ -1,5 +1,7 @@
 <?php
 
+use App\Billing\BillingController;
+use App\Billing\StripeWebhookController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AiAssistantController;
 use App\Http\Controllers\Api\AuthController;
@@ -7,10 +9,12 @@ use App\Http\Controllers\Api\CalendarIntegrationController;
 use App\Http\Controllers\Api\ExportController;
 use App\Http\Controllers\Api\IntegrationController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\PlanImportController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\TeamController;
+use App\Http\Controllers\Api\TeamMessageController;
 use Illuminate\Support\Facades\Route;
 
 // Public
@@ -18,6 +22,9 @@ Route::post('/register', [AuthController::class, 'register'])->middleware('throt
 Route::post('/login', [AuthController::class, 'login'])->name('login')->middleware('throttle:5,1');
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');
+
+// Stripe webhook — public (signature-verified), never behind auth.
+Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle']);
 
 // OAuth callbacks — hit directly by Google/Microsoft's redirect, so no
 // Sanctum bearer token is present. Team identity travels in the signed
@@ -35,13 +42,33 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
 
     Route::apiResource('teams', TeamController::class)->only(['index', 'store']);
     Route::post('/teams/{team}/members', [TeamController::class, 'addMember']);
+    Route::patch('/teams/{team}/members/{userId}', [TeamController::class, 'updateMemberTitle']);
     Route::delete('/teams/{team}/members/{userId}', [TeamController::class, 'removeMember']);
+
+    // Team chat: reads are cheap, sends are throttled against spam.
+    Route::get('/teams/{team}/messages', [TeamMessageController::class, 'index']);
+    Route::post('/teams/{team}/messages', [TeamMessageController::class, 'store'])->middleware('throttle:30,1');
+    Route::delete('/teams/{team}/messages/{message}', [TeamMessageController::class, 'destroy']);
+
+    // AI plan imports: uploads are heavy, so they get their own tight limiter.
+    Route::post('/teams/{team}/plan-imports', [PlanImportController::class, 'store'])->middleware('throttle:10,1');
+    Route::get('/plan-imports/{planImport}', [PlanImportController::class, 'show']);
+    Route::post('/plan-imports/{planImport}/approve', [PlanImportController::class, 'approve']);
+
+    // Billing (Stripe test mode; disabled entirely when BILLING_ENABLED=false).
+    Route::get('/billing', [BillingController::class, 'show']);
+    Route::post('/billing/checkout', [BillingController::class, 'checkout'])->middleware('throttle:10,1');
+    Route::post('/billing/portal', [BillingController::class, 'portal'])->middleware('throttle:10,1');
+    Route::post('/billing/cancel', [BillingController::class, 'cancel']);
+    Route::get('/billing/invoices', [BillingController::class, 'invoices']);
 
     Route::apiResource('projects', ProjectController::class);
 
     Route::apiResource('tasks', TaskController::class);
     Route::patch('/tasks/{task}/move', [TaskController::class, 'move']); // kanban drag-and-drop
+    Route::get('/tasks/{task}/comments', [TaskController::class, 'comments']);
     Route::post('/tasks/{task}/comments', [TaskController::class, 'addComment']);
+    Route::delete('/tasks/{task}/comments/{comment}', [TaskController::class, 'deleteComment']);
     Route::post('/tasks/{task}/attachments', [TaskController::class, 'addAttachment']);
 
     // AI features

@@ -170,7 +170,7 @@ export function SignupPage() {
 
         <p className="text-center text-[13px] mt-6" style={{ color: "var(--tf-ink-muted)" }}>
           Already have an account?{" "}
-          <Link to="/login" className="font-medium" style={{ color: "var(--tf-teal)" }}>
+          <Link to="/login" className="font-medium hover:underline" style={{ color: "var(--tf-teal)" }}>
             Log in
           </Link>
         </p>

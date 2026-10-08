@@ -111,7 +111,7 @@ export function TimeGrid({
                   {dayDeadlines.map((dl) => (
                     <div
                       key={dl.id}
-                      className="text-[9px] font-mono px-1 py-0.5 rounded truncate"
+                      className="text-[10px] font-mono px-1 py-0.5 rounded truncate"
                       style={{ background: `${PRIORITY_HEX[dl.priority]}22`, color: PRIORITY_HEX[dl.priority] }}
                       title={`Deadline: ${dl.title}`}
                     >
@@ -206,7 +206,7 @@ export function TimeGrid({
                         {isConflict && "⚠ "}
                         {truncateWords(m.title)}
                       </div>
-                      <div className="text-[9px] font-mono" style={{ color: "var(--tf-ink-muted)" }}>
+                      <div className="text-[10px] font-mono" style={{ color: "var(--tf-ink-muted)" }}>
                         {formatHour(m.startHour)}–{formatHour(m.startHour + duration)}
                       </div>
                       {height > 40 && (

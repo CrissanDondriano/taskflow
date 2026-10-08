@@ -143,7 +143,7 @@ export function MeetingDetailModal({
                 <button
                   key={p.initials}
                   onClick={() => toggleAttendee(p.initials)}
-                  className="flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full text-xs transition-opacity"
+                  className="flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full text-xs transition-opacity hover:opacity-100"
                   style={{ background: active ? "rgba(37,99,235,0.15)" : "var(--tf-fill-04)", opacity: active ? 1 : 0.5, color: "var(--tf-ink)" }}
                 >
                   <Avatar initials={p.initials} color={p.color} size={20} />

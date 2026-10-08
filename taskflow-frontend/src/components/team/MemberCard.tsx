@@ -1,11 +1,13 @@
-import { useState } from "react";
-import { Mail, MoreVertical, X } from "lucide-react";
-import { Avatar, GlassPanel, ConfirmDialog } from "../ui/Primitives";
+import { memo, useState } from "react";
+import { Mail, MoreVertical, Pencil, X } from "lucide-react";
+import { Avatar, GlassPanel } from "../ui/Primitives";
 import { Badge } from "../ui/Badge";
 import { CircularGauge } from "../ui/CircularGauge";
 import { DropdownMenu } from "../ui/DropdownMenu";
 import { useMeetingsData } from "../../context/MeetingsContext";
 import { isPersonBusyNow, nextFreeHour, formatHour } from "../../lib/calendar";
+import { JOB_TITLE_PRESETS, UNTITLED } from "../../lib/jobTitles";
+import { ApiError } from "../../lib/api";
 import type { Person } from "../../types";
 
 const STATUS_COLOR: Record<Person["status"], string> = {
@@ -14,21 +16,58 @@ const STATUS_COLOR: Record<Person["status"], string> = {
   offline: "var(--tf-ink-muted)",
 };
 
-export function MemberCard({
+const CUSTOM = "__custom__";
+
+export const MemberCard = memo(function MemberCard({
   person,
   assignedCount,
   completedCount,
   onRemove,
+  canManage,
+  onSaveTitle,
 }: {
   person: Person;
   assignedCount: number;
   completedCount: number;
-  onRemove: () => void;
+  onRemove: (person: Person) => void;
+  /** Owners/admins only — everyone else sees the read-only badge. */
+  canManage: boolean;
+  onSaveTitle: (initials: string, title: string | null) => Promise<void>;
 }) {
   const meetings = useMeetingsData();
-  const [confirmOpen, setConfirmOpen] = useState(false);
   const currentMeeting = isPersonBusyNow(person.initials, meetings);
   const freeAt = currentMeeting ? nextFreeHour(person.initials, meetings) : null;
+
+  const [editing, setEditing] = useState(false);
+  const [choice, setChoice] = useState(person.jobTitle ?? "");
+  const [custom, setCustom] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function openEditor() {
+    setChoice(person.jobTitle ?? "");
+    setCustom(person.jobTitle && !(JOB_TITLE_PRESETS as readonly string[]).includes(person.jobTitle) ? person.jobTitle : "");
+    setError(null);
+    setEditing(true);
+  }
+
+  async function save() {
+    const title = choice === CUSTOM ? custom.trim() : choice;
+    if (choice === CUSTOM && !title) {
+      setError("Type a custom title, or pick a preset.");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      await onSaveTitle(person.initials, title || null);
+      setEditing(false);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Couldn't save the title.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <GlassPanel className="p-4 relative">
@@ -46,29 +85,97 @@ export function MemberCard({
             <div className="text-sm font-semibold truncate" style={{ color: "var(--tf-ink)" }}>
               {person.name}
             </div>
-            <div className="text-xs truncate" style={{ color: "var(--tf-ink-muted)" }}>
-              {person.jobTitle}
+            <div className="text-xs truncate flex items-center gap-1.5" style={{ color: "var(--tf-ink-muted)" }}>
+              <span className="truncate">{person.jobTitle ?? UNTITLED}</span>
+              {canManage && !editing && (
+                <button
+                  onClick={openEditor}
+                  aria-label={`Edit ${person.name}'s job title`}
+                  className="shrink-0 w-5 h-5 rounded-md flex items-center justify-center transition-colors hover:bg-white/5"
+                  style={{ color: "var(--tf-ink-muted)" }}
+                >
+                  <Pencil size={11} />
+                </button>
+              )}
             </div>
           </div>
         </div>
 
         <DropdownMenu
           trigger={
-            <button aria-label={`Actions for ${person.name}`} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ color: "var(--tf-ink-muted)" }}>
+            <button aria-label={`Actions for ${person.name}`} className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5" style={{ color: "var(--tf-ink-muted)" }}>
               <MoreVertical size={15} />
             </button>
           }
-          groups={[{ items: [{ label: "Remove from team", icon: <X size={13} />, onSelect: () => setConfirmOpen(true), danger: true }] }]}
-        />
-        <ConfirmDialog
-          open={confirmOpen}
-          onClose={() => setConfirmOpen(false)}
-          title="Remove from team?"
-          message={`${person.name} will be removed from the team. You'll get a short window to undo this from the notification.`}
-          confirmLabel="Remove"
-          onConfirm={onRemove}
+          groups={[{ items: [{ label: "Remove from team", icon: <X size={13} />, onSelect: () => onRemove(person), danger: true }] }]}
         />
       </div>
+
+      {editing && (
+        <div className="mt-3 rounded-xl p-3 flex flex-col gap-2" style={{ background: "var(--tf-fill-03)", border: "1px solid var(--tf-panel-border)" }}>
+          <label htmlFor={`title-${person.initials}`} className="text-[11px] font-mono" style={{ color: "var(--tf-ink-muted)" }}>
+            Job title
+          </label>
+          <select
+            id={`title-${person.initials}`}
+            value={(JOB_TITLE_PRESETS as readonly string[]).includes(choice) ? choice : choice ? CUSTOM : ""}
+            onChange={(e) => {
+              setChoice(e.target.value === CUSTOM ? CUSTOM : e.target.value);
+              setError(null);
+            }}
+            disabled={saving}
+            className="w-full text-[13px] px-2.5 py-2 rounded-lg outline-none"
+            style={{ background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
+          >
+            <option value="">No title</option>
+            {JOB_TITLE_PRESETS.map((t) => (
+              <option key={t} value={t} style={{ background: "var(--tf-surface)" }}>
+                {t}
+              </option>
+            ))}
+            <option value={CUSTOM} style={{ background: "var(--tf-surface)" }}>
+              Custom…
+            </option>
+          </select>
+          {choice === CUSTOM && (
+            <input
+              value={custom}
+              onChange={(e) => setCustom(e.target.value)}
+              disabled={saving}
+              maxLength={100}
+              placeholder="e.g. DevOps Wizard"
+              aria-label="Custom job title"
+              className="w-full text-[13px] px-2.5 py-2 rounded-lg outline-none"
+              style={{ background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
+            />
+          )}
+          {error && (
+            <p className="text-[11px]" style={{ color: "var(--tf-danger)" }}>
+              {error}
+            </p>
+          )}
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setEditing(false)}
+              disabled={saving}
+              className="px-2.5 py-1.5 rounded-lg text-xs transition-colors hover:bg-white/5 disabled:opacity-50"
+              style={{ color: "var(--tf-ink-muted)" }}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => void save()}
+              disabled={saving}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-white disabled:opacity-50"
+              style={{ background: "var(--tf-primary)" }}
+            >
+              {saving ? "Saving…" : "Save"}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center gap-1.5 mt-3">
         <Badge color={person.color}>{person.department}</Badge>
@@ -94,4 +201,4 @@ export function MemberCard({
       </div>
     </GlassPanel>
   );
-}
+});

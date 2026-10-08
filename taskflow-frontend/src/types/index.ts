@@ -17,7 +17,8 @@ export interface Person {
   name: string;
   color: string;
   role: string;
-  jobTitle: string;
+  /** Real job title from the API (null when nobody set one — display a fallback, never invent one). */
+  jobTitle: string | null;
   department: string;
   status: PresenceStatus;
   workloadPct: number;

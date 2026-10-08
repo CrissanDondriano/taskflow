@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { CalendarViewTabs, type CalendarViewMode } from "../../components/calendar/CalendarViewTabs";
 import { MonthView } from "../../components/calendar/MonthView";
 import { TimeGrid } from "../../components/calendar/TimeGrid";
@@ -53,10 +53,12 @@ export function CalendarPage() {
   const conflictIds = useMemo(() => detectConflicts(meetings), [meetings]);
   const selectedDayMeetings = meetingsByDay[selectedDay] ?? [];
 
-  function selectMeeting(m: Meeting) {
+  // Stable callback: passed to TimeGrid, so its identity must not change on
+  // unrelated renders (e.g. opening the detail modal) or the grid re-renders.
+  const selectMeeting = useCallback((m: Meeting) => {
     setSelectedMeetingId(m.id);
     setOpenMeeting(m);
-  }
+  }, []);
 
   // Keyboard shortcuts: 1-4 switch views, arrows move the selected day, T jumps to today.
   useKeyboardShortcut("1", () => setView("day"));
@@ -67,8 +69,17 @@ export function CalendarPage() {
   useKeyboardShortcut("ArrowLeft", () => setSelectedDay((d) => Math.max(1, d - 1)));
   useKeyboardShortcut("ArrowRight", () => setSelectedDay((d) => Math.min(31, d + 1)));
 
-  const weekDates = getWeekDates(selectedDay);
-  const dayDates = [dateForDay(selectedDay)];
+  // Memoized so TimeGrid receives stable day arrays across unrelated renders.
+  const weekDates = useMemo(() => getWeekDates(selectedDay), [selectedDay]);
+  const dayDates = useMemo(() => [dateForDay(selectedDay)], [selectedDay]);
+
+  const handleDeleteMeeting = useCallback(
+    (id: string) => {
+      deleteMeeting(id);
+      toast("Meeting deleted.", "info", { label: "Undo", run: undoDelete });
+    },
+    [deleteMeeting, toast, undoDelete]
+  );
 
   return (
     <div className="flex flex-col gap-4">
@@ -83,10 +94,7 @@ export function CalendarPage() {
         meeting={openMeeting}
         onClose={() => setOpenMeeting(null)}
         onSave={updateMeeting}
-        onDelete={(id) => {
-          deleteMeeting(id);
-          toast("Meeting deleted.", "info", { label: "Undo", run: undoDelete });
-        }}
+        onDelete={handleDeleteMeeting}
       />
 
       {view === "month" && (

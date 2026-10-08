@@ -220,7 +220,7 @@ export function DashboardHome() {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <PriorityBadge priority={selectedNode.priority} />
-                <button onClick={() => setSelectedNode(null)} aria-label="Deselect task" className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ color: "var(--tf-ink-muted)" }}>
+                <button onClick={() => setSelectedNode(null)} aria-label="Deselect task" className="w-6 h-6 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5" style={{ color: "var(--tf-ink-muted)" }}>
                   <X size={13} />
                 </button>
               </div>

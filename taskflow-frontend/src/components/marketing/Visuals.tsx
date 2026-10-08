@@ -105,3 +105,38 @@ export function BarsVisual() {
     </div>
   );
 }
+
+/** Plan file in, assigned tasks out — the flagship flow as a static mockup. */
+export function PlanUploadVisual() {
+  const tasks = [
+    ["Homepage mockups", "Designer · Priya", "#2DD4BF"],
+    ["Pricing API", "Developer · Sam", "#2DD4BF"],
+    ["Month-end audit", "Accountant · Jo", "#FBBF24"],
+  ];
+  return (
+    <div aria-hidden="true" className="rounded-2xl p-5" style={PANEL}>
+      <div className="flex items-center gap-3 rounded-xl px-3.5 py-3" style={{ background: "var(--tf-fill-03)", border: "1px dashed var(--tf-panel-border)" }}>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg font-display text-[13px] font-semibold text-white" style={{ background: "linear-gradient(135deg,#2563EB,#14B8A6)" }}>PDF</span>
+        <div className="min-w-0">
+          <p className="truncate text-[13px] font-medium">q4-launch-plan.pdf</p>
+          <p className="text-[11px]" style={MUTED}>3 sections · 2,140 words</p>
+        </div>
+      </div>
+      <div className="my-3 flex items-center gap-2 text-[11px]" style={MUTED}>
+        <span className="h-px flex-1" style={{ background: "var(--tf-panel-border)" }} />
+        AI drafts 3 tasks
+        <span className="h-px flex-1" style={{ background: "var(--tf-panel-border)" }} />
+      </div>
+      <div className="flex flex-col gap-2">
+        {tasks.map(([t, who, tone]) => (
+          <div key={t} className="flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-[12px]" style={{ background: "var(--tf-fill-02)", border: "1px solid var(--tf-panel-border)" }}>
+            <span className="truncate font-medium">{t}</span>
+            <span className="flex shrink-0 items-center gap-1.5 text-[11px]" style={MUTED}>
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: tone }} />{who}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

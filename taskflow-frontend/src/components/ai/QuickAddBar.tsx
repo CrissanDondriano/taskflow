@@ -52,7 +52,7 @@ export function QuickAddBar({ onCreate, defaultColumn = "Backlog" }: { onCreate:
         <button
           type="submit"
           disabled={!parsed?.title}
-          className="absolute right-1.5 top-1.5 bottom-1.5 px-2.5 rounded-lg text-white text-xs font-medium flex items-center gap-1 disabled:opacity-40"
+          className="absolute right-1.5 top-1.5 bottom-1.5 px-2.5 rounded-lg text-white text-xs font-medium flex items-center gap-1 disabled:opacity-40 transition-opacity hover:opacity-90"
           style={{ background: "var(--tf-primary)" }}
         >
           <Plus size={12} /> Add

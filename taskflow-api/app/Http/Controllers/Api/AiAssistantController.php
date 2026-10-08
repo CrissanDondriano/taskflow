@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Billing\EnforcePlanLimits;
 use App\Http\Controllers\Controller;
 use App\Models\AiInsight;
 use App\Models\Project;
@@ -27,6 +28,13 @@ class AiAssistantController extends Controller
             'project_id' => ['nullable', 'exists:projects,id'],
         ]);
 
+        // AI message quota is per workspace (first team), counted only when
+        // the model actually answers — unconfigured-AI fallbacks are free.
+        $team = $request->user()->ownedTeams()->first() ?? $request->user()->teams()->first();
+        if ($team) {
+            EnforcePlanLimits::for($team)->check('ai_messages');
+        }
+
         $context = [];
 
         if (! empty($data['project_id'])) {
@@ -42,6 +50,10 @@ class AiAssistantController extends Controller
         }
 
         $answer = $this->ai->ask($data['question'], $context);
+
+        if ($team && ! str_starts_with(ltrim($answer), '{"error"')) {
+            EnforcePlanLimits::for($team)->record('ai_messages');
+        }
 
         return response()->json(['answer' => $answer]);
     }

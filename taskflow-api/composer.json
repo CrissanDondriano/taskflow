@@ -8,12 +8,15 @@
     "require": {
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.1",
+        "laravel/cashier": "^16.8",
         "laravel/framework": "^12.69",
         "laravel/reverb": "^1.10",
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.29",
         "laravel/tinker": "^2.10.1",
         "maatwebsite/excel": "^3.1",
+        "phpoffice/phpword": "^1.4",
+        "smalot/pdfparser": "^2.12",
         "socialiteproviders/azureadb2c": "^4.6",
         "socialiteproviders/microsoft-azure": "^5.2"
     },

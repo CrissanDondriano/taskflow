@@ -4,7 +4,9 @@ import {
   Calendar as CalendarIcon,
   FileText,
   Users,
+  MessageSquare,
   BarChart3,
+  CreditCard,
   Settings,
   Sparkles,
   Shield,
@@ -40,7 +42,9 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     label: "Management",
     items: [
       { to: "/dashboard/team", label: "Team", icon: Users },
+      { to: "/dashboard/chat", label: "Team chat", icon: MessageSquare },
       { to: "/dashboard/reports", label: "Reports", icon: BarChart3 },
+      { to: "/dashboard/billing", label: "Billing", icon: CreditCard },
       { to: "/dashboard/admin", label: "Admin", icon: Shield, adminOnly: true },
       { to: "/dashboard/settings", label: "Settings", icon: Settings },
     ],
@@ -148,7 +152,7 @@ export function DesktopSidebar({ onRequestLogout }: { onRequestLogout: () => voi
             {user?.role ?? ""}
           </div>
         </div>
-        <button onClick={onRequestLogout} aria-label="Log out" className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ color: "var(--tf-ink-muted)" }}>
+        <button onClick={onRequestLogout} aria-label="Log out" className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors hover:bg-white/5" style={{ color: "var(--tf-ink-muted)" }}>
           <LogOut size={15} />
         </button>
       </div>
@@ -170,7 +174,7 @@ export function MobileSidebar({ open, onClose, onRequestLogout }: { open: boolea
       >
         <div className="flex items-center justify-between px-2 mb-8">
           <Brand />
-          <button onClick={onClose} aria-label="Close menu" className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ color: "var(--tf-ink-muted)" }}>
+          <button onClick={onClose} aria-label="Close menu" className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5" style={{ color: "var(--tf-ink-muted)" }}>
             <X size={16} />
           </button>
         </div>
@@ -182,7 +186,7 @@ export function MobileSidebar({ open, onClose, onRequestLogout }: { open: boolea
               {user?.name ?? "Guest"}
             </div>
           </div>
-          <button onClick={onRequestLogout} aria-label="Log out" className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ color: "var(--tf-ink-muted)" }}>
+          <button onClick={onRequestLogout} aria-label="Log out" className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors hover:bg-white/5" style={{ color: "var(--tf-ink-muted)" }}>
             <LogOut size={15} />
           </button>
         </div>

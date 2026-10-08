@@ -30,7 +30,7 @@ export function ProductTour() {
           <button
             key={tab.id} ref={(el) => { refs.current[k] = el; }} type="button" role="tab" id={`tab-${tab.id}`}
             aria-selected={k === i} aria-controls="tour-panel" tabIndex={k === i ? 0 : -1} onClick={() => setI(k)}
-            className="min-h-11 shrink-0 rounded-full px-5 text-[14px] font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tf-teal)] motion-reduce:transition-none"
+            className="min-h-11 shrink-0 rounded-full px-5 text-[14px] font-medium transition-colors hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tf-teal)] motion-reduce:transition-none"
             style={k === i ? { background: "var(--tf-primary)", color: "#fff" } : { border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink-muted)" }}
           >
             {tab.label}

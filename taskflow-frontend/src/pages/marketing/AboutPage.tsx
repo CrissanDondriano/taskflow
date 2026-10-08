@@ -56,7 +56,7 @@ export function AboutPage() {
             <h2 id="story" className="font-display text-[26px] font-semibold leading-tight text-balance sm:text-[32px]">How TaskFlow AI works</h2>
             <div className="mt-5 flex max-w-[62ch] flex-col gap-4 text-[15px] leading-relaxed" style={{ color: "var(--tf-ink-soft)" }}>
               <p>TaskFlow AI reads your projects and answers the questions your team keeps asking: which task is slipping, who is overloaded, what was decided in Tuesday's meeting.</p>
-              <p>It ranks work by deadline and workload risk, turns meeting notes into owned tasks, and keeps the calendar, board and team view in one place.</p>
+              <p>Upload a project plan and it becomes assigned, dated tasks. It ranks work by deadline and workload risk, turns meeting notes into owned tasks, and keeps the calendar, board and team view in one place.</p>
             </div>
           </Reveal>
         </Container>

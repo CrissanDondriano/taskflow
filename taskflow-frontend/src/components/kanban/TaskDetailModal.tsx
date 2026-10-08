@@ -3,6 +3,7 @@ import { Trash2 } from "lucide-react";
 import { Modal, Avatar, ConfirmDialog } from "../ui/Primitives";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { TaskComments } from "./TaskComments";
 import { COLUMNS, PRIORITIES } from "../../data/mockData";
 import { useTeamMembers } from "../../context/TeamContext";
 import type { Task, TaskColumn, Priority } from "../../types";
@@ -154,7 +155,7 @@ export function TaskDetailModal({
               >
                 {members.map((p) => (
                   <option key={p.initials} value={p.initials} style={{ background: "var(--tf-surface)" }}>
-                    {p.name}
+                    {p.jobTitle ? `${p.name} — ${p.jobTitle}` : p.name}
                   </option>
                 ))}
               </select>
@@ -177,6 +178,8 @@ export function TaskDetailModal({
             />
           </div>
         </div>
+
+        <TaskComments taskId={lastId ?? draft.id} />
 
         <div className="flex justify-between items-center gap-2 mt-2">
           <Button variant="danger" size="sm" icon={<Trash2 size={13} />} onClick={() => setConfirmOpen(true)}>

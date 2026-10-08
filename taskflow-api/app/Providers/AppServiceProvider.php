@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Billing\PaymentGateway;
+use App\Billing\StripeGateway;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\Team;
@@ -24,7 +26,8 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        // Stripe today, PayMongo tomorrow: controllers only see the interface.
+        $this->app->singleton(PaymentGateway::class, StripeGateway::class);
     }
 
     public function boot(): void

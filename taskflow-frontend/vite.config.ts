@@ -1,16 +1,18 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    // Bundle analysis: writes dist/bundle-stats.html on every build (open:
+    // false). Open it in a browser to see the treemap + gzip/brotli sizes.
+    visualizer({ filename: 'dist/bundle-stats.html', open: false, gzipSize: true, brotliSize: true }),
+  ],
   server: {
     port: 5173,
-    // HMR disabled: adding hooks to a component (the loading gate) made the
-    // dev client swap module versions between renders, which React flags as
-    // a hook-order change and crashes on. A full page reload is the correct
-    // way to pick up hook-list changes; HMR can't reconcile them.
-    hmr: false,
     // Dev-only same-origin API: /api/* is forwarded to the Laravel app as
     // served by XAMPP Apache (parallel handling, always on with XAMPP).
     // Same origin means no CORS preflight (OPTIONS) round-trip before

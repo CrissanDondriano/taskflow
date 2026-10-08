@@ -2,12 +2,13 @@ import { Check } from "lucide-react";
 import { Container, SectionHead, ButtonLink } from "../../components/marketing/Bits";
 import { Reveal } from "../../components/marketing/Reveal";
 import { PageHero } from "../../components/marketing/PageHero";
-import { ChatVisual, RiskVisual, BarsVisual } from "../../components/marketing/Visuals";
+import { ChatVisual, PlanUploadVisual, RiskVisual, BarsVisual } from "../../components/marketing/Visuals";
 import { CtaBand } from "../../components/marketing/Sections";
 import { usePageMeta } from "../../hooks/usePageMeta";
 import { FEATURES, SCENARIOS } from "../../data/marketing";
 
 const ROWS = [
+  { title: "Turn a plan file into assigned tasks", desc: "Upload a PDF, Word doc or text file. The AI drafts every task with a priority, a due date and an owner from your team's job titles — you review once, then send it all to the board.", points: ["PDF, DOCX, TXT and Markdown up to 10MB", "Auto-assign by role, or pick anyone yourself"], visual: <PlanUploadVisual /> },
   { title: "Ask your projects anything", desc: "The assistant answers from your live tasks, deadlines and assignees, so \"what should I work on today?\" gets a real answer.", points: ["Daily priorities in plain language", "Project summaries on demand"], visual: <ChatVisual /> },
   { title: "See risk before it's late", desc: "Every task and project is scored for deadline and workload risk. The work that needs attention rises to the top.", points: ["Automatic risk scoring", "Alerts before deadlines slip"], visual: <RiskVisual /> },
   { title: "Reports that are already written", desc: "Completion trends, workload balance and project health update as work happens.", points: ["Live analytics dashboard", "Workload balance across the team"], visual: <BarsVisual /> },
@@ -15,7 +16,7 @@ const ROWS = [
 const PANEL = { background: "var(--tf-panel)", border: "1px solid var(--tf-panel-border)" };
 
 export function FeaturesPage() {
-  usePageMeta("Features", "AI task assistant, smart scheduling, risk detection, team collaboration, analytics and integrations in one workspace.");
+  usePageMeta("Features", "Upload a plan and get assigned tasks in minutes — plus Kanban, calendar, AI assistant, risk detection and reports.");
   return (
     <>
       <PageHero title="Everything your team needs to plan and deliver" lead="One workspace for tasks, calendar, people and AI insight.">

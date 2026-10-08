@@ -83,7 +83,7 @@ export function ReportsPage() {
             icon={<TrendingUp size={22} />}
             message="Complete a task to start building this trend."
             action={
-              <Link to="/dashboard/kanban" className="text-[13px] font-medium" style={{ color: "var(--tf-primary)" }}>
+              <Link to="/dashboard/kanban" className="text-[13px] font-medium hover:underline" style={{ color: "var(--tf-primary)" }}>
                 Open the Kanban board →
               </Link>
             }

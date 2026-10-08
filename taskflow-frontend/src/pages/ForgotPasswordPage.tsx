@@ -125,7 +125,7 @@ export function ForgotPasswordPage() {
         </GlassPanel>
 
         <p className="text-center text-[13px] mt-6" style={{ color: "var(--tf-ink-muted)" }}>
-          <Link to="/login" className="inline-flex items-center gap-1 font-medium" style={{ color: "var(--tf-teal)" }}>
+          <Link to="/login" className="inline-flex items-center gap-1 font-medium hover:underline" style={{ color: "var(--tf-teal)" }}>
             <ArrowLeft size={13} />
             Back to log in
           </Link>

@@ -24,6 +24,7 @@ class TeamResource extends JsonResource
                 'id' => $m->id,
                 'name' => $m->name,
                 'email' => $m->email,
+                'job_title' => $m->job_title,
                 'role_in_team' => $m->pivot->role_in_team,
             ])),
             'projects' => ProjectResource::collection($this->whenLoaded('projects')),

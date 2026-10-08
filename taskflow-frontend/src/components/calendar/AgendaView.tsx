@@ -1,5 +1,6 @@
-import { Clock3, Flag } from "lucide-react";
-import { Avatar, GlassPanel, PriorityBadge } from "../ui/Primitives";
+import { Link } from "react-router-dom";
+import { CalendarX, Clock3, Flag } from "lucide-react";
+import { Avatar, EmptyState, GlassPanel, PriorityBadge } from "../ui/Primitives";
 import { PRIORITY_HEX } from "../../data/mockData";
 import { useTeamMembers } from "../../context/TeamContext";
 import { ANCHOR_MONTH, ANCHOR_YEAR, formatHour } from "../../lib/calendar";
@@ -34,10 +35,16 @@ export function AgendaView({ meetings, deadlines, conflictIds }: { meetings: Mee
 
   if (days.length === 0) {
     return (
-      <GlassPanel className="p-8 text-center">
-        <p className="text-sm" style={{ color: "var(--tf-ink-muted)" }}>
-          Nothing scheduled this month.
-        </p>
+      <GlassPanel className="p-5">
+        <EmptyState
+          icon={<CalendarX size={22} />}
+          message="Nothing scheduled this month — tasks with due dates show up here automatically."
+          action={
+            <Link to="/dashboard/kanban" className="text-[13px] font-medium hover:underline" style={{ color: "var(--tf-primary)" }}>
+              Create a task with a due date →
+            </Link>
+          }
+        />
       </GlassPanel>
     );
   }

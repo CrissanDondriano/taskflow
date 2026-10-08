@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             return;
         }
 
+        $this->call(PlanSeeder::class);
         $admin = $this->makeUser([
             'name' => 'Alex Rivera',
             'email' => 'admin@taskflow.ai',

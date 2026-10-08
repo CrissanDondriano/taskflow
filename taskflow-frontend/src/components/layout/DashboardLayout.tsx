@@ -1,19 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, Search, Plus, Sparkles, Sun, Moon, Loader2 } from "lucide-react";
 import { Button } from "../ui/Button";
-import { DesktopSidebar, MobileSidebar } from "./Sidebar";
+import { DesktopSidebar } from "./Sidebar";
 import { NotificationsBell } from "./NotificationsBell";
-import { CommandPalette } from "../command-palette/CommandPalette";
-import { ShortcutHelp } from "../command-palette/ShortcutHelp";
-import { DailyBriefingModal } from "../ai/DailyBriefingModal";
 import { FloatingAssistant } from "../ai/FloatingAssistant";
-import { NewTaskModal } from "../dashboard/NewTaskModal";
+import { DashboardModals, preloadOverlaysOnDemand } from "./DashboardModals";
 import { useTaskActions, useTasksLoading } from "../../context/TasksContext";
 import { useTeamLoading } from "../../context/TeamContext";
 import { useAuth } from "../../context/AuthContext";
-import { ConfirmDialog } from "../ui/Primitives";
+import { useUIStore } from "../../stores/uiStore";
 import { useThemeStore } from "../../stores/themeStore";
 import { useKeyboardShortcut } from "../../hooks/useKeyboardShortcut";
 
@@ -23,27 +20,26 @@ const TITLES: Record<string, string> = {
   "/dashboard/calendar": "Calendar",
   "/dashboard/meeting-notes": "Meeting notes",
   "/dashboard/team": "Team",
+  "/dashboard/chat": "Team chat",
   "/dashboard/reports": "Reports",
   "/dashboard/admin": "Admin",
+  "/dashboard/billing": "Billing",
   "/dashboard/settings": "Settings",
 };
 
 export function DashboardLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [paletteOpen, setPaletteOpen] = useState(false);
-  const [briefingOpen, setBriefingOpen] = useState(false);
-  const [shortcutsOpen, setShortcutsOpen] = useState(false);
-  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
-  // Actions-only subscription: the shell must not re-render whenever a task
-  // or meeting changes — that re-renders the sidebars, top bar and the whole
-  // page transition for nothing.
+  // Modal/drawer open state lives in the UI store, not here — opening an
+  // overlay must not re-render the shell (sidebar, topbar, page transition).
+  // Triggers call openModal() on the store without subscribing; only the
+  // overlay itself re-renders when activeModal changes.
   const { addTask } = useTaskActions();
   const { logout } = useAuth();
   const theme = useThemeStore((s) => s.theme);
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
   // First-load gate: without it, pages flash their empty states while the
   // API fetch is still in flight (narrow flag subscriptions, not task data).
+  // Both hooks are called unconditionally on separate lines — combining them
+  // with || would short-circuit the second call and shift the hook order.
   const tasksLoading = useTasksLoading();
   const teamLoading = useTeamLoading();
   const workspaceLoading = tasksLoading || teamLoading;
@@ -51,8 +47,8 @@ export function DashboardLayout() {
   const mainRef = useRef<HTMLElement>(null);
   const title = TITLES[location.pathname] ?? "TaskFlow AI";
 
-  useKeyboardShortcut("k", () => setPaletteOpen(true), { meta: true });
-  useKeyboardShortcut("?", () => setShortcutsOpen((open) => !open));
+  useKeyboardShortcut("k", () => useUIStore.getState().openModal("palette"), { meta: true });
+  useKeyboardShortcut("?", () => useUIStore.getState().toggleModal("shortcuts"));
 
   // Keep the browser tab in sync with the visible page (marketing routes
   // use usePageMeta; the dashboard's seven tabs are covered by this effect).
@@ -88,34 +84,9 @@ export function DashboardLayout() {
         }}
       />
 
-      <NewTaskModal open={modalOpen} onClose={() => setModalOpen(false)} onCreate={addTask} defaultColumn="Backlog" />
-      <CommandPalette
-        open={paletteOpen}
-        onClose={() => setPaletteOpen(false)}
-        onNewTask={() => setModalOpen(true)}
-        onOpenBriefing={() => setBriefingOpen(true)}
-        onRequestLogout={() => setLogoutConfirmOpen(true)}
-        onShowShortcuts={() => {
-          setPaletteOpen(false);
-          setShortcutsOpen(true);
-        }}
-      />
-      <ShortcutHelp open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
-      <DailyBriefingModal open={briefingOpen} onClose={() => setBriefingOpen(false)} />
-      {/* One shared "are you sure?" for every logout entry point (sidebar,
-          mobile drawer, command palette) — rendered here at the root so it
-          stacks above the page content. */}
-      <ConfirmDialog
-        open={logoutConfirmOpen}
-        onClose={() => setLogoutConfirmOpen(false)}
-        title="Log out?"
-        message="You'll need to sign in again to access your workspace."
-        confirmLabel="Log out"
-        onConfirm={logout}
-      />
+      <DashboardModals addTask={addTask} logout={logout} />
       <FloatingAssistant />
-      <MobileSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} onRequestLogout={() => setLogoutConfirmOpen(true)} />
-      <DesktopSidebar onRequestLogout={() => setLogoutConfirmOpen(true)} />
+      <DesktopSidebar onRequestLogout={() => useUIStore.getState().openModal("logout")} />
 
       <div className="flex-1 flex flex-col min-w-0 relative z-10">
         <div
@@ -124,7 +95,7 @@ export function DashboardLayout() {
         >
           <div className="flex items-center gap-3 min-w-0">
             <button
-              onClick={() => setSidebarOpen(true)}
+              onClick={() => useUIStore.getState().openModal("sidebar")}
               aria-label="Open menu"
               className="lg:hidden w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
               style={{ border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink-muted)" }}
@@ -137,7 +108,9 @@ export function DashboardLayout() {
           </div>
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <button
-              onClick={() => setPaletteOpen(true)}
+              onClick={() => useUIStore.getState().openModal("palette")}
+              onPointerEnter={preloadOverlaysOnDemand}
+              onFocus={preloadOverlaysOnDemand}
               className="hidden md:flex items-center gap-2 pl-3 pr-2 py-2 rounded-xl text-[13px] w-56"
               style={{ background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink-muted)" }}
             >
@@ -148,7 +121,9 @@ export function DashboardLayout() {
               </kbd>
             </button>
             <button
-              onClick={() => setBriefingOpen(true)}
+              onClick={() => useUIStore.getState().openModal("briefing")}
+              onPointerEnter={preloadOverlaysOnDemand}
+              onFocus={preloadOverlaysOnDemand}
               aria-label="Daily briefing"
               title="Daily briefing"
               className="w-9 h-9 rounded-xl flex items-center justify-center"
@@ -166,7 +141,7 @@ export function DashboardLayout() {
               {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
             </button>
             <NotificationsBell />
-            <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => setModalOpen(true)}>
+            <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => useUIStore.getState().openModal("newTask")}>
               <span className="hidden sm:inline">New task</span>
             </Button>
           </div>

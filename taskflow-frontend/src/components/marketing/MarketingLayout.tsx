@@ -86,7 +86,7 @@ export function MarketingLayout() {
             )}
           </div>
           <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="mobile-nav" aria-label={open ? "Close menu" : "Open menu"}
-            className={`flex h-11 w-11 items-center justify-center rounded-xl md:hidden ${FOCUS}`} style={{ border: "1px solid var(--tf-panel-border)" }}>
+            className={`flex h-11 w-11 items-center justify-center rounded-xl transition-colors hover:bg-white/5 md:hidden ${FOCUS}`} style={{ border: "1px solid var(--tf-panel-border)" }}>
             {open ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />}
           </button>
         </Container>
@@ -103,7 +103,7 @@ export function MarketingLayout() {
                   type="button"
                   onClick={toggleTheme}
                   aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
-                  className={`col-span-2 flex min-h-11 items-center justify-center gap-2 rounded-xl text-[14px] font-medium ${FOCUS}`}
+                  className={`col-span-2 flex min-h-11 items-center justify-center gap-2 rounded-xl text-[14px] font-medium transition-colors hover:bg-white/5 ${FOCUS}`}
                   style={{ border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
                 >
                   {theme === "dark" ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
