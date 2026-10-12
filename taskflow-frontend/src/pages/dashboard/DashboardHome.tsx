@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Sparkles, X, TrendingUp, ShieldCheck, Activity, CalendarClock, BarChart3, Users } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { GlassPanel, PulseCard, Eyebrow, PriorityBadge, EmptyState } from "../../components/ui/Primitives";
+import { Skeleton } from "../../components/ui/Skeleton";
 import { Button } from "../../components/ui/Button";
 import { PriorityLegend } from "../../components/ui/PriorityLegend";
 import { CircularGauge } from "../../components/ui/CircularGauge";

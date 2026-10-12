@@ -1,6 +1,7 @@
-import { useMemo, useState, useDeferredValue } from "react";
+import { useMemo, useState, useDeferredValue, useEffect } from "react";
 import { Search, UserPlus } from "lucide-react";
 import { GlassPanel, Modal, EmptyState, ConfirmDialog } from "../../components/ui/Primitives";
+import { Skeleton } from "../../components/ui/Skeleton";
 import type { Person } from "../../types";
 import { Button } from "../../components/ui/Button";
 import { MemberCard } from "../../components/team/MemberCard";
