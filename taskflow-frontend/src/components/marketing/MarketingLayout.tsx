@@ -66,16 +66,6 @@ export function MarketingLayout() {
             {NAV.map((l) => <NavLink key={l.to} to={l.to} end={l.to === "/"} className={navClass}>{l.label}</NavLink>)}
           </nav>
           <div className="hidden items-center gap-3 md:flex">
-            <button
-              type="button"
-              onClick={toggleTheme}
-              aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
-              title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
-              className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors hover:text-white motion-reduce:transition-none ${FOCUS}`}
-              style={{ border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink-muted)" }}
-            >
-              {theme === "dark" ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
-            </button>
             {user ? (
               <ButtonLink to="/dashboard">Go to dashboard</ButtonLink>
             ) : (
