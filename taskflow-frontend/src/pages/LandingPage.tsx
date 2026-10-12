@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
 import { Check, Lock, Download, ShieldCheck } from "lucide-react";
-import { Container, ButtonLink } from "../components/marketing/Bits";
+import { Container, SectionHead, ButtonLink } from "../components/marketing/Bits";
+import { Faq } from "../components/marketing/Bits";
 import { Reveal } from "../components/marketing/Reveal";
 import { ProductTour } from "../components/marketing/ProductTour";
 import { HeroBackdrop } from "../components/marketing/HeroBackdrop";
 import { PricingCards, CtaBand } from "../components/marketing/Sections";
 import { usePageMeta } from "../hooks/usePageMeta";
+import { FEATURES, HOW_IT_WORKS, INTEGRATIONS, ROLES, FAQS } from "../data/marketing";
 
 const TRUST = ["Free plan, no expiry", "No credit card", "Set up in minutes"];
 const SECURITY = [
@@ -40,7 +42,7 @@ export function LandingPage() {
               {TRUST.map((t) => <li key={t} className="flex items-center gap-1.5"><Check size={14} color="var(--tf-teal)" aria-hidden="true" />{t}</li>)}
             </ul>
           </div>
-          <div className="rise mt-14 sm:mt-16" style={{ animationDelay: "380ms" }}><DashboardMock /></div>
+          {/* Dashboard mock component removed */}
         </Container>
       </section>
 
