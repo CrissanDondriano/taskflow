@@ -101,7 +101,7 @@ export function TaskDetailModal({
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label htmlFor="detail-priority" className="text-[11px] font-mono block mb-1" style={labelStyle}>
               Priority
@@ -140,7 +140,7 @@ export function TaskDetailModal({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label htmlFor="detail-assignee" className="text-[11px] font-mono block mb-1" style={labelStyle}>
               Assignee

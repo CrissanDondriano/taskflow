@@ -53,7 +53,7 @@ export function MissionOrbit({
   }, [tasks]);
 
   return (
-    <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="w-full max-w-[240px] mx-auto h-auto" role="img" aria-label="Task urgency radar">
+    <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="w-full max-w-[240px] mx-auto h-auto" role="group" aria-label="Task urgency radar">
       <defs>
         <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="#14B8A6" stopOpacity="0.9" />
@@ -67,7 +67,7 @@ export function MissionOrbit({
       ))}
 
       <circle cx={cx} cy={cy} r={20} fill="url(#coreGlow)" className="orbit-core-pulse" />
-      <circle cx={cx} cy={cy} r={12} fill="var(--tf-surface)" stroke="#14B8A6" strokeWidth={1.5} />
+      <circle cx={cx} cy={cy} r={12} fill="var(--tf-surface)" stroke="var(--tf-teal)" strokeWidth={1.5} />
       <text x={cx} y={cy + 2} textAnchor="middle" fill="var(--tf-ink)" fontSize={9} fontWeight={700} fontFamily="'Space Grotesk', sans-serif">
         {overallHealth}%
       </text>
@@ -88,7 +88,7 @@ export function MissionOrbit({
               onClick={() => onSelect(task)}
               onMouseEnter={() => onHover?.(task.id)}
               onMouseLeave={() => onHover?.(undefined)}
-              className="cursor-pointer"
+              className="cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tf-teal)]"
               role="button"
               tabIndex={0}
               aria-label={`${task.title}, ${task.priority} priority, due ${task.due}`}
@@ -106,7 +106,7 @@ export function MissionOrbit({
                 cy={y}
                 r={active ? 7 : 5}
                 fill={color}
-                stroke={active ? "#fff" : "none"}
+                stroke={active ? "var(--tf-ink)" : "none"}
                 strokeWidth={1.5}
                 style={{ filter: `drop-shadow(0 0 6px ${color})`, transition: "r 0.15s" }}
               />

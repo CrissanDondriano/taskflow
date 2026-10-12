@@ -88,7 +88,7 @@ export function TaskComments({ taskId }: { taskId: string }) {
       </div>
 
       {loading ? (
-        <div className="flex flex-col gap-2" aria-label="Loading comments">
+        <div className="flex flex-col gap-2" role="status" aria-label="Loading comments">
           {[0, 1].map((i) => (
             <div key={i} className="h-11 rounded-xl animate-pulse" style={{ background: "var(--tf-fill-04)" }} />
           ))}
@@ -137,7 +137,7 @@ export function TaskComments({ taskId }: { taskId: string }) {
       )}
 
       {error && (
-        <p className="text-[11px] mt-1.5" style={{ color: "var(--tf-danger)" }}>
+        <p role="alert" className="text-[11px] mt-1.5" style={{ color: "var(--tf-danger)" }}>
           {error}
         </p>
       )}
@@ -156,8 +156,8 @@ export function TaskComments({ taskId }: { taskId: string }) {
           type="submit"
           disabled={!draft.trim() || posting}
           aria-label="Post comment"
-          className="w-9 h-9 rounded-xl text-white flex items-center justify-center shrink-0 disabled:opacity-50 transition-opacity hover:opacity-90"
-          style={{ background: "var(--tf-primary)" }}
+          className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 disabled:opacity-50 transition-opacity hover:opacity-90"
+          style={{ background: "var(--tf-primary)", color: "#fff" }}
         >
           <Send size={14} />
         </button>

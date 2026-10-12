@@ -38,7 +38,7 @@ function ExportButton({ label, icon, path }: { label: string; icon: React.ReactN
       type="button"
       onClick={() => void run()}
       disabled={busy}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px]"
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] transition-opacity hover:opacity-90 active:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
       style={{ border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink-muted)" }}
       title={`Downloads from ${API_URL}`}
     >
@@ -72,7 +72,7 @@ export function ReportsPage() {
                   <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <XAxis dataKey="day" tick={{ fontSize: 12, fill: "#7C8AA5" }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="day" tick={{ fontSize: 12, fill: "var(--tf-ink-muted)" }} axisLine={false} tickLine={false} />
               <YAxis hide allowDecimals={false} />
               <Tooltip contentStyle={{ borderRadius: 10, border: "1px solid var(--tf-panel-border)", background: "var(--tf-surface)", fontSize: 12, color: "var(--tf-ink)" }} />
               <Area type="monotone" dataKey="done" stroke="#2563EB" strokeWidth={2} fill="url(#fillReport)" />
@@ -98,7 +98,8 @@ export function ReportsPage() {
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className="px-3 py-1.5 rounded-lg text-[12px] font-medium capitalize"
+                aria-pressed={tab === t}
+                className="px-3 py-1.5 rounded-lg text-[12px] font-medium capitalize transition-opacity hover:opacity-90 active:opacity-80"
                 style={{
                   background: tab === t ? "var(--tf-primary)" : "transparent",
                   color: tab === t ? "white" : "var(--tf-ink-muted)",
@@ -166,7 +167,7 @@ export function ReportsPage() {
                         <td className="py-3">
                           <div className="flex items-center gap-2 w-32">
                             <div className="h-1.5 flex-1 rounded-full overflow-hidden" style={{ background: "var(--tf-fill-08)" }}>
-                              <div className="h-full rounded-full" style={{ width: `${p.progress}%`, background: "#14B8A6" }} />
+                              <div className="h-full rounded-full" style={{ width: `${p.progress}%`, background: "var(--tf-teal)" }} />
                             </div>
                             <span className="text-[11px] font-mono" style={{ color: "var(--tf-ink-muted)" }}>
                               {p.progress}%
@@ -180,6 +181,10 @@ export function ReportsPage() {
               </table>
             </div>
           )
+        ) : teamPerformance.length === 0 ? (
+          <p className="text-sm py-8 text-center" style={{ color: "var(--tf-ink-muted)" }}>
+            No team members yet — invite a teammate from the Team page to see their workload.
+          </p>
         ) : (
           <div className="overflow-x-auto tf-scroll">
             <table className="w-full text-[13px]">

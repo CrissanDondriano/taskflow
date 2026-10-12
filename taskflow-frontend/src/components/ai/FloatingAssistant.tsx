@@ -30,8 +30,10 @@ export function FloatingAssistant() {
       <button
         onClick={() => setOpen((o) => !o)}
         aria-label={open ? "Close AI task assistant" : "Open AI task assistant"}
-        className="fixed bottom-5 right-4 sm:right-6 z-[900] w-14 h-14 rounded-full flex items-center justify-center text-white transition-transform hover:scale-105"
-        style={{ background: "linear-gradient(135deg, #2563EB, #14B8A6)", boxShadow: "0 8px 24px rgba(20,184,166,0.4)" }}
+        /* Inline #fff, not text-white: [data-theme="light"] rewrites .text-white to
+           dark ink, which would land on the always-blue→teal gradient below. */
+        className="fixed bottom-5 right-4 sm:right-6 z-[900] w-14 h-14 rounded-full flex items-center justify-center transition-transform hover:scale-105"
+        style={{ background: "linear-gradient(135deg, #2563EB, #14B8A6)", color: "#fff", boxShadow: "0 8px 24px rgba(20,184,166,0.4)" }}
       >
         {open ? <X size={22} /> : <MessageSquare size={22} />}
       </button>
@@ -104,8 +106,8 @@ function FloatingAssistantPanel({ onClose }: { onClose: () => void }) {
         {thread.map((m, i) => (
           <div
             key={i}
-            className={`text-sm px-3 py-2 rounded-xl max-w-[85%] ${m.role === "user" ? "self-end ml-auto text-white" : "self-start"}`}
-            style={m.role === "ai" ? { background: "var(--tf-fill-05)", color: "var(--tf-ink-soft)" } : { background: "var(--tf-primary)" }}
+            className={`text-sm px-3 py-2 rounded-xl max-w-[85%] ${m.role === "user" ? "self-end ml-auto" : "self-start"}`}
+            style={m.role === "ai" ? { background: "var(--tf-fill-05)", color: "var(--tf-ink-soft)" } : { background: "var(--tf-primary)", color: "#fff" }}
           >
             {m.text}
           </div>
@@ -137,8 +139,8 @@ function FloatingAssistantPanel({ onClose }: { onClose: () => void }) {
           onClick={() => ask(question)}
           disabled={thinking}
           aria-label="Send"
-          className="w-9 h-9 rounded-xl text-white flex items-center justify-center shrink-0 disabled:opacity-50"
-          style={{ background: "var(--tf-primary)", boxShadow: "0 0 16px rgba(37,99,235,0.35)" }}
+          className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 disabled:opacity-50"
+          style={{ background: "var(--tf-primary)", color: "#fff", boxShadow: "0 0 16px rgba(37,99,235,0.35)" }}
         >
           <Send size={15} />
         </button>

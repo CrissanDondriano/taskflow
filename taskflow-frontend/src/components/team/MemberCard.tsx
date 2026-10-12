@@ -150,7 +150,7 @@ export const MemberCard = memo(function MemberCard({
             />
           )}
           {error && (
-            <p className="text-[11px]" style={{ color: "var(--tf-danger)" }}>
+            <p className="text-[11px]" style={{ color: "var(--tf-danger-text)" }}>
               {error}
             </p>
           )}
@@ -168,8 +168,8 @@ export const MemberCard = memo(function MemberCard({
               type="button"
               onClick={() => void save()}
               disabled={saving}
-              className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-white disabled:opacity-50"
-              style={{ background: "var(--tf-primary)" }}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50"
+              style={{ background: "var(--tf-primary)", color: "#fff" }}
             >
               {saving ? "Saving…" : "Save"}
             </button>

@@ -33,7 +33,10 @@ export function CircularGauge({ value, size = 96, strokeWidth = 8, color = "var(
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           strokeLinecap="round"
-          style={{ filter: `drop-shadow(0 0 6px ${color}88)`, transition: "stroke-dashoffset 0.6s ease" }}
+          /* Alpha via color-mix, not an appended "88": appending to a var()
+             (var(--tf-teal)88) is invalid at computed-value time and silently
+             drops the glow; color-mix composes identically for hex colors. */
+          style={{ filter: `drop-shadow(0 0 6px color-mix(in srgb, ${color} 53%, transparent))`, transition: "stroke-dashoffset 0.6s ease" }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">

@@ -187,7 +187,7 @@ export function SettingsPage() {
         <div className="flex flex-col gap-5">
           <GlassPanel className="p-5">
             <div className="flex items-center gap-2 mb-1">
-              <Slack size={16} color="#14B8A6" />
+              <Slack size={16} color="var(--tf-teal)" />
               <h2 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
                 Slack integration
               </h2>
@@ -199,6 +199,8 @@ export function SettingsPage() {
               <input
                 value={webhookUrl}
                 onChange={(e) => setWebhookUrl(e.target.value)}
+                aria-label="Slack incoming webhook URL"
+                aria-invalid={slackStatus === "error"}
                 placeholder="https://hooks.slack.com/services/..."
                 className="flex-1 min-w-0 text-sm px-3 py-2 rounded-xl outline-none"
                 style={fieldStyle}
@@ -213,7 +215,7 @@ export function SettingsPage() {
               </p>
             )}
             {slackStatus === "error" && (
-              <p className="text-xs mt-2 flex items-center gap-1" style={{ color: "var(--tf-danger)" }}>
+              <p role="alert" className="text-xs mt-2 flex items-center gap-1" style={{ color: "var(--tf-danger-text)" }}>
                 <AlertTriangle size={13} /> {slackError}
               </p>
             )}
@@ -250,7 +252,7 @@ export function SettingsPage() {
                   />
                 </div>
                 {deleteError && (
-                  <p className="text-xs" style={{ color: "var(--tf-danger)" }}>
+                  <p role="alert" className="text-xs" style={{ color: "var(--tf-danger-text)" }}>
                     {deleteError}
                   </p>
                 )}

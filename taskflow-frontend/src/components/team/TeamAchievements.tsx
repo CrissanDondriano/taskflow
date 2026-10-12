@@ -13,9 +13,9 @@ export function TeamAchievements({ tasks }: { tasks: Task[] }) {
   const atRisk = tasks.filter((t) => t.atRisk).length;
 
   const badges = [
-    { icon: Trophy, label: `${completed} tasks shipped`, color: "#F59E0B", real: true },
-    { icon: ShieldCheck, label: atRisk === 0 ? "Zero at-risk tasks" : `${atRisk} task${atRisk === 1 ? "" : "s"} need attention`, color: atRisk === 0 ? "#22C55E" : "#EF4444", real: true },
-    { icon: Flame, label: "4-day completion streak", color: "#EF4444", real: false },
+    { icon: Trophy, label: `${completed} tasks shipped`, color: "var(--tf-warning)", real: true },
+    { icon: ShieldCheck, label: atRisk === 0 ? "Zero at-risk tasks" : `${atRisk} task${atRisk === 1 ? "" : "s"} need attention`, color: atRisk === 0 ? "var(--tf-success)" : "var(--tf-danger)", real: true },
+    { icon: Flame, label: "4-day completion streak", color: "var(--tf-danger)", real: false },
   ];
 
   return (
@@ -28,7 +28,9 @@ export function TeamAchievements({ tasks }: { tasks: Task[] }) {
           const Icon = b.icon;
           return (
             <div key={b.label} className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: `${b.color}22` }}>
+              {/* Alpha via color-mix, not an appended "22": appending to a var() is invalid
+                  at computed-value time; color-mix composes identically for hex colors. */}
+              <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: `color-mix(in srgb, ${b.color} 13%, transparent)` }}>
                 <Icon size={15} color={b.color} />
               </div>
               <span className="text-sm" style={{ color: "var(--tf-ink)" }}>

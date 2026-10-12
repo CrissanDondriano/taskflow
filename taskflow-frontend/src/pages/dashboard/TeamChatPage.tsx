@@ -145,7 +145,7 @@ export function TeamChatPage() {
 
       <GlassPanel className="flex-1 min-h-0 flex flex-col p-4">
         {loading ? (
-          <div className="flex flex-col gap-2.5 flex-1" aria-label="Loading messages">
+          <div className="flex flex-col gap-2.5 flex-1" role="status" aria-label="Loading messages">
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="flex gap-2.5 items-start">
                 <div className="w-7 h-7 rounded-full animate-pulse shrink-0" style={{ background: "var(--tf-fill-08)" }} />
@@ -218,7 +218,7 @@ export function TeamChatPage() {
         )}
 
         {error && messages.length > 0 && (
-          <p className="text-[11px] mt-2 shrink-0" style={{ color: "var(--tf-danger)" }}>
+          <p className="text-[11px] mt-2 shrink-0" style={{ color: "var(--tf-danger-text)" }}>
             {error}
           </p>
         )}
@@ -237,8 +237,8 @@ export function TeamChatPage() {
             type="submit"
             disabled={!draft.trim() || sending}
             aria-label="Send message"
-            className="w-10 h-10 rounded-xl text-white flex items-center justify-center shrink-0 disabled:opacity-50 transition-opacity hover:opacity-90"
-            style={{ background: "var(--tf-primary)" }}
+            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 disabled:opacity-50 transition-opacity hover:opacity-90"
+            style={{ background: "var(--tf-primary)", color: "white" }}
           >
             <Send size={15} />
           </button>

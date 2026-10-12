@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Sparkles, X, TrendingUp, ShieldCheck, Activity, CalendarClock, BarChart3 } from "lucide-react";
+import { Sparkles, X, TrendingUp, ShieldCheck, Activity, CalendarClock, BarChart3, Users } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { GlassPanel, PulseCard, Eyebrow, PriorityBadge, EmptyState } from "../../components/ui/Primitives";
 import { Button } from "../../components/ui/Button";
@@ -97,7 +97,7 @@ export function DashboardHome() {
             <h2 className="text-xl sm:text-2xl font-display font-semibold mb-3" style={{ color: "var(--tf-ink)" }}>
               {greeting()}, {user?.name?.split(" ")[0] ?? "there"}. Mission control is live.
             </h2>
-            <div className="flex items-start gap-2.5 p-3 rounded-xl" style={{ background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.25)" }}>
+            <div className="flex items-start gap-2.5 p-3 rounded-xl" style={{ background: "color-mix(in srgb, var(--tf-primary) 8%, transparent)", border: "1px solid color-mix(in srgb, var(--tf-primary) 25%, transparent)" }}>
               <Sparkles size={15} className="mt-0.5 shrink-0" color="var(--tf-info-text)" />
               <p className="text-sm leading-snug" style={{ color: "var(--tf-ink-soft)" }}>
                 <span className="font-semibold" style={{ color: "var(--tf-ink)" }}>
@@ -137,21 +137,21 @@ export function DashboardHome() {
       {/* ---------- Smart analytics grid ---------- */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         <GlassPanel className="p-4 flex flex-col items-center justify-center gap-2">
-          <CircularGauge value={metrics.completionRate} size={64} strokeWidth={6} color="#2563EB" />
+          <CircularGauge value={metrics.completionRate} size={64} strokeWidth={6} color="var(--tf-primary)" />
           <span className="text-[10px] font-mono uppercase tracking-wide text-center" style={{ color: "var(--tf-ink-muted)" }}>
             Completion rate
           </span>
         </GlassPanel>
 
         <GlassPanel className="p-4 flex flex-col items-center justify-center gap-2">
-          <CircularGauge value={metrics.projectHealth} size={64} strokeWidth={6} color={metrics.projectHealth > 70 ? "#22C55E" : "#F59E0B"} />
+          <CircularGauge value={metrics.projectHealth} size={64} strokeWidth={6} color={metrics.projectHealth > 70 ? "var(--tf-success)" : "var(--tf-warning)"} />
           <span className="text-[10px] font-mono uppercase tracking-wide text-center" style={{ color: "var(--tf-ink-muted)" }}>
             Project health
           </span>
         </GlassPanel>
 
         <GlassPanel className="p-4 flex flex-col items-center justify-center gap-2">
-          <CircularGauge value={metrics.teamEfficiency} size={64} strokeWidth={6} color="#14B8A6" />
+          <CircularGauge value={metrics.teamEfficiency} size={64} strokeWidth={6} color="var(--tf-teal)" />
           <span className="text-[10px] font-mono uppercase tracking-wide text-center" style={{ color: "var(--tf-ink-muted)" }}>
             Team efficiency
           </span>
@@ -230,12 +230,12 @@ export function DashboardHome() {
 
         <PulseCard className="lg:col-span-2">
           <div className="flex items-center gap-2 mb-1">
-            <Sparkles size={16} color="#14B8A6" />
+            <Sparkles size={16} color="var(--tf-teal)" />
             <h3 className="text-base font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
               AI insights
             </h3>
           </div>
-          <Eyebrow color="#2563EB">Computed from current tasks</Eyebrow>
+          <Eyebrow color="var(--tf-primary)">Computed from current tasks</Eyebrow>
           <div className="flex flex-col gap-3 mt-2">
             {insights.length === 0 ? (
               <p className="text-sm" style={{ color: "var(--tf-ink-muted)" }}>
@@ -245,7 +245,7 @@ export function DashboardHome() {
               </p>
             ) : (
               insights.map((line, i) => (
-                <div key={i} className="text-sm leading-snug pl-3 border-l-2" style={{ color: "var(--tf-ink-soft)", borderColor: "#14B8A6" }}>
+                <div key={i} className="text-sm leading-snug pl-3 border-l-2" style={{ color: "var(--tf-ink-soft)", borderColor: "var(--tf-teal)" }}>
                   {line}
                 </div>
               ))
@@ -272,7 +272,7 @@ export function DashboardHome() {
                     <stop offset="95%" stopColor="#14B8A6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <XAxis dataKey="day" tick={{ fontSize: 11, fill: "#7C8AA5" }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="day" tick={{ fontSize: 11, fill: "var(--tf-ink-muted)" }} axisLine={false} tickLine={false} />
                 <YAxis hide allowDecimals={false} />
                 <Tooltip contentStyle={{ borderRadius: 10, border: "1px solid var(--tf-panel-border)", background: "var(--tf-surface)", fontSize: 12, color: "var(--tf-ink)" }} />
                 <Area type="monotone" dataKey="done" stroke="#14B8A6" strokeWidth={2} fill="url(#fillDone)" />
@@ -295,7 +295,7 @@ export function DashboardHome() {
           ) : (
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={columnDistribution} margin={{ left: -20, right: 10, top: 5, bottom: 0 }}>
-                <XAxis dataKey="column" tick={{ fontSize: 9, fill: "#7C8AA5" }} axisLine={false} tickLine={false} interval={0} angle={-20} textAnchor="end" height={40} />
+                <XAxis dataKey="column" tick={{ fontSize: 9, fill: "var(--tf-ink-muted)" }} axisLine={false} tickLine={false} interval={0} angle={-20} textAnchor="end" height={40} />
                 <YAxis hide allowDecimals={false} />
                 <Tooltip contentStyle={{ borderRadius: 10, border: "1px solid var(--tf-panel-border)", background: "var(--tf-surface)", fontSize: 12, color: "var(--tf-ink)" }} />
                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>
@@ -312,9 +312,12 @@ export function DashboardHome() {
       {/* ---------- Workload, activity, deadlines ---------- */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <GlassPanel className="p-5">
-          <h3 className="text-sm font-semibold font-display mb-4" style={{ color: "var(--tf-ink)" }}>
-            Workload distribution
-          </h3>
+          <div className="flex items-center gap-1.5 mb-4">
+            <Users size={14} color="var(--tf-ink-muted)" />
+            <h3 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
+              Workload distribution
+            </h3>
+          </div>
           <div className="flex flex-col gap-3">
             {people.length === 0 ? (
               <p className="text-sm" style={{ color: "var(--tf-ink-muted)" }}>No team members yet.</p>
@@ -337,9 +340,12 @@ export function DashboardHome() {
         </GlassPanel>
 
         <GlassPanel className="p-5">
-          <h3 className="text-sm font-semibold font-display mb-4" style={{ color: "var(--tf-ink)" }}>
-            Recent activity
-          </h3>
+          <div className="flex items-center gap-1.5 mb-4">
+            <Activity size={14} color="var(--tf-ink-muted)" />
+            <h3 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
+              Recent activity
+            </h3>
+          </div>
           <div className="flex flex-col gap-3">
             {recentActivity.length === 0 ? (
               <p className="text-sm" style={{ color: "var(--tf-ink-muted)" }}>

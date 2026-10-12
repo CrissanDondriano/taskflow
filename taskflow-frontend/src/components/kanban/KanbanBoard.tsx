@@ -54,7 +54,7 @@ const KanbanCard = memo(function KanbanCard({
       role="button"
       tabIndex={0}
       aria-label={`Open ${task.title}`}
-      className="group rounded-xl p-3 cursor-pointer transition-all duration-150 hover:-translate-y-0.5"
+      className="group rounded-xl p-3 cursor-pointer transition-all duration-150 hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tf-teal)]"
       style={{
         background: "var(--tf-surface)",
         border: "1px solid var(--tf-panel-border)",
@@ -197,8 +197,8 @@ export const KanbanBoard = memo(function KanbanBoard({
               }}
               className="w-72 shrink-0 rounded-2xl transition-colors flex flex-col max-h-[calc(100vh-320px)]"
               style={{
-                background: dragOverCol === col ? "rgba(37,99,235,0.08)" : "var(--tf-fill-02)",
-                border: `1px solid ${dragOverCol === col ? "rgba(37,99,235,0.4)" : "var(--tf-panel-border)"}`,
+                background: dragOverCol === col ? "color-mix(in srgb, var(--tf-primary) 8%, transparent)" : "var(--tf-fill-02)",
+                border: `1px solid ${dragOverCol === col ? "color-mix(in srgb, var(--tf-primary) 40%, transparent)" : "var(--tf-panel-border)"}`,
               }}
             >
               <div
@@ -210,7 +210,7 @@ export const KanbanBoard = memo(function KanbanBoard({
                 </span>
                 <div className="flex items-center gap-1.5">
                   {criticalCount > 0 && (
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full" style={{ background: "rgba(239,68,68,0.12)", color: "var(--tf-danger-text)" }}>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, var(--tf-danger) 12%, transparent)", color: "var(--tf-danger-text)" }}>
                       {criticalCount} critical
                     </span>
                   )}

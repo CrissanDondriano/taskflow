@@ -31,12 +31,12 @@ export function AiWorkloadPanel({ people, tasks }: { people: Person[]; tasks: Ta
   return (
     <PulseCard>
       <div className="flex items-center gap-2 mb-1">
-        <Sparkles size={16} color="#14B8A6" />
+        <Sparkles size={16} color="var(--tf-teal)" />
         <h2 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
           AI workload recommendation
         </h2>
       </div>
-      <Eyebrow color="#2563EB">Computed from current assignments</Eyebrow>
+      <Eyebrow color="var(--tf-primary)">Computed from current assignments</Eyebrow>
       <p className="text-sm leading-snug mt-2" style={{ color: "var(--tf-ink-soft)" }}>
         {recommendation}
       </p>

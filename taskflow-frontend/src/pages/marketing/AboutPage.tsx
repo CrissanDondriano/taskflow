@@ -33,7 +33,7 @@ export function AboutPage() {
               <li key={title}>
                 <Reveal delay={i * 100} className="h-full">
                   <div className="lift h-full rounded-2xl p-6" style={PANEL}>
-                    <span className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: "rgba(248,113,113,0.12)" }}><Icon size={20} color="#F87171" aria-hidden="true" /></span>
+                    <span className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: "rgba(248,113,113,0.12)" }}><Icon size={20} color="var(--tf-danger-text)" aria-hidden="true" /></span>
                     <h3 className="mb-2 mt-4 text-[16px] font-semibold">{title}</h3>
                     <p className="text-[13px] leading-relaxed" style={MUTED}>{desc}</p>
                   </div>

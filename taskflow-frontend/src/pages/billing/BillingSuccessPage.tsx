@@ -13,7 +13,7 @@ export function BillingSuccessPage() {
   return (
     <section className="py-20 sm:py-28">
       <Container className="max-w-lg text-center">
-        <CheckCircle2 size={40} color="#22C55E" className="mx-auto" aria-hidden="true" />
+        <CheckCircle2 size={40} className="mx-auto" aria-hidden="true" style={{ color: "var(--tf-success)" }} />
         <h1 className="mt-4 font-display text-[28px] font-semibold">You're upgraded</h1>
         <p className="mx-auto mt-3 max-w-[48ch] text-[15px] leading-relaxed" style={{ color: "var(--tf-ink-muted)" }}>
           Payment went through. Your plan activates within a minute or so — if the billing page still shows the old

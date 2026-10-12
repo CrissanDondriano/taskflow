@@ -13,9 +13,9 @@ const FOCUS = "focus-visible:outline focus-visible:outline-2 focus-visible:outli
 const FIELD = `min-h-11 w-full rounded-xl bg-transparent px-3.5 py-2.5 text-[14px] transition-colors motion-reduce:transition-none ${FOCUS}`;
 const PANEL = { background: "var(--tf-panel)", border: "1px solid var(--tf-panel-border)" };
 const MUTED = { color: "var(--tf-ink-muted)" };
-const TOPICS = ["Pricing and plans", "Enterprise and security", "Help with my account", "Something else"];
+const TOPICS = ["Pricing and plans", "Security and roles", "Help with my account", "Something else"];
 const INFO = [
-  { icon: Briefcase, title: "Sales and Enterprise", desc: "Plans, SSO, custom integrations and security questions." },
+  { icon: Briefcase, title: "Plans and security", desc: "Plans, roles and security questions." },
   { icon: LifeBuoy, title: "Help with your account", desc: "Something not working? Tell us what you saw and we'll dig in." },
   { icon: Mail, title: "Email us directly", desc: "hello@taskflow.ai" },
 ];
@@ -30,10 +30,10 @@ function validate(d: FormData): Errors {
 }
 
 export function ContactPage() {
-  usePageMeta("Contact", "Talk to the TaskFlow AI team about plans, integrations or Enterprise requirements.");
+  usePageMeta("Contact", "Talk to the TaskFlow AI team about plans, integrations or security requirements.");
   const [errors, setErrors] = useState<Errors>({});
   const [sent, setSent] = useState(false);
-  const a11y = (f: Field) => ({ "aria-invalid": !!errors[f], "aria-describedby": errors[f] ? `${f}-err` : undefined, style: { border: `1px solid ${errors[f] ? "#F87171" : "var(--tf-panel-border)"}` } });
+  const a11y = (f: Field) => ({ "aria-invalid": !!errors[f], "aria-describedby": errors[f] ? `${f}-err` : undefined, style: { border: `1px solid ${errors[f] ? "var(--tf-danger)" : "var(--tf-panel-border)"}` } });
   const err = (f: Field) => errors[f] && <p id={`${f}-err`} className="mt-1.5 text-[12px]" style={{ color: "var(--tf-danger-text)" }}>{errors[f]}</p>;
 
   // Replace the mailto with a POST to your Laravel API (e.g. /api/contact) when ready.
@@ -51,14 +51,14 @@ export function ContactPage() {
 
   return (
     <>
-      <PageHero title="Talk to the TaskFlow AI team" lead="Ask about plans, integrations or Enterprise needs. We reply by email." />
+      <PageHero title="Talk to the TaskFlow AI team" lead="Ask about plans, integrations or security needs. We reply by email." />
 
       <section aria-label="Contact form" className="py-16 lg:py-24">
         <Container className="grid gap-10 lg:grid-cols-12 lg:gap-14">
           <Reveal className="lg:col-span-7">
             {sent ? (
               <div role="status" className="rise flex flex-col items-start gap-4 rounded-2xl p-8 sm:p-10" style={PANEL}>
-                <CheckCircle2 size={36} color="#2DD4BF" aria-hidden="true" />
+                <CheckCircle2 size={36} color="var(--tf-teal)" aria-hidden="true" />
                 <h2 className="font-display text-[24px] font-semibold">Your message is ready to send</h2>
                 <p className="max-w-[48ch] text-[14px] leading-relaxed" style={MUTED}>Your email app should have opened with the message filled in. If nothing opened, write to <a href="mailto:hello@taskflow.ai" className="underline underline-offset-4">hello@taskflow.ai</a>.</p>
                 <button type="button" onClick={() => setSent(false)} className={`min-h-11 rounded-xl px-5 text-[14px] font-medium transition-opacity hover:opacity-90 ${FOCUS}`} style={{ border: "1px solid var(--tf-panel-border)" }}>Write another message</button>
@@ -72,7 +72,7 @@ export function ContactPage() {
                 <div><label htmlFor="topic" className="mb-1.5 block text-[13px] font-medium">Topic</label>
                   <select id="topic" name="topic" className={FIELD} style={{ border: "1px solid var(--tf-panel-border)", background: "var(--tf-surface)" }}>{TOPICS.map((t) => <option key={t}>{t}</option>)}</select></div>
                 <div><label htmlFor="message" className="mb-1.5 block text-[13px] font-medium">How can we help?</label><textarea id="message" name="message" rows={6} className={FIELD} {...a11y("message")} />{err("message")}</div>
-                <button type="submit" className={`min-h-11 rounded-xl px-6 text-[14px] font-medium text-white transition-opacity hover:opacity-90 motion-reduce:transition-none sm:w-fit ${FOCUS}`} style={{ background: "var(--tf-primary)" }}>Send message</button>
+                <button type="submit" className={`min-h-11 rounded-xl px-6 text-[14px] font-medium transition-opacity hover:opacity-90 motion-reduce:transition-none sm:w-fit ${FOCUS}`} style={{ background: "var(--tf-primary)", color: "#fff" }}>Send message</button>
               </form>
             )}
           </Reveal>
@@ -96,7 +96,7 @@ export function ContactPage() {
                 <ol className="m-0 flex list-none flex-col gap-3 p-0">
                   {NEXT.map((n, i) => (
                     <li key={n} className="flex items-center gap-3 text-[13px]">
-                      <span aria-hidden="true" className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold text-white" style={{ background: "linear-gradient(135deg,#2563EB,#14B8A6)" }}>{i + 1}</span>{n}
+                      <span aria-hidden="true" className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold" style={{ background: "linear-gradient(135deg,#2563EB,#14B8A6)", color: "#fff" }}>{i + 1}</span>{n}
                     </li>
                   ))}
                 </ol>

@@ -48,7 +48,7 @@ export function UrgencyList({
             onMouseEnter={() => onHover?.(task.id)}
             onMouseLeave={() => onHover?.(undefined)}
             className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors"
-            style={{ background: active ? "rgba(37,99,235,0.1)" : "transparent" }}
+            style={{ background: active ? "color-mix(in srgb, var(--tf-primary) 10%, transparent)" : "transparent" }}
           >
             <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: "var(--tf-danger)", opacity: task.atRisk ? 1 : 0, boxShadow: task.atRisk ? "0 0 5px var(--tf-danger)" : "none" }} />
             <div className="min-w-0 flex-1">

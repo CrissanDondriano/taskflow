@@ -16,6 +16,7 @@ export function CalendarViewTabs({ view, onChange }: { view: CalendarViewMode; o
         <button
           key={t.mode}
           onClick={() => onChange(t.mode)}
+          aria-pressed={view === t.mode}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hover:opacity-80"
           style={{ background: view === t.mode ? "var(--tf-primary)" : "transparent", color: view === t.mode ? "white" : "var(--tf-ink-muted)" }}
           title={`Shortcut: ${t.key}`}

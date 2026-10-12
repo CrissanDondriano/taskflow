@@ -77,7 +77,7 @@ export function SignupPage() {
       <div className="w-full max-w-sm relative z-10">
         <Link to="/" className="flex items-center justify-center gap-2 mb-8">
           <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg, #2563EB, #14B8A6)", boxShadow: "0 0 18px rgba(20,184,166,0.4)" }}>
-            <Sparkles size={18} color="#fff" />
+            <Sparkles size={18} color="#fff" aria-hidden="true" />
           </div>
           <span className="text-[19px] font-display font-semibold" style={{ color: "var(--tf-ink)" }}>
             TaskFlow <span style={{ color: "var(--tf-teal)" }}>AI</span>
@@ -85,7 +85,8 @@ export function SignupPage() {
         </Link>
 
         <GlassPanel className="p-6 sm:p-8">
-          <h1 className="text-[20px] font-display font-semibold mb-1" style={{ color: "var(--tf-ink)" }}>
+          <div>
+            <h1 className="text-[20px] font-display font-semibold mb-1" style={{ color: "var(--tf-ink)" }}>
               Create your account
             </h1>
             <p className="text-[13px] mb-6" style={{ color: "var(--tf-ink-muted)" }}>
@@ -94,7 +95,7 @@ export function SignupPage() {
 
             {error && (
               <div role="alert" className="flex items-start gap-2 text-[12px] p-3 rounded-xl mb-4" style={{ background: "rgba(239,68,68,0.1)", color: "var(--tf-danger-text)", border: "1px solid rgba(239,68,68,0.3)" }}>
-                <AlertTriangle size={14} className="shrink-0 mt-0.5" />
+                <AlertTriangle size={14} className="shrink-0 mt-0.5" aria-hidden="true" />
                 <span>{error}</span>
               </div>
             )}
@@ -155,7 +156,7 @@ export function SignupPage() {
                     const met = r.test(password);
                     return (
                       <div key={r.label} className="flex items-center gap-1.5 text-[11px]" style={{ color: met ? "var(--tf-teal)" : "var(--tf-ink-muted)" }}>
-                        <Check size={11} style={{ opacity: met ? 1 : 0.3 }} /> {r.label}
+                        <Check size={11} style={{ opacity: met ? 1 : 0.3 }} aria-hidden="true" /> {r.label}
                       </div>
                     );
                   })}
@@ -166,6 +167,7 @@ export function SignupPage() {
                 {loading ? "Creating account..." : "Create account"}
               </Button>
             </form>
+          </div>
         </GlassPanel>
 
         <p className="text-center text-[13px] mt-6" style={{ color: "var(--tf-ink-muted)" }}>

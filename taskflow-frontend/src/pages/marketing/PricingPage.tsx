@@ -35,7 +35,7 @@ function CompareTable() {
             <th scope="col" className="py-3 pr-4 text-left font-normal" style={{ color: "var(--tf-ink-muted)" }}>
               <span className="sr-only">Feature</span>
             </th>
-            {["Free", "Pro", "Enterprise"].map((p) => (
+            {["Free", "Pro", "Team"].map((p) => (
               <th key={p} scope="col" className="px-4 py-3 text-center font-semibold">
                 {p}
               </th>
@@ -52,7 +52,7 @@ function CompareTable() {
                 <td key={i} className="px-4 py-3 text-center" style={{ color: "var(--tf-ink-soft)" }}>
                   {typeof v === "boolean" ? (
                     v ? (
-                      <Check size={16} className="mx-auto" color="#14B8A6" aria-label="Included" />
+                      <Check size={16} className="mx-auto" color="var(--tf-teal)" aria-label="Included" />
                     ) : (
                       <Minus size={16} className="mx-auto" aria-label="Not included" style={{ color: "var(--tf-ink-muted)" }} />
                     )
@@ -70,7 +70,7 @@ function CompareTable() {
 }
 
 export function PricingPage() {
-  usePageMeta("Pricing", "Start free with 3 projects. Upgrade to Pro at $14 per user per month, or contact us for Enterprise.");
+  usePageMeta("Pricing", "Start free with 3 projects. Upgrade to Pro at $14 per user per month, or Team at $29.");
   const faqLd = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: FAQS.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) };
   return (
     <>
@@ -78,7 +78,7 @@ export function PricingPage() {
       <PageHero title="Simple pricing that grows with your team" lead="Start free. Upgrade when you need more projects or the full AI suite." />
       <section aria-label="Plans" className="py-16 lg:py-24"><Container><PricingCards level={2} /></Container></section>
 
-      <section aria-labelledby="included" className="py-16 lg:py-20" style={{ background: "var(--tf-fill-015)" }}>
+      <section aria-labelledby="included" className="py-16 lg:py-24" style={{ background: "var(--tf-fill-015)" }}>
         <Container>
           <Reveal><SectionHead id="included" title="On every plan" /></Reveal>
           <ul className="m-0 grid list-none grid-cols-1 gap-6 p-0 md:grid-cols-3">

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { CalendarX, Clock3, Flag } from "lucide-react";
+import { AlertTriangle, CalendarX, Clock3, Flag } from "lucide-react";
 import { Avatar, EmptyState, GlassPanel, PriorityBadge } from "../ui/Primitives";
 import { PRIORITY_HEX } from "../../data/mockData";
 import { useTeamMembers } from "../../context/TeamContext";
@@ -70,9 +70,14 @@ export function AgendaView({ meetings, deadlines, conflictIds }: { meetings: Mee
                   >
                     <Clock3 size={14} className="shrink-0" color={PRIORITY_HEX[m.priority]} />
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm truncate" style={{ color: "var(--tf-ink)" }}>
-                        {isConflict && "⚠ "}
-                        {m.title}
+                      <div className="flex items-center gap-1.5 text-sm" style={{ color: "var(--tf-ink)" }}>
+                        {isConflict && (
+                          <>
+                            <AlertTriangle size={13} color="var(--tf-danger)" className="shrink-0" aria-hidden="true" />
+                            <span className="sr-only">Conflicts with another meeting. </span>
+                          </>
+                        )}
+                        <span className="min-w-0 truncate">{m.title}</span>
                       </div>
                       <div className="text-xs font-mono" style={{ color: "var(--tf-ink-muted)" }}>
                         {formatHour(m.startHour)}–{formatHour(m.startHour + m.durationHours)}

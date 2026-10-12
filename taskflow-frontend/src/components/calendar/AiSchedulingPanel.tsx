@@ -23,12 +23,12 @@ export function AiSchedulingPanel({ dayMeetings, conflictIds, day }: { dayMeetin
     <div className="flex flex-col gap-4">
       <PulseCard>
         <div className="flex items-center gap-2 mb-1">
-          <Sparkles size={16} color="#14B8A6" />
+          <Sparkles size={16} color="var(--tf-teal)" />
           <h2 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
             AI scheduling
           </h2>
         </div>
-        <Eyebrow color="#2563EB">Live for the selected day</Eyebrow>
+        <Eyebrow color="var(--tf-primary)">Live for the selected day</Eyebrow>
         <p className="text-sm leading-snug mt-2" style={{ color: "var(--tf-ink-soft)" }}>
           {computeSchedulingRecommendation(conflicting)}
         </p>
@@ -79,7 +79,7 @@ export function AiSchedulingPanel({ dayMeetings, conflictIds, day }: { dayMeetin
 
       <GlassPanel className="p-4">
         <div className="flex items-center gap-1.5 mb-2">
-          <Users size={13} color="#2563EB" />
+          <Users size={13} color="var(--tf-primary)" />
           <h3 className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--tf-ink-muted)" }}>
             Best times for the whole team
           </h3>

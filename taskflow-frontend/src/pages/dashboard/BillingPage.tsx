@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle, CreditCard, FlaskConical, Receipt } from "lucide-react";
 import { GlassPanel, EmptyState, ConfirmDialog } from "../../components/ui/Primitives";
 import { Button } from "../../components/ui/Button";
+import { Skeleton } from "../../components/ui/Skeleton";
 import { useCanManageTeam } from "../../context/TeamContext";
 import { api, ApiError } from "../../lib/api";
 import {
@@ -106,8 +107,8 @@ export function BillingPage() {
       <div className="flex flex-col gap-4" role="status" aria-live="polite">
         {[0, 1].map((i) => (
           <GlassPanel key={i} className="p-5">
-            <div className="h-4 w-32 rounded animate-pulse mb-3" style={{ background: "var(--tf-fill-08)" }} />
-            <div className="h-2.5 rounded animate-pulse" style={{ background: "var(--tf-fill-06)" }} />
+            <Skeleton variant="text" width="8rem" height={16} className="mb-3" />
+            <Skeleton variant="text" height={10} />
           </GlassPanel>
         ))}
       </div>
@@ -146,7 +147,7 @@ export function BillingPage() {
 
       {pastDue && (
         <div className="flex items-center gap-2 rounded-xl px-4 py-3 text-[13px]" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.35)", color: "var(--tf-ink)" }} role="alert">
-          <AlertTriangle size={15} aria-hidden="true" style={{ color: "var(--tf-danger)" }} />
+          <AlertTriangle size={15} aria-hidden="true" style={{ color: "var(--tf-danger-text)" }} />
           <span>
             <strong>Payment failed</strong> on your last invoice — your plan stays active for now. Update your card via the customer portal.
           </span>
@@ -236,7 +237,8 @@ export function BillingPage() {
                 <button
                   key={i}
                   onClick={() => setInterval(i)}
-                  className="px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors hover:opacity-80"
+                  aria-pressed={interval === i}
+                  className="px-2.5 py-1.5 rounded-lg text-xs font-medium transition-opacity hover:opacity-90 active:opacity-80"
                   style={{ background: interval === i ? "var(--tf-primary)" : "transparent", color: interval === i ? "white" : "var(--tf-ink-muted)" }}
                 >
                   {i === "monthly" ? "Monthly" : "Yearly (−20%)"}

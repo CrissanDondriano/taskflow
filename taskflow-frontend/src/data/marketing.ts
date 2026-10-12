@@ -53,7 +53,7 @@ export const SCENARIOS: { icon: LucideIcon; title: string; desc: string }[] = [
 export const PLANS = [
   { name: "Free", tagline: "For trying it on a real project", price: "$0", period: "forever", features: ["Up to 3 projects", "Basic Kanban and calendar", "50 AI messages a month", "3 team seats"], cta: "Start free", featured: false },
   { name: "Pro", tagline: "For teams that ship every week", price: "$14", period: "per user / month", features: ["Up to 25 projects", "Full AI suite", "Meeting notes converter", "Risk detection and alerts", "Slack, Calendar, Outlook"], cta: "Start free trial", featured: true },
-  { name: "Enterprise", tagline: "For organizations with security needs", price: "Custom", period: "talk to us", features: ["SSO and advanced roles", "Dedicated support", "Custom integrations", "Audit logs and compliance"], cta: "Contact sales", featured: false },
+  { name: "Team", tagline: "For organizations that run on TaskFlow", price: "$29", period: "per user / month", features: ["Up to 100 projects", "50 team seats", "5000 AI messages a month", "200 plan imports a month"], cta: "Start free trial", featured: false },
 ];
 
 export const FAQS = [

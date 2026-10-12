@@ -179,7 +179,7 @@ export function MeetingNotesConverter() {
     <div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
         <GlassPanel className="p-5">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
             <span className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
               Meeting notes
             </span>
@@ -211,7 +211,7 @@ export function MeetingNotesConverter() {
             className="w-full text-sm leading-relaxed p-3 rounded-xl outline-none resize-none font-mono"
             style={fieldStyle}
           />
-          <div className="flex items-center justify-between mt-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap mt-3">
             <span className="text-[10px] font-mono" style={{ color: "var(--tf-ink-muted)" }}>
               {notes.trim() ? `${notes.trim().split(/\s+/).length} words` : "Paste or upload notes to begin"}
             </span>
@@ -244,7 +244,7 @@ export function MeetingNotesConverter() {
               ) : (
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center gap-2">
-                    <Sparkles size={15} color="#14B8A6" />
+                    <Sparkles size={15} color="var(--tf-teal)" />
                     <h2 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
                       Here's what you get
                     </h2>
@@ -290,7 +290,7 @@ export function MeetingNotesConverter() {
             <>
               <PulseCard>
                 <div className="flex items-center gap-2 mb-2">
-                  <Sparkles size={15} color="#14B8A6" />
+                  <Sparkles size={15} color="var(--tf-teal)" />
                   <h2 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
                     Summary
                   </h2>
@@ -301,9 +301,9 @@ export function MeetingNotesConverter() {
               </PulseCard>
 
               <GlassPanel className="p-5">
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
                   <div className="flex items-center gap-2">
-                    <ListChecks size={16} color="#2563EB" />
+                    <ListChecks size={16} color="var(--tf-primary)" />
                     <h2 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
                       Action items
                     </h2>
@@ -371,7 +371,7 @@ export function MeetingNotesConverter() {
                     );
                   })}
                 </div>
-                <div className="flex items-center justify-between mt-4">
+                <div className="flex items-center justify-between gap-2 flex-wrap mt-4">
                   <span className="text-xs font-mono" style={{ color: "var(--tf-ink-muted)" }}>
                     Will land in "{result.project}" · Backlog
                   </span>

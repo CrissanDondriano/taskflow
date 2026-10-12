@@ -109,7 +109,7 @@ export function TeamPage() {
             they'll need to register first. Your team is created automatically if you don't have one yet.
           </p>
           {inviteError && (
-            <p className="text-[11px]" style={{ color: "var(--tf-danger)" }}>
+            <p className="text-[11px]" style={{ color: "var(--tf-danger-text)" }}>
               {inviteError}
             </p>
           )}

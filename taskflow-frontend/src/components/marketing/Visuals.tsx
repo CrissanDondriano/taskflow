@@ -116,7 +116,7 @@ export function PlanUploadVisual() {
   return (
     <div aria-hidden="true" className="rounded-2xl p-5" style={PANEL}>
       <div className="flex items-center gap-3 rounded-xl px-3.5 py-3" style={{ background: "var(--tf-fill-03)", border: "1px dashed var(--tf-panel-border)" }}>
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg font-display text-[13px] font-semibold text-white" style={{ background: "linear-gradient(135deg,#2563EB,#14B8A6)" }}>PDF</span>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg font-display text-[13px] font-semibold" style={{ background: "linear-gradient(135deg,#2563EB,#14B8A6)", color: "#fff" }}>PDF</span>
         <div className="min-w-0">
           <p className="truncate text-[13px] font-medium">q4-launch-plan.pdf</p>
           <p className="text-[11px]" style={MUTED}>3 sections · 2,140 words</p>

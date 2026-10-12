@@ -20,6 +20,20 @@ export const PRIORITY_HEX: Record<Priority, string> = {
   Critical: "#EF4444",
 };
 
+/**
+ * Theme-aware text color per priority. PRIORITY_HEX above stays the hue for
+ * fills, borders, dots and glows (it must stay a hex — components concatenate
+ * alpha/glow suffixes onto it), while any TEXT drawn in a priority color uses
+ * these status tokens: #F59E0B on white is ~2.0:1, but --tf-warning-text is
+ * #B45309 on light (≥4.5:1) and #FCD34D on dark — same hue, legible in both.
+ */
+export const PRIORITY_TEXT: Record<Priority, string> = {
+  Low: "var(--tf-accent-text)",
+  Medium: "var(--tf-warning-text)",
+  High: "var(--tf-info-text)",
+  Critical: "var(--tf-danger-text)",
+};
+
 export const PRIORITY_STYLE: Record<Priority, string> = {
   Low: "bg-[#14B8A6]/10 text-[color:var(--tf-accent-text)] border border-[#14B8A6]/30",
   Medium: "bg-[#F59E0B]/10 text-[color:var(--tf-warning-text)] border border-[#F59E0B]/30",

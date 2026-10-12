@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { AlertTriangle, Flag } from "lucide-react";
 import { Avatar } from "../ui/Primitives";
-import { PRIORITY_HEX } from "../../data/mockData";
+import { PRIORITY_HEX, PRIORITY_TEXT } from "../../data/mockData";
 import { useTeamMembers } from "../../context/TeamContext";
 import { ANCHOR_YEAR, ANCHOR_MONTH, TODAY_DAY, formatWeekdayShort, formatHour, truncateWords } from "../../lib/calendar";
 import type { Meeting, DeadlineItem } from "../../types";
@@ -111,11 +112,12 @@ export function TimeGrid({
                   {dayDeadlines.map((dl) => (
                     <div
                       key={dl.id}
-                      className="text-[10px] font-mono px-1 py-0.5 rounded truncate"
-                      style={{ background: `${PRIORITY_HEX[dl.priority]}22`, color: PRIORITY_HEX[dl.priority] }}
+                      className="flex items-center gap-1 text-[10px] font-mono px-1 py-0.5 rounded"
+                      style={{ background: `${PRIORITY_HEX[dl.priority]}22`, color: PRIORITY_TEXT[dl.priority] }}
                       title={`Deadline: ${dl.title}`}
                     >
-                      ⚑ {truncateWords(dl.title)}
+                      <Flag size={10} className="shrink-0" aria-hidden="true" />
+                      <span className="min-w-0 truncate">{truncateWords(dl.title)}</span>
                     </div>
                   ))}
                 </div>
@@ -202,9 +204,10 @@ export function TimeGrid({
                         boxShadow: isSelected ? `0 0 0 2px ${color}` : "none",
                       }}
                     >
-                      <div className="text-[10px] font-medium leading-tight truncate" style={{ color: "var(--tf-ink)" }}>
-                        {isConflict && "⚠ "}
-                        {truncateWords(m.title)}
+                      <div className="flex items-center gap-1 text-[10px] font-medium leading-tight" style={{ color: "var(--tf-ink)" }}>
+                        {/* Conflict is already in this block's aria-label; icon is decorative. */}
+                        {isConflict && <AlertTriangle size={10} color="var(--tf-danger)" className="shrink-0" aria-hidden="true" />}
+                        <span className="min-w-0 truncate">{truncateWords(m.title)}</span>
                       </div>
                       <div className="text-[10px] font-mono" style={{ color: "var(--tf-ink-muted)" }}>
                         {formatHour(m.startHour)}–{formatHour(m.startHour + duration)}

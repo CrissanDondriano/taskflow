@@ -61,7 +61,7 @@ export function ForgotPasswordPage() {
       <div className="w-full max-w-sm relative z-10">
         <Link to="/" className="flex items-center justify-center gap-2 mb-8">
           <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg, #2563EB, #14B8A6)", boxShadow: "0 0 18px rgba(20,184,166,0.4)" }}>
-            <Sparkles size={18} color="#fff" />
+            <Sparkles size={18} color="#fff" aria-hidden="true" />
           </div>
           <span className="text-[19px] font-display font-semibold" style={{ color: "var(--tf-ink)" }}>
             TaskFlow <span style={{ color: "var(--tf-teal)" }}>AI</span>
@@ -70,7 +70,7 @@ export function ForgotPasswordPage() {
 
         <GlassPanel className="p-6 sm:p-8">
           {sent ? (
-            <div>
+            <div role="status">
               <h1 className="text-[20px] font-display font-semibold mb-1" style={{ color: "var(--tf-ink)" }}>
                 Check your inbox
               </h1>
@@ -93,7 +93,7 @@ export function ForgotPasswordPage() {
 
               {error && (
                 <div role="alert" className="flex items-start gap-2 text-[12px] p-3 rounded-xl mb-4" style={{ background: "rgba(239,68,68,0.1)", color: "var(--tf-danger-text)", border: "1px solid rgba(239,68,68,0.3)" }}>
-                  <AlertTriangle size={14} className="shrink-0 mt-0.5" />
+                  <AlertTriangle size={14} className="shrink-0 mt-0.5" aria-hidden="true" />
                   <span>{error}</span>
                 </div>
               )}
@@ -126,7 +126,7 @@ export function ForgotPasswordPage() {
 
         <p className="text-center text-[13px] mt-6" style={{ color: "var(--tf-ink-muted)" }}>
           <Link to="/login" className="inline-flex items-center gap-1 font-medium hover:underline" style={{ color: "var(--tf-teal)" }}>
-            <ArrowLeft size={13} />
+            <ArrowLeft size={13} aria-hidden="true" />
             Back to log in
           </Link>
         </p>

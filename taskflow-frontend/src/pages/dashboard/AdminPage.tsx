@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { RefreshCw, ShieldCheck, ScrollText, Users } from "lucide-react";
+import { RefreshCw, ShieldAlert, ShieldCheck, ScrollText, Users } from "lucide-react";
 import { GlassPanel, EmptyState, Avatar } from "../../components/ui/Primitives";
 import { Button } from "../../components/ui/Button";
 import { Skeleton, SkeletonStatCard } from "../../components/ui/Skeleton";
@@ -44,21 +44,43 @@ export function AdminPage() {
       ]
     : [];
 
+  // The shell's topbar already renders the page title ("Admin"), so the body
+  // carries only the deck — a second heading here repeated it word for word.
+  const header = (
+    <div className="flex flex-wrap items-end justify-between gap-3">
+      <p className="text-[12px]" style={{ color: "var(--tf-ink-muted)" }}>
+        Platform overview, user roles and the audit trail.
+      </p>
+      <Button variant="secondary" size="sm" icon={<RefreshCw size={13} />} onClick={() => void fetchAll()} disabled={loading}>
+        Refresh
+      </Button>
+    </div>
+  );
+
+  // A failed first load has no stats, users or logs to render — show one
+  // honest error state with a retry instead of the empty-directory copy below.
+  if (error && !loading && !stats) {
+    return (
+      <div className="flex flex-col gap-5">
+        {header}
+        <GlassPanel className="p-5">
+          <EmptyState
+            icon={<ShieldAlert size={22} />}
+            message={error}
+            action={
+              <Button variant="secondary" size="sm" icon={<RefreshCw size={13} />} onClick={() => void fetchAll()}>
+                Retry
+              </Button>
+            }
+          />
+        </GlassPanel>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-display font-semibold" style={{ color: "var(--tf-ink)" }}>
-            Admin
-          </h1>
-          <p className="text-[12px] mt-0.5" style={{ color: "var(--tf-ink-muted)" }}>
-            Platform overview, user roles and the audit trail.
-          </p>
-        </div>
-        <Button variant="secondary" size="sm" icon={<RefreshCw size={13} />} onClick={() => void fetchAll()} disabled={loading}>
-          Refresh
-        </Button>
-      </div>
+      {header}
 
       {error && !loading && (
         <div
@@ -71,20 +93,26 @@ export function AdminPage() {
       )}
 
       {/* Platform stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {loading && !stats
-          ? [0, 1, 2, 3].map((i) => <SkeletonStatCard key={i} />)
-          : statCards.map((s) => (
-              <GlassPanel key={s.label} className="p-4">
-                <div className="text-[10px] font-mono uppercase tracking-[0.16em] mb-2" style={{ color: "var(--tf-ink-muted)" }}>
-                  {s.label}
-                </div>
-                <div className="text-xl font-display font-semibold" style={{ color: "var(--tf-ink)" }}>
-                  {s.value}
-                </div>
-              </GlassPanel>
-            ))}
-      </div>
+      {loading && !stats ? (
+        <div role="status" aria-live="polite" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[0, 1, 2, 3].map((i) => (
+            <SkeletonStatCard key={i} />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {statCards.map((s) => (
+            <GlassPanel key={s.label} className="p-4">
+              <div className="text-[10px] font-mono uppercase tracking-[0.16em] mb-2" style={{ color: "var(--tf-ink-muted)" }}>
+                {s.label}
+              </div>
+              <div className="text-xl font-display font-semibold" style={{ color: "var(--tf-ink)" }}>
+                {s.value}
+              </div>
+            </GlassPanel>
+          ))}
+        </div>
+      )}
 
       {/* AI + audit status strip */}
       {stats && (
@@ -118,7 +146,7 @@ export function AdminPage() {
         </div>
 
         {loading && users.length === 0 ? (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3" role="status" aria-live="polite">
             <Skeleton variant="rect" height={36} />
             <Skeleton variant="rect" height={36} />
             <Skeleton variant="rect" height={36} />
@@ -126,7 +154,7 @@ export function AdminPage() {
         ) : users.length === 0 ? (
           <EmptyState icon={<Users size={20} />} message="No users found." />
         ) : (
-          <div className="overflow-x-auto -mx-1 px-1">
+          <div className="overflow-x-auto tf-scroll -mx-1 px-1">
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="text-left" style={{ color: "var(--tf-ink-muted)" }}>
@@ -192,7 +220,7 @@ export function AdminPage() {
         </div>
 
         {loading && logs.length === 0 ? (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3" role="status" aria-live="polite">
             <Skeleton variant="rect" height={32} />
             <Skeleton variant="rect" height={32} />
             <Skeleton variant="rect" height={32} />

@@ -13,7 +13,7 @@ const TRUST = ["Free plan, no expiry", "No credit card", "Set up in minutes"];
 const SECURITY = [
   { icon: Lock, title: "Your data stays yours", desc: "Every project is private to your workspace and its members." },
   { icon: Download, title: "Export any time", desc: "Take your tasks, reports and files with you, on any plan." },
-  { icon: ShieldCheck, title: "Roles and SSO", desc: "Assign roles per member. SSO and audit logs are on Enterprise." },
+  { icon: ShieldCheck, title: "Roles and SSO", desc: "Assign roles per member, from owner to contributor." },
 ];
 const PANEL = { background: "var(--tf-panel)", border: "1px solid var(--tf-panel-border)" };
 const MUTED = { color: "var(--tf-ink-muted)" };
@@ -29,7 +29,7 @@ export function LandingPage() {
         <Container className="relative">
           <div className="mx-auto max-w-3xl text-center">
             <h1 id="hero-title" className="rise font-display text-[36px] font-semibold leading-[1.08] text-balance sm:text-[56px]">
-              Turn your project plan into assigned tasks <span className="text-gradient">in minutes</span>
+              Turn your project plan into assigned tasks <span className="font-bold">in minutes</span>
             </h1>
             <p className="rise mx-auto mt-5 max-w-[56ch] text-[16px] leading-relaxed sm:text-[18px]" style={{ animationDelay: "100ms", ...MUTED }}>
               Upload a PDF or doc. TaskFlow AI drafts every task with a due date and an owner — you review, then ship.
@@ -39,7 +39,7 @@ export function LandingPage() {
               <ButtonLink to="/features" variant="ghost">See how it works</ButtonLink>
             </div>
             <ul className="rise m-0 mt-6 flex list-none flex-wrap items-center justify-center gap-x-6 gap-y-2 p-0 text-[13px]" style={{ animationDelay: "280ms", ...MUTED }}>
-              {TRUST.map((t) => <li key={t} className="flex items-center gap-1.5"><Check size={14} color="#14B8A6" aria-hidden="true" />{t}</li>)}
+              {TRUST.map((t) => <li key={t} className="flex items-center gap-1.5"><Check size={14} color="var(--tf-teal)" aria-hidden="true" />{t}</li>)}
             </ul>
           </div>
           <div className="rise mt-14 sm:mt-16" style={{ animationDelay: "380ms" }}><DashboardMock /></div>

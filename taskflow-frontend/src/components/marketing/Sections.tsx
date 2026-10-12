@@ -64,7 +64,7 @@ export function PricingCards({ level = 3 }: { level?: 2 | 3 }) {
             <Reveal key={p.name} delay={i * 100} className="h-full">
               <div className={`h-full rounded-2xl p-px ${p.featured ? "md:scale-[1.03]" : ""}`} style={{ background: p.featured ? "linear-gradient(160deg,#2563EB,#14B8A6)" : "var(--tf-panel-border)", boxShadow: p.featured ? "0 20px 60px rgba(37,99,235,0.25)" : undefined }}>
                 <section aria-labelledby={`plan-${p.name}-${level}`} className="relative flex h-full flex-col rounded-[15px] p-6 sm:p-7" style={{ background: "var(--tf-surface)" }}>
-                  {p.featured && <span className="absolute right-5 top-5 rounded-full px-3 py-1 text-[12px] font-medium text-white" style={{ background: "linear-gradient(135deg,#2563EB,#14B8A6)" }}>Most popular</span>}
+                  {p.featured && <span className="absolute right-5 top-5 rounded-full px-3 py-1 text-[12px] font-medium" style={{ background: "linear-gradient(135deg,#2563EB,#14B8A6)", color: "#fff" }}>Most popular</span>}
                   <H id={`plan-${p.name}-${level}`} className="text-[18px] font-semibold">{p.name}</H>
                   <p className="mt-1 min-h-10 text-[13px]" style={{ color: "var(--tf-ink-muted)" }}>{p.tagline}</p>
                   <p className="mt-4"><span className="font-display text-[40px] font-semibold leading-none">{price.amount}</span> <span className="ml-1 text-[13px]" style={{ color: "var(--tf-ink-muted)" }}>{price.period}</span></p>
@@ -74,12 +74,12 @@ export function PricingCards({ level = 3 }: { level?: 2 | 3 }) {
                         Start free trial
                       </Button>
                     ) : (
-                      <ButtonLink to={p.name === "Enterprise" ? "/contact" : "/signup"} variant={p.featured ? "primary" : "ghost"}>{p.cta}</ButtonLink>
+                      <ButtonLink to="/signup" variant={p.featured ? "primary" : "ghost"}>{p.cta}</ButtonLink>
                     )}
                   </div>
                   <p className="mb-3 mt-7 text-[13px] font-semibold">{p.name === "Free" ? "Includes" : p.name === "Pro" ? "Everything in Free, plus" : "Everything in Pro, plus"}</p>
                   <ul className="m-0 flex list-none flex-col gap-2.5 p-0 text-[14px]" style={{ color: "var(--tf-ink-soft)" }}>
-                    {p.features.map((f) => <li key={f} className="flex items-start gap-2.5"><Check size={16} className="mt-0.5 shrink-0" color="#14B8A6" aria-hidden="true" />{f}</li>)}
+                    {p.features.map((f) => <li key={f} className="flex items-start gap-2.5"><Check size={16} className="mt-0.5 shrink-0" color="var(--tf-teal)" aria-hidden="true" />{f}</li>)}
                   </ul>
                 </section>
               </div>

@@ -507,8 +507,9 @@ export function PlanImportModal({ open, onClose }: { open: boolean; onClose: () 
             <Link
               to="/dashboard/kanban"
               onClick={close}
-              className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-[13px] font-medium text-white transition-opacity hover:opacity-90"
-              style={{ background: "var(--tf-primary)" }}
+              className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-[13px] font-medium transition-opacity hover:opacity-90"
+              /* Inline #fff (not text-white): sits on --tf-primary, which stays blue in light theme. */
+              style={{ background: "var(--tf-primary)", color: "#fff" }}
             >
               Open the Kanban board
             </Link>

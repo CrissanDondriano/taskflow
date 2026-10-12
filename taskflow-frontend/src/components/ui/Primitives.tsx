@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { Badge } from "./Badge";
 import { Button } from "./Button";
-import { PRIORITY_HEX } from "../../data/mockData";
+import { PRIORITY_HEX, PRIORITY_TEXT } from "../../data/mockData";
 import type { Priority } from "../../types";
 
 const FOCUSABLE =
@@ -56,8 +56,11 @@ export function Avatar({
 }) {
   return (
     <div
-      className="rounded-full flex items-center justify-center font-semibold text-white shrink-0 font-mono"
-      style={{ width: size, height: size, background: color, fontSize: size * 0.38, boxShadow: `0 0 12px ${color}66` }}
+      className="rounded-full flex items-center justify-center font-semibold shrink-0 font-mono"
+      /* Inline white, not text-white: [data-theme="light"] rewrites .text-white to dark ink,
+         which would land on the colored circle (Badge/Button use this same inline idiom).
+         color stays a hex literal — boxShadow below concatenates a suffix onto it. */
+      style={{ width: size, height: size, background: color, color: "#fff", fontSize: size * 0.38, boxShadow: `0 0 12px ${color}66` }}
       title={initials}
     >
       {initials}
@@ -65,7 +68,7 @@ export function Avatar({
   );
 }
 
-export function Eyebrow({ children, color = "#14B8A6" }: { children: ReactNode; color?: string }) {
+export function Eyebrow({ children, color = "var(--tf-teal)" }: { children: ReactNode; color?: string }) {
   return (
     <div className="flex items-center gap-1.5 mb-1">
       <span className="w-1.5 h-1.5 rounded-full" style={{ background: color, boxShadow: `0 0 8px ${color}` }} />
@@ -217,7 +220,13 @@ export function Modal({
 }
 
 export function PriorityBadge({ priority }: { priority: Priority }) {
-  return <Badge color={PRIORITY_HEX[priority] ?? "var(--tf-ink-muted)"}>{priority}</Badge>;
+  /* Fill/border keep the bright hue (PRIORITY_HEX); text comes from the
+     theme token (PRIORITY_TEXT) so it clears 4.5:1 in both themes. */
+  return (
+    <Badge color={PRIORITY_HEX[priority] ?? "var(--tf-ink-muted)"} textColor={PRIORITY_TEXT[priority] ?? "var(--tf-ink-muted)"}>
+      {priority}
+    </Badge>
+  );
 }
 
 export function EmptyState({ icon, message, action }: { icon: ReactNode; message: string; action?: ReactNode }) {

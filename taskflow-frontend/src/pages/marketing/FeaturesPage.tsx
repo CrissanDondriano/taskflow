@@ -31,7 +31,7 @@ export function FeaturesPage() {
                 <h2 className="font-display text-[26px] font-semibold leading-tight text-balance sm:text-[32px]">{r.title}</h2>
                 <p className="mt-3 max-w-[52ch] text-[15px] leading-relaxed" style={{ color: "var(--tf-ink-muted)" }}>{r.desc}</p>
                 <ul className="m-0 mt-5 flex list-none flex-col gap-2.5 p-0">
-                  {r.points.map((p) => <li key={p} className="flex items-center gap-2.5 text-[14px]"><Check size={16} color="#14B8A6" aria-hidden="true" />{p}</li>)}
+                  {r.points.map((p) => <li key={p} className="flex items-center gap-2.5 text-[14px]"><Check size={16} className="shrink-0" color="var(--tf-teal)" aria-hidden="true" />{p}</li>)}
                 </ul>
               </Reveal>
               <Reveal delay={120}>{r.visual}</Reveal>
@@ -67,9 +67,9 @@ export function FeaturesPage() {
               <li key={title}>
                 <Reveal delay={i * 100} className="h-full">
                   <div className="lift h-full rounded-2xl p-6" style={PANEL}>
-                    <Icon size={22} color="var(--tf-accent-text)" aria-hidden="true" />
-                    <h3 className="mb-2 mt-3 text-[16px] font-semibold">{title}</h3>
-                    <p className="text-[13px] leading-relaxed" style={{ color: "var(--tf-ink-soft)" }}>{desc}</p>
+                    <span className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: "rgba(37,99,235,0.14)" }}><Icon size={20} color="var(--tf-info-text)" aria-hidden="true" /></span>
+                    <h3 className="mb-2 mt-4 text-[16px] font-semibold">{title}</h3>
+                    <p className="text-[13px] leading-relaxed" style={{ color: "var(--tf-ink-muted)" }}>{desc}</p>
                   </div>
                 </Reveal>
               </li>

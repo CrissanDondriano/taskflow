@@ -15,7 +15,6 @@
   background-clip: text;
   color: transparent;
 }
-
 /* Hero backdrop: a task-dependency map that draws itself once, then breathes. */
 .edge {
   stroke-dasharray: 1;
