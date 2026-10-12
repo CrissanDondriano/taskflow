@@ -27,6 +27,7 @@ export function TeamPage() {
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [department, setDepartment] = useState<string>("All");
+  const [loading, setLoading] = useState(true);
   // One confirm for the whole grid instead of a hidden Modal tree per card.
   const [removeTarget, setRemoveTarget] = useState<Person | null>(null);
   // Defer the filtered-list computation so typing stays responsive.
@@ -37,6 +38,10 @@ export function TeamPage() {
   const people = useMemo(() => withComputedWorkload(members, tasks), [members, tasks]);
 
   const departments = useMemo(() => ["All", ...Array.from(new Set(people.map((p) => p.department)))], [people]);
+  // Initialize loading state after data is available from stores
+  useEffect(() => {
+    setLoading(false);
+  }, []);
 
   const filtered = people.filter((p) => {
     const matchesSearch = `${p.name} ${p.jobTitle} ${p.department}`.toLowerCase().includes(deferredSearch.toLowerCase());
@@ -85,7 +90,23 @@ export function TeamPage() {
     setInviteError(null);
   }
 
-  return (
+  return loading ? (
+    <div className="min-h-[80vh] flex items-center justify-center p-8">
+      <div className="flex flex-col items-center gap-4">
+        <Skeleton variant="rect" width={48} height={48} className="rounded-2xl" />
+        <Skeleton variant="rect" width={60} height={20} />
+        <Skeleton variant="text" width="30%" height={13} />
+        <Skeleton variant="text" width="50%" height={13} />
+        <Skeleton variant="text" width="35%" height={13} />
+        <Skeleton variant="rect" height={44} />
+        <Skeleton variant="rect" height={44} />
+        <Skeleton variant="rect" height={44} />
+        <Skeleton variant="text" width="30%" height={10} />
+        <Skeleton variant="text" width="24%" height={10} />
+        <Skeleton variant="text" width="55%" height={10} />
+      </div>
+    </div>
+  ) : (
     <div className="flex flex-col gap-5">
       <Modal open={inviteOpen} onClose={closeInvite} title="Invite a team member">
         <form onSubmit={inviteMember} className="flex flex-col gap-3">

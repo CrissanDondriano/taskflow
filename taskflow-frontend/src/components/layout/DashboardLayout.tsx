@@ -150,7 +150,7 @@ export function DashboardLayout() {
         <main id="main-content" tabIndex={-1} ref={mainRef} className="flex-1 min-h-0 overflow-y-auto tf-scroll p-4 sm:p-8 outline-none">
           <AnimatePresence mode="wait">
             <motion.div
-              key={location.pathname}
+              key="dashboard-main"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}

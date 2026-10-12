@@ -36,8 +36,14 @@ export function DashboardHome() {
   const [selectedNode, setSelectedNode] = useState<Task | null>(null);
   const [hoveredId, setHoveredId] = useState<string | undefined>(undefined);
   const [newTaskOpen, setNewTaskOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const people = useMemo(() => withComputedWorkload(members, tasks), [members, tasks]);
+
+  // Initialize loading state after data is available from stores
+  useEffect(() => {
+    setLoading(false);
+  }, []);
 
   // Every number below is derived from the real, shared task list (TasksContext)
   // and real team data — create or complete a task and these update immediately.
@@ -81,7 +87,23 @@ export function DashboardHome() {
 
   const recentActivity = notifications.slice(0, 5);
 
-  return (
+  return loading ? (
+    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-5 pt-20">
+      <div className="flex flex-col items-center gap-4">
+        <Skeleton variant="rect" width={48} height={48} className="rounded-2xl" />
+        <Skeleton variant="rect" width={60} height={20} />
+        <Skeleton variant="text" width="30%" height={13} />
+        <Skeleton variant="text" width="50%" height={13} />
+        <Skeleton variant="text" width="35%" height={13} />
+        <Skeleton variant="rect" height={44} />
+        <Skeleton variant="rect" height={44} />
+        <Skeleton variant="rect" height={44} />
+        <Skeleton variant="text" width="30%" height={10} />
+        <Skeleton variant="text" width="24%" height={10} />
+        <Skeleton variant="text" width="55%" height={10} />
+      </div>
+    </div>
+  ) : (
     <div className="flex flex-col gap-5">
       <NewTaskModal open={newTaskOpen} onClose={() => setNewTaskOpen(false)} onCreate={addTask} defaultColumn="Backlog" />
       {/* ---------- Mission Control hero ---------- */}

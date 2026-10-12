@@ -5,7 +5,7 @@ import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Skeleton } from "../ui/Skeleton";
 import { PriorityLegend } from "../ui/PriorityLegend";
-import { PRIORITY_STYLE, PRIORITIES, SAMPLE_MEETING_NOTES } from "../../data/mockData";
+import { PRIORITY_STYLE, PRIORITIES } from "../../data/mockData";
 import { useTeamMembers } from "../../context/TeamContext";
 import { suggestLabels } from "../../lib/nlp";
 import { api } from "../../lib/api";
@@ -23,21 +23,7 @@ interface ExtractResult {
 // from the real current team (cycling through whoever exists) rather than
 // fictional names, since this sample is meant to show what conversion looks
 // like against your actual account, not a demo cast.
-function mockExtract(memberNames: string[]): ExtractResult {
-  const owner = (i: number) => memberNames[i % Math.max(memberNames.length, 1)] ?? "Unassigned";
-  return {
-    project: "Platform Core",
-    summary:
-      "The team reviewed sprint progress. Risk detection is nearly ready pending load tests, the summarizer prompt has an owner-detection bug, and the Slack integration is blocked on OAuth review. Calendar sync was deprioritized to next sprint.",
-    actionItems: [
-      { id: "a1", title: "Load test the AI risk-detection worker before Friday demo", owner: owner(0), priority: "Critical", selected: true },
-      { id: "a2", title: "Fix owner-detection bug in meeting-notes summarizer", owner: owner(1), priority: "High", selected: true },
-      { id: "a3", title: "Follow up with client on delayed billing wireframe feedback", owner: owner(2), priority: "Medium", selected: true },
-      { id: "a4", title: "Write load tests for AI task-generation endpoint", owner: owner(0), priority: "High", selected: true },
-      { id: "a5", title: "Investigate Slack OAuth app review delay", owner: owner(3), priority: "Medium", selected: false },
-    ],
-  };
-}
+
 
 interface AiActionItem {
   title?: string;
@@ -95,7 +81,8 @@ export function MeetingNotesConverter() {
   const [createdCount, setCreatedCount] = useState<number | null>(null);
 
   function loadSample() {
-    setNotes(SAMPLE_MEETING_NOTES);
+    // Sample data removed — upload a .txt file instead
+    setNotes("");
     setFileName(null);
     reset();
   }
@@ -133,7 +120,7 @@ export function MeetingNotesConverter() {
       // AI unavailable (not configured / backend offline) â€” keep the feature
       // working with the local heuristic after a brief processing beat.
       setTimeout(() => {
-        setResult(mockExtract(memberNames));
+        // AI unavailable — no fake data shown
         setStatus("done");
       }, 800);
     }

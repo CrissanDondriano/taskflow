@@ -38,12 +38,6 @@ export const ROLES: { title: string; desc: string }[] = [
   { title: "Project managers", desc: "One upload becomes a staffed, dated board. You review instead of transcribing." },
 ];
 
-export const TESTIMONIALS: { quote: string; name: string; role: string }[] = [
-  { quote: "We uploaded our launch plan on Monday morning. By lunch, forty tasks were assigned and dated.", name: "Sample Customer", role: "Operations lead (placeholder)" },
-  { quote: "The risk view caught a slipping deadline two weeks before we would have noticed.", name: "Sample Customer", role: "Project manager (placeholder)" },
-  { quote: "Our designers finally see only their own work, without anyone forwarding threads.", name: "Sample Customer", role: "Design lead (placeholder)" },
-];
-
 export const SCENARIOS: { icon: LucideIcon; title: string; desc: string }[] = [
   { icon: FileText, title: "Turn a meeting into a task list", desc: "Paste a transcript. The AI pulls out action items, suggests an owner for each and drops them into your Backlog." },
   { icon: ShieldAlert, title: "Catch risk before it's late", desc: "Every task is scored for deadline and workload risk, so you see what's trending late before it is." },

@@ -1,13 +1,11 @@
 import { Link } from "react-router-dom";
-import { Check, Lock, Download, ShieldCheck, Quote } from "lucide-react";
-import { Container, SectionHead, ButtonLink, Faq } from "../components/marketing/Bits";
+import { Check, Lock, Download, ShieldCheck } from "lucide-react";
+import { Container, ButtonLink } from "../components/marketing/Bits";
 import { Reveal } from "../components/marketing/Reveal";
-import { DashboardMock } from "../components/marketing/Visuals";
 import { ProductTour } from "../components/marketing/ProductTour";
 import { HeroBackdrop } from "../components/marketing/HeroBackdrop";
 import { PricingCards, CtaBand } from "../components/marketing/Sections";
 import { usePageMeta } from "../hooks/usePageMeta";
-import { FEATURES, INTEGRATIONS, HOW_IT_WORKS, ROLES, TESTIMONIALS, FAQS } from "../data/marketing";
 
 const TRUST = ["Free plan, no expiry", "No credit card", "Set up in minutes"];
 const SECURITY = [
@@ -155,27 +153,7 @@ export function LandingPage() {
         </Container>
       </section>
 
-      {/* Testimonials (placeholders — replace with real customer quotes) */}
-      <section aria-labelledby="love-title" className="py-20 lg:py-28" style={{ background: "var(--tf-fill-015)" }}>
-        <Container>
-          <Reveal><SectionHead id="love-title" title="Teams feel the difference in week one" /></Reveal>
-          <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 md:grid-cols-3">
-            {TESTIMONIALS.map(({ quote, name, role }, i) => (
-              <li key={name + i}>
-                <Reveal delay={i * 100} className="h-full">
-                  <figure className="m-0 flex h-full flex-col rounded-2xl p-6" style={PANEL}>
-                    <Quote size={20} color="var(--tf-accent-text)" aria-hidden="true" />
-                    <blockquote className="mt-3 flex-1 text-[14px] leading-relaxed" style={{ color: "var(--tf-ink-soft)" }}>“{quote}”</blockquote>
-                    <figcaption className="mt-4 text-[13px]" style={MUTED}>{name} · {role}</figcaption>
-                  </figure>
-                </Reveal>
-              </li>
-            ))}
-          </ul>
-        </Container>
-      </section>
-
-      {/* FAQ */}
+      
       <section aria-labelledby="faq-title" className="pb-20 lg:pb-28">
         <Container className="max-w-3xl">
           <Reveal><SectionHead id="faq-title" title="Frequently asked questions" /></Reveal>
