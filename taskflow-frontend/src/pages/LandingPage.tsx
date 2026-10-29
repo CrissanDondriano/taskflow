@@ -1,10 +1,9 @@
 import { Link } from "react-router-dom";
-import { Check, Lock, Download, ShieldCheck } from "lucide-react";
-import { Container, SectionHead, ButtonLink } from "../components/marketing/Bits";
-import { Faq } from "../components/marketing/Bits";
+import { Lock, Download, ShieldCheck } from "lucide-react";
+import { Container, SectionHead, ButtonLink, Faq } from "../components/marketing/Bits";
 import { Reveal } from "../components/marketing/Reveal";
 import { ProductTour } from "../components/marketing/ProductTour";
-import { HeroBackdrop } from "../components/marketing/HeroBackdrop";
+import { HeroMockup } from "../components/marketing/HeroMockup";
 import { PricingCards, CtaBand } from "../components/marketing/Sections";
 import { usePageMeta } from "../hooks/usePageMeta";
 import { FEATURES, HOW_IT_WORKS, INTEGRATIONS, ROLES, FAQS } from "../data/marketing";
@@ -19,30 +18,38 @@ const PANEL = { background: "var(--tf-panel)", border: "1px solid var(--tf-panel
 const MUTED = { color: "var(--tf-ink-muted)" };
 
 export function LandingPage() {
-  usePageMeta("Home", "Turn your project plan into assigned tasks in minutes. Upload a plan, let AI draft the work, start free.");
+  usePageMeta("Home", "Turn plans into tasks in minutes. Upload a PDF or doc and TaskFlow AI creates tasks with owners and due dates. Start free.");
   return (
     <>
       {/* Hero */}
-      <section aria-labelledby="hero-title" className="relative overflow-hidden pb-20 pt-16 sm:pt-24 lg:pb-28">
+      <section aria-labelledby="hero-title" className="hero-screen relative flex items-center overflow-hidden py-12 sm:py-16 lg:py-20">
         <div className="aurora pointer-events-none absolute inset-0" aria-hidden="true" />
-        <HeroBackdrop />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute right-0 top-10 hidden h-[460px] w-[460px] rounded-full blur-3xl lg:block"
+          style={{ background: "radial-gradient(circle, rgba(37,99,235,0.22), transparent 68%)" }}
+        />
         <Container className="relative">
-          <div className="mx-auto max-w-3xl text-center">
-            <h1 id="hero-title" className="rise font-display text-[36px] font-semibold leading-[1.08] text-balance sm:text-[56px]">
-              Turn your project plan into assigned tasks <span className="font-bold">in minutes</span>
-            </h1>
-            <p className="rise mx-auto mt-5 max-w-[56ch] text-[16px] leading-relaxed sm:text-[18px]" style={{ animationDelay: "100ms", ...MUTED }}>
-              Upload a PDF or doc. TaskFlow AI drafts every task with a due date and an owner — you review, then ship.
-            </p>
-            <div className="rise mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row" style={{ animationDelay: "200ms" }}>
-              <ButtonLink to="/signup">Start free</ButtonLink>
-              <ButtonLink to="/features" variant="ghost">See how it works</ButtonLink>
+          <div className="grid items-center gap-14 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-16">
+            <div className="max-w-xl">
+              <h1 id="hero-title" className="rise font-display text-[40px] font-semibold leading-[1.05] tracking-tight text-balance sm:text-[54px] lg:text-[62px]">
+                Turn plans into tasks in minutes.
+              </h1>
+              <p className="rise mt-6 max-w-[46ch] text-[16px] leading-relaxed sm:text-[18px]" style={{ animationDelay: "100ms", ...MUTED }}>
+                Upload a PDF or doc. TaskFlow AI creates tasks with owners and due dates. Review and ship.
+              </p>
+              <div className="rise mt-8 flex flex-col gap-3 sm:flex-row" style={{ animationDelay: "200ms" }}>
+                <ButtonLink to="/signup">Start free</ButtonLink>
+                <ButtonLink to="/features" variant="ghost">See how it works</ButtonLink>
+              </div>
+              <ul className="rise m-0 mt-8 flex list-none flex-col gap-2 p-0 text-[14px]" style={{ animationDelay: "280ms", ...MUTED }}>
+                {TRUST.map((t) => <li key={t}>{t}</li>)}
+              </ul>
             </div>
-            <ul className="rise m-0 mt-6 flex list-none flex-wrap items-center justify-center gap-x-6 gap-y-2 p-0 text-[13px]" style={{ animationDelay: "280ms", ...MUTED }}>
-              {TRUST.map((t) => <li key={t} className="flex items-center gap-1.5"><Check size={14} color="var(--tf-teal)" aria-hidden="true" />{t}</li>)}
-            </ul>
+            <div className="rise min-w-0" style={{ animationDelay: "160ms" }}>
+              <HeroMockup />
+            </div>
           </div>
-          {/* Dashboard mock component removed */}
         </Container>
       </section>
 

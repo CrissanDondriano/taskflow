@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
-import { Sparkles, Menu, X, ArrowUp, Mail, Sun, Moon } from "lucide-react";
+import { Sparkles, Menu, X, ArrowUp, Mail } from "lucide-react";
 import { Container, ButtonLink } from "./Bits";
 import { useAuth } from "../../context/AuthContext";
-import { useThemeStore } from "../../stores/themeStore";
 import { NAV } from "../../data/marketing";
 import "../../styles/marketing.css";
 
@@ -34,8 +33,6 @@ export function MarketingLayout() {
   const [scrolled, setScrolled] = useState(false);
   const { pathname } = useLocation();
   const { user } = useAuth();
-  const theme = useThemeStore((s) => s.theme);
-  const toggleTheme = useThemeStore((s) => s.toggleTheme);
 
   useEffect(() => { setOpen(false); window.scrollTo(0, 0); }, [pathname]);
   useEffect(() => {
@@ -62,10 +59,10 @@ export function MarketingLayout() {
         style={{ background: scrolled || open ? "var(--tf-header-scrolled)" : "var(--tf-header)", borderBottom: `1px solid ${scrolled || open ? "var(--tf-panel-border)" : "transparent"}`, boxShadow: scrolled ? "0 8px 30px rgba(0,0,0,0.35)" : "none" }}>
         <Container className="flex h-16 items-center justify-between gap-6">
           <Logo />
-          <nav aria-label="Main" className="hidden items-center gap-8 md:flex">
+          <nav aria-label="Main" className="hidden items-center gap-8 lg:flex">
             {NAV.map((l) => <NavLink key={l.to} to={l.to} end={l.to === "/"} className={navClass}>{l.label}</NavLink>)}
           </nav>
-          <div className="hidden items-center gap-3 md:flex">
+          <div className="hidden items-center gap-3 lg:flex">
             {user ? (
               <ButtonLink to="/dashboard">Go to dashboard</ButtonLink>
             ) : (
@@ -76,29 +73,19 @@ export function MarketingLayout() {
             )}
           </div>
           <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="mobile-nav" aria-label={open ? "Close menu" : "Open menu"}
-            className={`flex h-11 w-11 items-center justify-center rounded-xl transition-colors hover:bg-white/5 md:hidden ${FOCUS}`} style={{ border: "1px solid var(--tf-panel-border)" }}>
+            className={`flex h-11 w-11 items-center justify-center rounded-xl transition-colors hover:bg-white/5 lg:hidden ${FOCUS}`} style={{ border: "1px solid var(--tf-panel-border)" }}>
             {open ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />}
           </button>
         </Container>
 
         {open && (
-          <nav id="mobile-nav" aria-label="Mobile" className="menu-in absolute inset-x-0 top-full max-h-[calc(100vh-4rem)] overflow-y-auto md:hidden" style={{ background: "var(--tf-nav-panel)", borderBottom: "1px solid var(--tf-panel-border)" }}>
+          <nav id="mobile-nav" aria-label="Mobile" className="menu-in absolute inset-x-0 top-full max-h-[calc(100vh-4rem)] overflow-y-auto lg:hidden" style={{ background: "var(--tf-nav-panel)", borderBottom: "1px solid var(--tf-panel-border)" }}>
             <Container className="flex flex-col gap-1 pb-6 pt-3">
               {NAV.map((l) => (
                 <NavLink key={l.to} to={l.to} end={l.to === "/"}
                   className={({ isActive }) => `flex min-h-12 items-center rounded-xl px-4 text-[16px] font-medium ${FOCUS} ${isActive ? "bg-white/5 text-white" : "text-[color:var(--tf-ink-muted)]"}`}>{l.label}</NavLink>
               ))}
               <div className="mt-4 grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={toggleTheme}
-                  aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
-                  className={`col-span-2 flex min-h-11 items-center justify-center gap-2 rounded-xl text-[14px] font-medium transition-colors hover:bg-white/5 ${FOCUS}`}
-                  style={{ border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
-                >
-                  {theme === "dark" ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
-                  {theme === "dark" ? "Light theme" : "Dark theme"}
-                </button>
                 {user ? (
                   <div className="col-span-2">
                     <ButtonLink to="/dashboard">Go to dashboard</ButtonLink>

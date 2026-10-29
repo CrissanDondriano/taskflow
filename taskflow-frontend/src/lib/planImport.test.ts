@@ -21,11 +21,13 @@ describe("toPriority", () => {
 
 describe("offsetToDateString", () => {
   it("converts a day offset to an ISO date", () => {
-    const d = new Date();
-    d.setDate(d.getDate() + 5);
-    const expected = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    expect(offsetToDateString(5)).toBe(expected);
-    expect(offsetToDateString(0)).toBe(expected.replace(/-\d{2}$/, `-${String(new Date().getDate()).padStart(2, "0")}`));
+    const iso = (offset: number) => {
+      const d = new Date();
+      d.setDate(d.getDate() + offset);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
+    expect(offsetToDateString(5)).toBe(iso(5));
+    expect(offsetToDateString(0)).toBe(iso(0));
   });
 
   it("returns empty for missing offsets", () => {

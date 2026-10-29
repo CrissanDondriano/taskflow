@@ -18,11 +18,9 @@ interface ExtractResult {
   project: string;
 }
 
-// Local heuristic extraction — used as the fallback when the real backend
-// call below fails (AI not configured, backend offline). Owners are assigned
-// from the real current team (cycling through whoever exists) rather than
-// fictional names, since this sample is meant to show what conversion looks
-// like against your actual account, not a demo cast.
+// Extraction runs against the real backend. When AI isn't configured or the
+// API is unreachable we show an explicit unavailable state — never fabricated
+// notes, owners or action items.
 
 
 interface AiActionItem {
@@ -76,16 +74,9 @@ export function MeetingNotesConverter() {
   const members = useTeamMembers();
   const [notes, setNotes] = useState("");
   const [fileName, setFileName] = useState<string | null>(null);
-  const [status, setStatus] = useState<"idle" | "processing" | "done">("idle");
+  const [status, setStatus] = useState<"idle" | "processing" | "done" | "unavailable">("idle");
   const [result, setResult] = useState<ExtractResult | null>(null);
   const [createdCount, setCreatedCount] = useState<number | null>(null);
-
-  function loadSample() {
-    // Sample data removed � upload a .txt file instead
-    setNotes("");
-    setFileName(null);
-    reset();
-  }
 
   function reset() {
     setStatus("idle");
@@ -117,12 +108,9 @@ export function MeetingNotesConverter() {
       setResult(await aiExtract(memberNames, notes.trim()));
       setStatus("done");
     } catch {
-      // AI unavailable (not configured / backend offline) — keep the feature
-      // working with the local heuristic after a brief processing beat.
-      setTimeout(() => {
-        // AI unavailable � no fake data shown
-        setStatus("done");
-      }, 800);
+      // AI unavailable (not configured / backend offline): surface it plainly.
+      // No fabricated summary or action items are shown.
+      setStatus("unavailable");
     }
   }
 
@@ -176,9 +164,6 @@ export function MeetingNotesConverter() {
                   <RotateCcw size={11} /> Start over
                 </button>
               )}
-              <button onClick={loadSample} className="text-xs hover:underline" style={{ color: "var(--tf-ink-muted)" }}>
-                Load sample
-              </button>
               <label className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg cursor-pointer" style={{ border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink-muted)" }}>
                 <Upload size={12} /> Upload .txt
                 <input type="file" accept=".txt,.md" className="hidden" onChange={onFile} />
@@ -228,6 +213,23 @@ export function MeetingNotesConverter() {
                     Reading through the notes and pulling out action items...
                   </p>
                 </div>
+              ) : status === "unavailable" ? (
+                <div role="alert" className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={15} color="var(--tf-warning)" />
+                    <h2 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
+                      AI extraction is unavailable
+                    </h2>
+                  </div>
+                  <p className="text-[13px] leading-snug" style={{ color: "var(--tf-ink-soft)" }}>
+                    The assistant couldn&apos;t read your notes just now. Your text is still here — try again in a moment, or add tasks manually from the board.
+                  </p>
+                  <div>
+                    <Button variant="primary" icon={<RotateCcw size={14} />} onClick={convert}>
+                      Try again
+                    </Button>
+                  </div>
+                </div>
               ) : (
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center gap-2">
@@ -265,9 +267,6 @@ export function MeetingNotesConverter() {
                       </span>
                     </li>
                   </ul>
-                  <p className="text-xs pt-3" style={{ color: "var(--tf-ink-muted)", borderTop: "1px solid var(--tf-panel-border)" }}>
-                    No notes to hand? Click <span style={{ color: "var(--tf-teal)" }}>Load sample</span> to see it in action.
-                  </p>
                 </div>
               )}
             </GlassPanel>

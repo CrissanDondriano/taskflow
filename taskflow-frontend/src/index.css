@@ -221,3 +221,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   outline: 2px solid var(--tf-teal);
   outline-offset: 2px;
 }
+
+/* RouteEffects focuses the new page's <h1> so screen readers announce it.
+   The heading isn't interactive, so the browser's focus ring would just draw
+   a stray box around the headline — suppress it while keeping the focus. */
+h1[tabindex="-1"]:focus,
+h2[tabindex="-1"]:focus {
+  outline: none;
+}
