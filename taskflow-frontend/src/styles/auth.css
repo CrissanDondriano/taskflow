@@ -1,0 +1,561 @@
+/* Auth screens (login, signup, password reset). Imported by AuthLayout.
+   These pages are intentionally dark-only — the reference design is a
+   fixed navy/black split — so every color here is a literal, not a theme
+   token that flips in light mode. */
+
+.auth-shell {
+  color-scheme: dark;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #060b15;
+  color: #e2e8f0;
+}
+
+@media (min-width: 1024px) {
+  .auth-shell {
+    flex-direction: row;
+  }
+}
+
+/* ---------- Left brand panel (desktop only) ---------- */
+
+.auth-brand {
+  display: none;
+  position: relative;
+  flex-direction: column;
+  overflow: hidden;
+  padding: clamp(2.5rem, 3.75vw, 4.5rem);
+  background:
+    radial-gradient(120% 90% at 0% 0%, rgba(37, 99, 235, 0.38), transparent 58%),
+    radial-gradient(110% 95% at 100% 100%, rgba(20, 184, 166, 0.24), transparent 58%),
+    linear-gradient(160deg, #0b1a33 0%, #07101f 48%, #050a13 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+@media (min-width: 1024px) {
+  .auth-brand {
+    display: flex;
+    flex: 1 1 50%;
+    min-width: 0;
+  }
+}
+
+.auth-brand-body {
+  width: 100%;
+  max-width: 740px;
+  margin: auto 0;
+  padding: 3rem 0;
+}
+
+.auth-hero-title {
+  margin: 0;
+  font-size: clamp(2.5rem, 2.4vw + 1.2rem, 4rem);
+  font-weight: 500;
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  color: #f8fafc;
+}
+
+.auth-hero-sub {
+  margin: 1.4rem 0 0;
+  font-size: clamp(1rem, 0.55vw + 0.75rem, 1.1875rem);
+  line-height: 1.55;
+  color: #94a3b8;
+}
+
+/* Decorative task preview under the hero copy. */
+.auth-mockup {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 740px;
+  margin-top: clamp(2.5rem, 4.5vh, 3.5rem);
+  padding: 1.375rem;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 1.125rem;
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.auth-task {
+  padding: 1rem 1.25rem 1.125rem;
+  border-radius: 0.625rem;
+}
+
+.auth-task--risk {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.auth-task--track {
+  background: rgba(34, 197, 94, 0.07);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.auth-task-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.875rem;
+}
+
+.auth-task-title {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #f1f5f9;
+}
+
+.auth-task-status {
+  flex-shrink: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.auth-task--risk .auth-task-status {
+  color: #f87171;
+}
+
+.auth-task--track .auth-task-status {
+  color: #4ade80;
+}
+
+.auth-bar {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.auth-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.auth-task--risk .auth-bar > span {
+  background: #ef4444;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+}
+
+.auth-task--track .auth-bar > span {
+  background: #22c55e;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.55);
+}
+
+/* ---------- Right form panel ---------- */
+
+.auth-main {
+  display: flex;
+  min-width: 0;
+  flex: 1 0 auto;
+  flex-direction: column;
+  padding-inline: clamp(1.5rem, 5vw, 2.5rem);
+  background:
+    radial-gradient(120% 70% at 0% 0%, rgba(37, 99, 235, 0.2), transparent 60%),
+    radial-gradient(100% 60% at 100% 100%, rgba(20, 184, 166, 0.14), transparent 60%),
+    #060b15;
+}
+
+@media (min-width: 1024px) {
+  .auth-main {
+    flex: 1 1 50%;
+    align-items: center;
+    padding: 3rem clamp(2rem, 3vw, 3rem);
+    background:
+      radial-gradient(90% 60% at 100% 0%, rgba(37, 99, 235, 0.07), transparent 60%),
+      #070c17;
+  }
+}
+
+.auth-mobile-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 2.25rem 0 0;
+}
+
+@media (min-width: 1024px) {
+  .auth-mobile-bar {
+    display: none;
+  }
+}
+
+.auth-form-col {
+  width: 100%;
+  max-width: 632px;
+  margin-inline: auto;
+  padding: 3.5rem 0 4rem;
+}
+
+@media (min-width: 1024px) {
+  /* auto block margins center the column when there's room, but collapse to
+     0 when the form is taller than the viewport — so the top stays reachable
+     and the page scrolls instead of clipping. */
+  .auth-form-col {
+    margin-block: auto;
+    padding: 0;
+  }
+}
+
+/* ---------- Logo ---------- */
+
+.auth-focus:focus-visible {
+  outline: 2px solid #2dd4bf;
+  outline-offset: 3px;
+}
+
+.auth-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8125rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+}
+
+.auth-logo-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, #3b82f6, #2dd4bf);
+  box-shadow: 0 0 24px rgba(45, 212, 191, 0.25);
+}
+
+.auth-logo-word {
+  font-size: clamp(1.1875rem, 2.8vw, 1.5rem);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: #f8fafc;
+  white-space: nowrap;
+}
+
+.auth-logo-ai {
+  color: #2dd4bf;
+}
+
+.auth-mobile-link {
+  flex-shrink: 0;
+  border-radius: 0.375rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #2dd4bf;
+  text-decoration: none;
+}
+
+.auth-mobile-link:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Form typography ---------- */
+
+.auth-head {
+  margin-bottom: 2.5rem;
+}
+
+.auth-title {
+  margin: 0;
+  font-size: clamp(2rem, 6.5vw, 3.5rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: #f8fafc;
+}
+
+@media (min-width: 1024px) {
+  .auth-title {
+    font-size: clamp(2.25rem, 2.2vw + 1rem, 3.5rem);
+  }
+}
+
+.auth-sub {
+  margin: 1.125rem 0 0;
+  font-size: clamp(0.9375rem, 1.6vw, 1.0625rem);
+  line-height: 1.55;
+  color: #94a3b8;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.375rem;
+}
+
+.auth-field {
+  min-width: 0;
+}
+
+.auth-label {
+  display: block;
+  margin-bottom: 0.625rem;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8125rem;
+  letter-spacing: 0.01em;
+  color: #cbd5e1;
+}
+
+.auth-input {
+  display: block;
+  width: 100%;
+  height: 3.5rem;
+  padding: 0 1.25rem;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 0.75rem;
+  background: #151d2c;
+  font-family: "Inter", sans-serif;
+  font-size: 1rem;
+  color: #f8fafc;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+
+@media (min-width: 1024px) {
+  .auth-input {
+    height: 3.75rem;
+    font-size: 1.0625rem;
+  }
+}
+
+.auth-input::placeholder {
+  color: #64748b;
+}
+
+.auth-input:hover {
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.auth-input:focus,
+.auth-input:focus-visible {
+  outline: none;
+  border-color: #2563eb;
+  background: #172033;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18);
+}
+
+.auth-input.is-invalid {
+  border-color: rgba(239, 68, 68, 0.7);
+}
+
+.auth-input.is-invalid:focus,
+.auth-input.is-invalid:focus-visible {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.16);
+}
+
+.auth-input:-webkit-autofill,
+.auth-input:-webkit-autofill:hover,
+.auth-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #f8fafc;
+  -webkit-box-shadow: 0 0 0 1000px #151d2c inset;
+  caret-color: #f8fafc;
+}
+
+.auth-error {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #fca5a5;
+}
+
+.auth-row-end {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -0.25rem;
+}
+
+.auth-inline-link {
+  border-radius: 0.25rem;
+  font-size: 0.9375rem;
+  color: #2dd4bf;
+  text-decoration: none;
+}
+
+.auth-inline-link:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Submit ---------- */
+
+.auth-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 3.5rem;
+  margin-top: 0.375rem;
+  border: 1px solid transparent;
+  border-radius: 0.75rem;
+  background: #2563eb;
+  font-family: "Inter", sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.32);
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.15s ease;
+}
+
+@media (min-width: 1024px) {
+  .auth-submit {
+    height: 3.75rem;
+    font-size: 1.0625rem;
+  }
+}
+
+.auth-submit:hover:not(:disabled) {
+  background: #1d4ed8;
+  box-shadow: 0 12px 34px rgba(37, 99, 235, 0.42);
+}
+
+.auth-submit:active:not(:disabled) {
+  background: #1e40af;
+}
+
+.auth-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+/* ---------- Password requirements ---------- */
+
+.auth-reqs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.auth-req {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: #94a3b8;
+  transition: color 0.15s ease;
+}
+
+.auth-req-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  border-radius: 999px;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.auth-req.is-met {
+  color: #5eead4;
+}
+
+.auth-req.is-met .auth-req-dot {
+  border-color: #14b8a6;
+  background: #14b8a6;
+  color: #04211d;
+}
+
+/* ---------- Error banner ---------- */
+
+.auth-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  margin-bottom: 1.375rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  border-radius: 0.75rem;
+  background: rgba(239, 68, 68, 0.1);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #fca5a5;
+}
+
+/* ---------- Footer ---------- */
+
+.auth-footer {
+  margin-top: 2rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.auth-footer--left {
+  text-align: left;
+}
+
+@media (min-width: 1024px) {
+  .auth-footer {
+    text-align: left;
+  }
+}
+
+.auth-footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  color: #2dd4bf;
+  text-decoration: none;
+}
+
+.auth-footer-link:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Status screens (reset sent / password updated) ---------- */
+
+.auth-status-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 1.25rem;
+  border-radius: 999px;
+  background: rgba(20, 184, 166, 0.14);
+  border: 1px solid rgba(20, 184, 166, 0.35);
+  color: #5eead4;
+}
+
+.auth-note {
+  margin: 0 0 1.75rem;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: #94a3b8;
+}
+
+.auth-note strong {
+  font-weight: 500;
+  color: #e2e8f0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-input,
+  .auth-submit,
+  .auth-req,
+  .auth-req-dot {
+    transition: none;
+  }
+}

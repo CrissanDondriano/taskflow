@@ -1,8 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
-import { Sparkles, Lock, AlertTriangle, ArrowLeft, CheckCircle2 } from "lucide-react";
-import { Button } from "../components/ui/Button";
-import { GlassPanel, TextField } from "../components/ui/Primitives";
+import { AlertTriangle, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { AuthAlert, AuthField, AuthLayout, AuthSubmit } from "../components/auth/AuthLayout";
 import { usePageMeta } from "../hooks/usePageMeta";
 import { useAuth } from "../context/AuthContext";
 import { api, ApiError } from "../lib/api";
@@ -54,120 +53,108 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden p-4" style={{ background: "var(--tf-void)" }}>
-      <div
-        className="pointer-events-none fixed inset-0"
-        style={{
-          background:
-            "radial-gradient(700px circle at 20% 20%, rgba(37,99,235,0.16), transparent 60%), radial-gradient(600px circle at 80% 80%, rgba(20,184,166,0.12), transparent 60%)",
-          opacity: "var(--tf-aurora-opacity)",
-        }}
-      />
-
-      <div className="w-full max-w-sm relative z-10">
-        <Link to="/" className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg, #2563EB, #14B8A6)", boxShadow: "0 0 18px rgba(20,184,166,0.4)" }}>
-            <Sparkles size={18} color="#fff" aria-hidden="true" />
-          </div>
-          <span className="text-[19px] font-display font-semibold" style={{ color: "var(--tf-ink)" }}>
-            TaskFlow <span style={{ color: "var(--tf-teal)" }}>AI</span>
-          </span>
+    <AuthLayout
+      heroTitle={
+        <>
+          Locked out?
+          <br />
+          We&apos;ve got you.
+        </>
+      }
+      heroSubtitle="Reset your password in a minute."
+      mobileAction={{ label: "Log in", to: "/login" }}
+      footerAlign="left"
+      footer={
+        <Link to="/login" className="auth-footer-link">
+          <ArrowLeft size={15} aria-hidden="true" />
+          Back to log in
         </Link>
+      }
+    >
+      {!hasLink ? (
+        <div>
+          <div className="auth-status-icon" style={{ background: "rgba(245,158,11,0.12)", borderColor: "rgba(245,158,11,0.35)", color: "#fcd34d" }}>
+            <AlertTriangle size={22} aria-hidden="true" />
+          </div>
+          <h1 className="auth-title font-display">Invalid reset link</h1>
+          <p className="auth-note" style={{ marginTop: "1.125rem" }}>
+            This link is incomplete or malformed. Request a fresh one and open it from your inbox.
+          </p>
+          <button
+            type="button"
+            className="auth-submit auth-focus"
+            style={{ marginTop: 0 }}
+            onClick={() => navigate("/forgot-password")}
+          >
+            Request a new link
+          </button>
+        </div>
+      ) : done ? (
+        <div role="status">
+          <div className="auth-status-icon">
+            <CheckCircle2 size={22} aria-hidden="true" />
+          </div>
+          <h1 className="auth-title font-display">Password updated</h1>
+          <p className="auth-note" style={{ marginTop: "1.125rem" }}>
+            Your password has been changed. Log in with your new credentials.
+          </p>
+          <button
+            type="button"
+            className="auth-submit auth-focus"
+            style={{ marginTop: 0 }}
+            onClick={() => navigate("/login")}
+          >
+            Go to log in
+          </button>
+        </div>
+      ) : (
+        <>
+          <header className="auth-head">
+            <h1 className="auth-title font-display">Set a new password</h1>
+            <p className="auth-sub">
+              Choose a password of at least 8 characters for <strong style={{ color: "#e2e8f0", fontWeight: 500 }}>{email}</strong>.
+            </p>
+          </header>
 
-        <GlassPanel className="p-6 sm:p-8">
-          {!hasLink ? (
-            <div>
-              <h1 className="text-[20px] font-display font-semibold mb-1" style={{ color: "var(--tf-ink)" }}>
-                Invalid reset link
-              </h1>
-              <p className="text-[13px] mb-6" style={{ color: "var(--tf-ink-muted)" }}>
-                This link is incomplete or malformed. Request a fresh one and open it from your inbox.
-              </p>
-              <Button variant="primary" fullWidth onClick={() => navigate("/forgot-password")}>
-                Request a new link
-              </Button>
-            </div>
-          ) : done ? (
-            <div role="status">
-              <div className="flex items-center gap-2 mb-2" style={{ color: "var(--tf-success)" }}>
-                <CheckCircle2 size={18} aria-hidden="true" />
-                <h1 className="text-[20px] font-display font-semibold" style={{ color: "var(--tf-ink)" }}>
-                  Password updated
-                </h1>
-              </div>
-              <p className="text-[13px] mb-6" style={{ color: "var(--tf-ink-muted)" }}>
-                Your password has been changed. Log in with your new credentials.
-              </p>
-              <Button variant="primary" fullWidth onClick={() => navigate("/login")}>
-                Go to log in
-              </Button>
-            </div>
-          ) : (
-            <div>
-              <h1 className="text-[20px] font-display font-semibold mb-1" style={{ color: "var(--tf-ink)" }}>
-                Set a new password
-              </h1>
-              <p className="text-[13px] mb-6" style={{ color: "var(--tf-ink-muted)" }}>
-                Choose a password of at least 8 characters for <span style={{ color: "var(--tf-ink)" }}>{email}</span>.
-              </p>
+          {error && <AuthAlert>{error}</AuthAlert>}
 
-              {error && (
-                <div role="alert" className="flex items-start gap-2 text-[12px] p-3 rounded-xl mb-4" style={{ background: "rgba(239,68,68,0.1)", color: "var(--tf-danger-text)", border: "1px solid rgba(239,68,68,0.3)" }}>
-                  <AlertTriangle size={14} className="shrink-0 mt-0.5" aria-hidden="true" />
-                  <span>{error}</span>
-                </div>
-              )}
+          <form onSubmit={handleSubmit} noValidate className="auth-form">
+            <AuthField
+              id="reset-password"
+              label="New password"
+              type="password"
+              required
+              value={password}
+              onChange={(v) => {
+                setPassword(v);
+                setFieldErrors((prev) => ({ ...prev, password: undefined }));
+                setError(null);
+              }}
+              autoComplete="new-password"
+              placeholder="At least 8 characters"
+              error={fieldErrors.password}
+            />
 
-              <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
-                <TextField
-                  id="reset-password"
-                  label="New password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(v) => {
-                    setPassword(v);
-                    setFieldErrors((prev) => ({ ...prev, password: undefined }));
-                    setError(null);
-                  }}
-                  autoComplete="new-password"
-                  placeholder="••••••••"
-                  icon={<Lock size={14} />}
-                  error={fieldErrors.password}
-                />
+            <AuthField
+              id="reset-confirm"
+              label="Confirm new password"
+              type="password"
+              required
+              value={confirm}
+              onChange={(v) => {
+                setConfirm(v);
+                setFieldErrors((prev) => ({ ...prev, confirm: undefined }));
+                setError(null);
+              }}
+              autoComplete="new-password"
+              placeholder="Repeat your password"
+              error={fieldErrors.confirm}
+            />
 
-                <TextField
-                  id="reset-confirm"
-                  label="Confirm new password"
-                  type="password"
-                  required
-                  value={confirm}
-                  onChange={(v) => {
-                    setConfirm(v);
-                    setFieldErrors((prev) => ({ ...prev, confirm: undefined }));
-                    setError(null);
-                  }}
-                  autoComplete="new-password"
-                  placeholder="••••••••"
-                  icon={<Lock size={14} />}
-                  error={fieldErrors.confirm}
-                />
-
-                <Button type="submit" variant="primary" loading={loading} fullWidth className="mt-2">
-                  {loading ? "Updating..." : "Update password"}
-                </Button>
-              </form>
-            </div>
-          )}
-        </GlassPanel>
-
-        <p className="text-center text-[13px] mt-6" style={{ color: "var(--tf-ink-muted)" }}>
-          <Link to="/login" className="inline-flex items-center gap-1 font-medium hover:underline" style={{ color: "var(--tf-teal)" }}>
-            <ArrowLeft size={13} aria-hidden="true" />
-            Back to log in
-          </Link>
-        </p>
-      </div>
-    </div>
+            <AuthSubmit loading={loading}>{loading ? "Updating…" : "Update password"}</AuthSubmit>
+          </form>
+        </>
+      )}
+    </AuthLayout>
   );
 }

@@ -1,9 +1,13 @@
 import { useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { Sparkles, User, Mail, Lock, AlertTriangle, Check } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { Button } from "../components/ui/Button";
-import { GlassPanel, TextField } from "../components/ui/Primitives";
+import {
+  AuthAlert,
+  AuthField,
+  AuthLayout,
+  AuthRequirements,
+  AuthSubmit,
+} from "../components/auth/AuthLayout";
 import { usePageMeta } from "../hooks/usePageMeta";
 import { ApiError } from "../lib/api";
 
@@ -64,119 +68,89 @@ export function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden p-4" style={{ background: "var(--tf-void)" }}>
-      <div
-        className="pointer-events-none fixed inset-0"
-        style={{
-          background:
-            "radial-gradient(700px circle at 80% 20%, rgba(37,99,235,0.16), transparent 60%), radial-gradient(600px circle at 20% 80%, rgba(20,184,166,0.12), transparent 60%)",
-          opacity: "var(--tf-aurora-opacity)",
-        }}
-      />
-
-      <div className="w-full max-w-sm relative z-10">
-        <Link to="/" className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg, #2563EB, #14B8A6)", boxShadow: "0 0 18px rgba(20,184,166,0.4)" }}>
-            <Sparkles size={18} color="#fff" aria-hidden="true" />
-          </div>
-          <span className="text-[19px] font-display font-semibold" style={{ color: "var(--tf-ink)" }}>
-            TaskFlow <span style={{ color: "var(--tf-teal)" }}>AI</span>
-          </span>
-        </Link>
-
-        <GlassPanel className="p-6 sm:p-8">
-          <div>
-            <h1 className="text-[20px] font-display font-semibold mb-1" style={{ color: "var(--tf-ink)" }}>
-              Create your account
-            </h1>
-            <p className="text-[13px] mb-6" style={{ color: "var(--tf-ink-muted)" }}>
-              Start planning smarter with AI, free.
-            </p>
-
-            {error && (
-              <div role="alert" className="flex items-start gap-2 text-[12px] p-3 rounded-xl mb-4" style={{ background: "rgba(239,68,68,0.1)", color: "var(--tf-danger-text)", border: "1px solid rgba(239,68,68,0.3)" }}>
-                <AlertTriangle size={14} className="shrink-0 mt-0.5" aria-hidden="true" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
-              <TextField
-                id="signup-name"
-                label="Full name"
-                required
-                value={name}
-                onChange={(v) => {
-                  setName(v);
-                  setFieldErrors((prev) => ({ ...prev, name: undefined }));
-                  clearError();
-                }}
-                autoComplete="name"
-                placeholder="Jade Santos"
-                icon={<User size={14} />}
-                error={fieldErrors.name}
-              />
-
-              <TextField
-                id="signup-email"
-                label="Email"
-                type="email"
-                required
-                value={email}
-                onChange={(v) => {
-                  setEmail(v);
-                  setFieldErrors((prev) => ({ ...prev, email: undefined }));
-                  clearError();
-                }}
-                autoComplete="email"
-                placeholder="you@company.com"
-                icon={<Mail size={14} />}
-                error={fieldErrors.email}
-              />
-
-              <TextField
-                id="signup-password"
-                label="Password"
-                type="password"
-                required
-                value={password}
-                onChange={(v) => {
-                  setPassword(v);
-                  setFieldErrors((prev) => ({ ...prev, password: undefined }));
-                  clearError();
-                }}
-                autoComplete="new-password"
-                placeholder="••••••••"
-                icon={<Lock size={14} />}
-                error={fieldErrors.password}
-                hintId="signup-password-requirements"
-              >
-                <div id="signup-password-requirements" className="flex flex-col gap-1 mt-2">
-                  {REQUIREMENTS.map((r) => {
-                    const met = r.test(password);
-                    return (
-                      <div key={r.label} className="flex items-center gap-1.5 text-[11px]" style={{ color: met ? "var(--tf-teal)" : "var(--tf-ink-muted)" }}>
-                        <Check size={11} style={{ opacity: met ? 1 : 0.3 }} aria-hidden="true" /> {r.label}
-                      </div>
-                    );
-                  })}
-                </div>
-              </TextField>
-
-              <Button type="submit" variant="primary" loading={loading} fullWidth className="mt-2">
-                {loading ? "Creating account..." : "Create account"}
-              </Button>
-            </form>
-          </div>
-        </GlassPanel>
-
-        <p className="text-center text-[13px] mt-6" style={{ color: "var(--tf-ink-muted)" }}>
+    <AuthLayout
+      heroTitle={
+        <>
+          Start your
+          <br />
+          mission.
+        </>
+      }
+      heroSubtitle="Start planning smarter with AI, free."
+      mobileAction={{ label: "Log in", to: "/login" }}
+      footer={
+        <>
           Already have an account?{" "}
-          <Link to="/login" className="font-medium hover:underline" style={{ color: "var(--tf-teal)" }}>
+          <Link to="/login" className="auth-footer-link">
             Log in
           </Link>
-        </p>
-      </div>
-    </div>
+        </>
+      }
+    >
+      <header className="auth-head">
+        <h1 className="auth-title font-display">Create your account</h1>
+        <p className="auth-sub">Start planning smarter with AI, free.</p>
+      </header>
+
+      {error && <AuthAlert>{error}</AuthAlert>}
+
+      <form onSubmit={handleSubmit} noValidate className="auth-form">
+        <AuthField
+          id="signup-name"
+          label="Full name"
+          required
+          value={name}
+          onChange={(v) => {
+            setName(v);
+            setFieldErrors((prev) => ({ ...prev, name: undefined }));
+            clearError();
+          }}
+          autoComplete="name"
+          placeholder="Jade Santos"
+          error={fieldErrors.name}
+        />
+
+        <AuthField
+          id="signup-email"
+          label="Email"
+          type="email"
+          required
+          value={email}
+          onChange={(v) => {
+            setEmail(v);
+            setFieldErrors((prev) => ({ ...prev, email: undefined }));
+            clearError();
+          }}
+          autoComplete="email"
+          placeholder="you@company.com"
+          error={fieldErrors.email}
+        />
+
+        <AuthField
+          id="signup-password"
+          label="Password"
+          type="password"
+          required
+          value={password}
+          onChange={(v) => {
+            setPassword(v);
+            setFieldErrors((prev) => ({ ...prev, password: undefined }));
+            clearError();
+          }}
+          autoComplete="new-password"
+          placeholder="Create a password"
+          error={fieldErrors.password}
+          hintId="signup-password-requirements"
+        >
+          <div id="signup-password-requirements">
+            <AuthRequirements
+              items={REQUIREMENTS.map((r) => ({ label: r.label, met: r.test(password) }))}
+            />
+          </div>
+        </AuthField>
+
+        <AuthSubmit loading={loading}>{loading ? "Creating account…" : "Create account"}</AuthSubmit>
+      </form>
+    </AuthLayout>
   );
 }
