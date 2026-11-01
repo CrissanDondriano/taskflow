@@ -7,6 +7,10 @@ export const ANCHOR_YEAR = 2026;
 export const ANCHOR_MONTH = 6; // July, 0-indexed
 export const TODAY_DAY = 2;
 
+/** The calendar can page one month either side of the anchor month. */
+export const MIN_MONTH_OFFSET = -1;
+export const MAX_MONTH_OFFSET = 1;
+
 export function dateForDay(day: number, month = ANCHOR_MONTH, year = ANCHOR_YEAR): Date {
   return new Date(year, month, day);
 }
@@ -102,13 +106,13 @@ export function formatHour(hour: number): string {
 /** A one-line scheduling recommendation computed from real conflicts for the day — no canned text. */
 export function computeSchedulingRecommendation(conflicting: Meeting[]): string {
   if (conflicting.length === 0) {
-    return "No scheduling conflicts today — your calendar looks clear.";
+    return "No scheduling conflicts — this day looks clear.";
   }
   const [a, b] = conflicting;
   if (b) {
-    return `"${a.title}" and "${b.title}" overlap today — move one before your day starts.`;
+    return `"${a.title}" and "${b.title}" overlap — move one before the day starts.`;
   }
-  return `"${a.title}" overlaps with another meeting today — worth resolving before it starts.`;
+  return `"${a.title}" overlaps with another meeting — worth resolving before it starts.`;
 }
 
 /** Caps a title to a maximum word count AND character length for tight

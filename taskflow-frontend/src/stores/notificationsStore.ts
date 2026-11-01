@@ -44,14 +44,18 @@ export const useNotificationsStore = create<NotificationsState>()((set) => ({
 }));
 
 // --- Derivation: tasks -> created / completed / at-risk notifications ---
-// The known-sets start from whatever exists right now, mirroring the old
-// provider's first effect run (which recorded the initial dataset and only
-// notified about *changes* from there on).
+// The known-sets track what the user has already seen. They're (re)seeded
+// from every wholesale load — not once at module import — because the first
+// fetch resolves long after this module runs. Without that, signing in would
+// announce the entire existing backlog as "New task created" on each visit.
 const knownIds = new Set<string>();
 const knownCompleted = new Set<string>();
 const knownAtRisk = new Set<string>();
 
 function recordExistingTasks() {
+  knownIds.clear();
+  knownCompleted.clear();
+  knownAtRisk.clear();
   useTasksStore.getState().tasks.forEach((t) => {
     knownIds.add(t.id);
     if (t.column === "Completed") knownCompleted.add(t.id);
@@ -60,7 +64,20 @@ function recordExistingTasks() {
 }
 recordExistingTasks();
 
+/** True between load() starting and its result landing in the store. */
+let hydrating = false;
+
 useTasksStore.subscribe((state) => {
+  if (state.loading) {
+    hydrating = true;
+    return;
+  }
+  if (hydrating) {
+    hydrating = false;
+    recordExistingTasks();
+    return;
+  }
+
   const newNotifications: AppNotification[] = [];
   const now = new Date().toISOString();
 

@@ -42,6 +42,8 @@ export interface Task {
   description?: string;
   labels?: string[];
   checklist?: ChecklistProgress;
+  /** ISO timestamp, stamped automatically when the task is created. */
+  createdAt?: string;
   completedAt?: string; // ISO timestamp, set automatically when column becomes "Completed"
 }
 

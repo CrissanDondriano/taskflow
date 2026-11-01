@@ -19,6 +19,78 @@ export function computeWeeklyTrend(tasks: Task[]) {
   return days;
 }
 
+export type TrendRange = "weekly" | "monthly" | "quarterly";
+
+export interface CompletionPoint {
+  label: string;
+  /** Tasks created in the bucket (needs `createdAt` — see TasksStore.addTask). */
+  created: number;
+  /** Tasks completed in the bucket (from `completedAt`). */
+  done: number;
+}
+
+const DAY_MS = 86_400_000;
+
+/**
+ * Created-vs-completed counts per period, bucketed from the real task
+ * timestamps. Tasks persisted before `createdAt` existed simply don't
+ * contribute to the created series — nothing is invented to fill a gap.
+ */
+export function computeCompletionSeries(tasks: Task[], range: TrendRange): CompletionPoint[] {
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const tomorrow = todayStart + DAY_MS;
+
+  const buckets: { start: number; end: number; label: string }[] = [];
+
+  if (range === "weekly") {
+    // Seven rolling 7-day buckets, oldest first.
+    for (let i = 6; i >= 0; i--) {
+      const end = tomorrow - i * 7 * DAY_MS;
+      buckets.push({ start: end - 7 * DAY_MS, end, label: `W${7 - i}` });
+    }
+  } else if (range === "monthly") {
+    for (let i = 5; i >= 0; i--) {
+      const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+      buckets.push({
+        start: start.getTime(),
+        end: end.getTime(),
+        label: start.toLocaleDateString("en-US", { month: "short" }),
+      });
+    }
+  } else {
+    const currentQuarter = Math.floor(now.getMonth() / 3);
+    for (let i = 3; i >= 0; i--) {
+      const offset = currentQuarter - i;
+      const year = now.getFullYear() + Math.floor(offset / 4);
+      const quarter = ((offset % 4) + 4) % 4;
+      buckets.push({
+        start: new Date(year, quarter * 3, 1).getTime(),
+        end: new Date(year, quarter * 3 + 3, 1).getTime(),
+        label: `Q${quarter + 1}`,
+      });
+    }
+  }
+
+  const series: CompletionPoint[] = buckets.map((b) => ({ label: b.label, created: 0, done: 0 }));
+
+  tasks.forEach((t) => {
+    if (t.createdAt) {
+      const ts = new Date(t.createdAt).getTime();
+      const bucket = buckets.findIndex((b) => ts >= b.start && ts < b.end);
+      if (bucket !== -1) series[bucket].created += 1;
+    }
+    if (t.completedAt) {
+      const ts = new Date(t.completedAt).getTime();
+      const bucket = buckets.findIndex((b) => ts >= b.start && ts < b.end);
+      if (bucket !== -1) series[bucket].done += 1;
+    }
+  });
+
+  return series;
+}
+
 /** Per-project rollup for the Reports page — derived from live tasks, not a separate hardcoded project list. */
 export function computeProjectStatus(tasks: Task[]) {
   const byProject = tasks.reduce<Record<string, { total: number; completed: number; atRisk: number }>>((acc, t) => {

@@ -23,6 +23,7 @@ export function useMeetingsActions() {
     useShallow((s) => ({
       moveMeeting: s.moveMeeting,
       resizeMeeting: s.resizeMeeting,
+      addMeeting: s.addMeeting,
       updateMeeting: s.updateMeeting,
       deleteMeeting: s.deleteMeeting,
       undoDelete: s.undoDelete,

@@ -39,23 +39,26 @@ export function QuickAddBar({ onCreate, defaultColumn = "Backlog" }: { onCreate:
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-2">
-      <div className="relative">
-        <Sparkles size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--tf-teal)" }} />
+      <div
+        className="flex items-center gap-3 rounded-xl px-3 py-1.5 transition-colors"
+        style={{ background: "var(--tf-fill-03)", border: "1px solid var(--tf-panel-border)" }}
+      >
+        <Sparkles size={15} className="shrink-0" style={{ color: "var(--tf-teal)" }} aria-hidden="true" />
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder='Try: "Fix login bug tomorrow, critical"'
           aria-label="Quick add task with natural language"
-          className="w-full text-sm pl-9 pr-20 py-2.5 rounded-xl outline-none"
-          style={{ background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
+          className="flex-1 min-w-0 bg-transparent text-[13px] py-2 outline-none"
+          style={{ color: "var(--tf-ink)" }}
         />
         <button
           type="submit"
           disabled={!parsed?.title}
-          className="absolute right-1.5 top-1.5 bottom-1.5 px-2.5 rounded-lg text-xs font-medium flex items-center gap-1 disabled:opacity-40 transition-opacity hover:opacity-90"
+          className="shrink-0 h-8 px-3.5 rounded-lg text-[12.5px] font-semibold flex items-center gap-1 transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
           style={{ background: "var(--tf-primary)", color: "#fff" }}
         >
-          <Plus size={12} /> Add
+          <Plus size={13} aria-hidden="true" /> Add
         </button>
       </div>
 

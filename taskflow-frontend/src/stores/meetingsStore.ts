@@ -7,6 +7,7 @@ interface MeetingsState {
   lastDeleted: { meeting: Meeting; index: number } | null;
   moveMeeting: (id: string, day: number, startHour: number) => void;
   resizeMeeting: (id: string, durationHours: number) => void;
+  addMeeting: (meeting: Meeting) => void;
   updateMeeting: (id: string, patch: Partial<Meeting>) => void;
   deleteMeeting: (id: string) => void;
   /** Restores the meeting removed by the most recent deleteMeeting call. */
@@ -27,6 +28,9 @@ export const useMeetingsStore = create<MeetingsState>()((set) => ({
   },
   resizeMeeting(id, durationHours) {
     set((prev) => ({ meetings: prev.meetings.map((m) => (m.id === id ? { ...m, durationHours } : m)) }));
+  },
+  addMeeting(meeting) {
+    set((prev) => ({ meetings: [...prev.meetings, meeting] }));
   },
   updateMeeting(id, patch) {
     set((prev) => ({ meetings: prev.meetings.map((m) => (m.id === id ? { ...m, ...patch } : m)) }));

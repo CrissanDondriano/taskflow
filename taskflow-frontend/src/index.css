@@ -175,6 +175,18 @@ body {
   background: var(--tf-scrollbar-thumb-hover);
 }
 
+/* Recharts writes its chrome as SVG presentation attributes, where var()
+   is not substituted. Styling those elements from CSS keeps the chart grid
+   and axis labels on the same theme tokens as everything else. */
+.recharts-cartesian-grid line {
+  stroke: var(--tf-panel-border);
+}
+.recharts-cartesian-axis-tick text,
+.recharts-legend-item-text {
+  fill: var(--tf-ink-muted);
+  color: var(--tf-ink-muted);
+}
+
 .orbit-core-pulse {
   animation: corepulse 3s ease-in-out infinite;
   transform-origin: center;

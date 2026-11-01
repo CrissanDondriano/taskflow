@@ -23,6 +23,7 @@ export interface ApiTask {
   category: string | null;
   due_date: string | null;
   position: number;
+  created_at?: string | null;
   completed_at: string | null;
   assignee?: { id: number; name: string; avatar_url: string | null } | null;
 }
@@ -137,6 +138,7 @@ export function fromApiTask(api: ApiTask, projectNameById: Record<number, string
     column: fromApiStatus(api.status),
     description: api.description ?? undefined,
     labels: categoryToLabels(api.category),
+    createdAt: api.created_at ?? undefined,
     completedAt: api.completed_at ?? undefined,
   };
 }

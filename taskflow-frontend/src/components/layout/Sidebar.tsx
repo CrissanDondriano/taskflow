@@ -12,11 +12,14 @@ import {
   Shield,
   X,
   LogOut,
+  Sun,
+  Moon,
   type LucideIcon,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Avatar } from "../ui/Primitives";
 import { useAuth } from "../../context/AuthContext";
+import { useThemeStore } from "../../stores/themeStore";
 import { initialsOf } from "../../lib/format";
 
 interface NavItem {
@@ -56,14 +59,14 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const isAdmin = user?.role === "admin";
 
   return (
-    <nav aria-label="Dashboard" className="flex-1 min-h-0 overflow-y-auto tf-scroll flex flex-col gap-4 pr-1">
+    <nav aria-label="Dashboard" className="flex-1 min-h-0 overflow-y-auto tf-scroll flex flex-col gap-6 px-4">
       {NAV_GROUPS.map((group) => {
         const items = group.items.filter((item) => !item.adminOnly || isAdmin);
         if (items.length === 0) return null;
 
         return (
-          <div key={group.label} className="flex flex-col gap-1">
-            <span className="px-3 pb-1 text-[10px] font-mono uppercase tracking-[0.18em]" style={{ color: "var(--tf-ink-muted)" }}>
+          <div key={group.label} className="flex flex-col gap-0.5">
+            <span className="px-3 pb-2 text-[10.5px] font-mono uppercase tracking-[0.16em]" style={{ color: "var(--tf-ink-muted)" }}>
               {group.label}
             </span>
             {items.map((n) => {
@@ -75,11 +78,14 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
                   end={n.end}
                   onClick={onNavigate}
                   className={({ isActive }) =>
-                    `relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
+                    `relative flex items-center gap-3 h-10 px-3 rounded-xl text-[13.5px] transition-colors ${
                       isActive
-                        ? "bg-[rgba(37,99,235,0.14)] text-[var(--tf-ink)]"
-                        : "text-[var(--tf-ink-muted)] hover:bg-[var(--tf-fill-04)] hover:text-[var(--tf-ink)]"
+                        ? "font-semibold text-[var(--tf-ink)]"
+                        : "font-medium text-[var(--tf-ink-muted)] hover:bg-[var(--tf-fill-04)] hover:text-[var(--tf-ink)]"
                     }`
+                  }
+                  style={({ isActive }) =>
+                    isActive ? { background: "color-mix(in srgb, var(--tf-primary) 15%, transparent)" } : undefined
                   }
                 >
                   {({ isActive }) => (
@@ -87,12 +93,12 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
                       {isActive && (
                         <span
                           aria-hidden="true"
-                          className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-full"
-                          style={{ background: "var(--tf-teal)" }}
+                          className="absolute -left-4 top-1.5 bottom-1.5 w-1 rounded-r-full"
+                          style={{ background: "var(--tf-teal)", boxShadow: "0 0 10px var(--tf-teal)" }}
                         />
                       )}
-                      <Icon size={16} aria-hidden="true" />
-                      {n.label}
+                      <Icon size={16} aria-hidden="true" className="shrink-0" />
+                      <span className="truncate">{n.label}</span>
                     </>
                   )}
                 </NavLink>
@@ -107,86 +113,55 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 
 function Brand() {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2.5">
       <div
-        className="w-8 h-8 rounded-lg flex items-center justify-center relative"
-        style={{ background: "linear-gradient(135deg, #2563EB, #14B8A6)", boxShadow: "0 0 18px rgba(20,184,166,0.4)" }}
+        className="w-9 h-9 rounded-[11px] flex items-center justify-center shrink-0"
+        style={{ background: "linear-gradient(140deg, #2DD4BF, #2563EB)", boxShadow: "0 0 18px rgba(45,212,191,0.32)" }}
       >
-        <Sparkles size={16} color="#fff" />
+        <Sparkles size={17} color="#fff" aria-hidden="true" />
       </div>
-      <span className="text-[17px] font-display font-semibold" style={{ color: "var(--tf-ink)" }}>
+      <span className="text-[18px] font-display font-semibold tracking-[-0.01em]" style={{ color: "var(--tf-ink)" }}>
         TaskFlow <span style={{ color: "var(--tf-teal)" }}>AI</span>
       </span>
     </div>
   );
 }
 
-export function DesktopSidebar({ onRequestLogout }: { onRequestLogout: () => void }) {
+/** Avatar + name + role, with theme + logout actions. Shared by both sidebars. */
+function ProfileFooter({ onRequestLogout }: { onRequestLogout: () => void }) {
   const { user } = useAuth();
+  const theme = useThemeStore((s) => s.theme);
+  const toggleTheme = useThemeStore((s) => s.toggleTheme);
 
   return (
-    <div
-      className="w-60 shrink-0 hidden lg:flex flex-col py-6 px-4 relative z-10"
-      style={{ background: "var(--tf-surface-translucent)", borderRight: "1px solid var(--tf-panel-border)", backdropFilter: "blur(12px)" }}
-    >
-      <div className="px-2 mb-8">
-        <Brand />
-      </div>
-
-      <div className="flex items-center gap-1.5 px-2 mb-5">
-        <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--tf-success)", boxShadow: "0 0 6px var(--tf-success)" }} />
-        <span className="text-[10px] font-mono tracking-wider" style={{ color: "var(--tf-ink-muted)" }}>
-          AI SYSTEMS ONLINE
-        </span>
-      </div>
-
-      <NavLinks />
-
-      <div className="mt-auto pt-4 flex items-center gap-2 px-2" style={{ borderTop: "1px solid var(--tf-panel-border)" }}>
-        <Avatar initials={initialsOf(user?.name)} color="#2563EB" size={32} />
+    <div className="px-4 pt-4">
+      <div className="pt-4 flex items-center gap-2.5" style={{ borderTop: "1px solid var(--tf-panel-border)" }}>
+        <Avatar initials={initialsOf(user?.name)} color="#2563EB" size={36} />
         <div className="min-w-0 flex-1">
-          <div className="text-[13px] font-medium truncate" style={{ color: "var(--tf-ink)" }}>
+          <div className="text-[13px] font-semibold truncate" style={{ color: "var(--tf-ink)" }}>
             {user?.name ?? "Guest"}
           </div>
-          <div className="text-[11px] capitalize" style={{ color: "var(--tf-ink-muted)" }}>
+          <div className="text-[11.5px] capitalize" style={{ color: "var(--tf-ink-muted)" }}>
             {user?.role ?? ""}
           </div>
         </div>
-        <button onClick={onRequestLogout} aria-label="Log out" className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors hover:bg-white/5" style={{ color: "var(--tf-ink-muted)" }}>
-          <LogOut size={15} />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-export function MobileSidebar({ open, onClose, onRequestLogout }: { open: boolean; onClose: () => void; onRequestLogout: () => void }) {
-  const { user } = useAuth();
-  if (!open) return null;
-
-  return (
-    <div className="fixed inset-0 z-40 lg:hidden" onClick={onClose}>
-      <div className="absolute inset-0" style={{ background: "var(--tf-overlay)" }} />
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="absolute left-0 top-0 bottom-0 w-64 flex flex-col py-6 px-4"
-        style={{ background: "var(--tf-surface)", borderRight: "1px solid var(--tf-panel-border)" }}
-      >
-        <div className="flex items-center justify-between px-2 mb-8">
-          <Brand />
-          <button onClick={onClose} aria-label="Close menu" className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5" style={{ color: "var(--tf-ink-muted)" }}>
-            <X size={16} />
+        <div className="flex items-center gap-0.5 shrink-0">
+          <button
+            onClick={toggleTheme}
+            aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+            title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5"
+            style={{ color: "var(--tf-ink-muted)" }}
+          >
+            {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
           </button>
-        </div>
-        <NavLinks onNavigate={onClose} />
-        <div className="mt-auto pt-4 flex items-center gap-2 px-2" style={{ borderTop: "1px solid var(--tf-panel-border)" }}>
-          <Avatar initials={initialsOf(user?.name)} color="#2563EB" size={32} />
-          <div className="min-w-0 flex-1">
-            <div className="text-[13px] font-medium truncate" style={{ color: "var(--tf-ink)" }}>
-              {user?.name ?? "Guest"}
-            </div>
-          </div>
-          <button onClick={onRequestLogout} aria-label="Log out" className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors hover:bg-white/5" style={{ color: "var(--tf-ink-muted)" }}>
+          <button
+            onClick={onRequestLogout}
+            aria-label="Log out"
+            title="Log out"
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5"
+            style={{ color: "var(--tf-ink-muted)" }}
+          >
             <LogOut size={15} />
           </button>
         </div>
@@ -195,3 +170,52 @@ export function MobileSidebar({ open, onClose, onRequestLogout }: { open: boolea
   );
 }
 
+export function DesktopSidebar({ onRequestLogout }: { onRequestLogout: () => void }) {
+  return (
+    <div
+      className="w-[272px] xl:w-[300px] 2xl:w-[340px] shrink-0 hidden lg:flex flex-col py-5 relative z-10"
+      style={{ background: "var(--tf-surface)", borderRight: "1px solid var(--tf-panel-border)" }}
+    >
+      <div className="px-6 mb-7">
+        <Brand />
+      </div>
+
+      <NavLinks />
+
+      <div className="mt-auto">
+        <ProfileFooter onRequestLogout={onRequestLogout} />
+      </div>
+    </div>
+  );
+}
+
+export function MobileSidebar({ open, onClose, onRequestLogout }: { open: boolean; onClose: () => void; onRequestLogout: () => void }) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-40 lg:hidden" onClick={onClose}>
+      <div className="absolute inset-0" style={{ background: "var(--tf-overlay)" }} />
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="absolute left-0 top-0 bottom-0 w-[280px] flex flex-col py-5"
+        style={{ background: "var(--tf-surface)", borderRight: "1px solid var(--tf-panel-border)" }}
+      >
+        <div className="flex items-center justify-between px-6 mb-7">
+          <Brand />
+          <button
+            onClick={onClose}
+            aria-label="Close menu"
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5"
+            style={{ color: "var(--tf-ink-muted)" }}
+          >
+            <X size={17} />
+          </button>
+        </div>
+        <NavLinks onNavigate={onClose} />
+        <div className="mt-auto">
+          <ProfileFooter onRequestLogout={onRequestLogout} />
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -161,10 +161,13 @@ export const useTasksStore = create<TasksState>()((set, get) => ({
     const ready = get().tasks.some((t) => t.id === task.id)
       ? { ...task, id: `${task.id}-${get().tasks.length}` }
       : task;
+    // Stamp creation time so the dashboard's created-vs-completed chart has
+    // a real history to bucket instead of a fabricated one.
+    const withCreated = ready.createdAt ? ready : { ...ready, createdAt: new Date().toISOString() };
     const withCompletion =
-      ready.column === "Completed" && !ready.completedAt
-        ? { ...ready, completedAt: new Date().toISOString() }
-        : ready;
+      withCreated.column === "Completed" && !withCreated.completedAt
+        ? { ...withCreated, completedAt: new Date().toISOString() }
+        : withCreated;
     set((prev) => ({ tasks: [...prev.tasks, withCompletion] }));
     void persistNew(withCompletion);
   },

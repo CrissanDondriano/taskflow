@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeProjectStatus, computeWeeklyTrend } from "./reports";
+import { computeCompletionSeries, computeProjectStatus, computeWeeklyTrend } from "./reports";
 import type { Task } from "../types";
 
 function task(patch: Partial<Task>): Task {
@@ -29,6 +29,39 @@ describe("computeWeeklyTrend", () => {
   it("ignores tasks without a completion timestamp", () => {
     const trend = computeWeeklyTrend([task({ column: "Completed" })]);
     expect(trend.every((d) => d.done === 0)).toBe(true);
+  });
+});
+
+describe("computeCompletionSeries", () => {
+  const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString();
+
+  it("buckets created and completed tasks into seven weekly points", () => {
+    const series = computeCompletionSeries(
+      [
+        task({ createdAt: daysAgo(0) }),
+        task({ createdAt: daysAgo(10) }),
+        task({ column: "Completed", createdAt: daysAgo(40), completedAt: daysAgo(1) }),
+      ],
+      "weekly"
+    );
+    expect(series).toHaveLength(7);
+    expect(series[6].created).toBe(1); // created today
+    expect(series[6].done).toBe(1); // completed yesterday
+    expect(series[5].created).toBe(1); // created ten days ago
+    expect(series[1].created).toBe(1); // created forty days ago
+  });
+
+  it("never invents creation history for tasks persisted before createdAt existed", () => {
+    const series = computeCompletionSeries([task({})], "weekly");
+    expect(series.every((p) => p.created === 0)).toBe(true);
+  });
+
+  it("returns six monthly and four quarterly buckets, newest last", () => {
+    const monthly = computeCompletionSeries([], "monthly");
+    const quarterly = computeCompletionSeries([], "quarterly");
+    expect(monthly).toHaveLength(6);
+    expect(quarterly).toHaveLength(4);
+    expect(quarterly[3].label).toBe(`Q${Math.floor(new Date().getMonth() / 3) + 1}`);
   });
 });
 

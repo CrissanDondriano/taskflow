@@ -1,174 +1,166 @@
-import { ChevronLeft, ChevronRight, Flag, Clock3 } from "lucide-react";
-import { GlassPanel, PriorityBadge } from "../ui/Primitives";
-import { PriorityLegend } from "../ui/PriorityLegend";
-import { PRIORITY_HEX } from "../../data/mockData";
-import { ANCHOR_YEAR, ANCHOR_MONTH, TODAY_DAY, formatMonthLabel, formatHour } from "../../lib/calendar";
-import type { Meeting, DeadlineItem } from "../../types";
+import { Flag } from "lucide-react";
+import { PRIORITY_HEX, PRIORITY_TEXT } from "../../data/mockData";
+import { ANCHOR_YEAR, ANCHOR_MONTH, TODAY_DAY, truncateWords } from "../../lib/calendar";
+import type { Meeting, DeadlineItem, Priority } from "../../types";
 
-const MIN_OFFSET = -1; // June 2026
-const MAX_OFFSET = 1; // August 2026
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+type CellEvent =
+  | { kind: "meeting"; id: string; title: string; priority: Priority; hour: number; meeting: Meeting }
+  | { kind: "deadline"; id: string; title: string; priority: Priority; hour: number };
+
+/**
+ * Month grid. The toolbar (prev/next, month label, add event, view tabs)
+ * lives in CalendarPage so every view shares one header; this component is
+ * just the grid, with events rendered as inline chips like the reference.
+ */
 export function MonthView({
   monthOffset,
-  onMonthOffsetChange,
   selectedDay,
   onSelectDay,
   meetingsByDay,
   deadlinesByDay,
+  onSelectMeeting,
 }: {
   monthOffset: number;
-  onMonthOffsetChange: (o: number) => void;
   selectedDay: number;
   onSelectDay: (day: number) => void;
   meetingsByDay: Record<number, Meeting[]>;
   deadlinesByDay: Record<number, DeadlineItem[]>;
+  onSelectMeeting: (meeting: Meeting) => void;
 }) {
   const isAnchorMonth = monthOffset === 0;
   const gridDate = new Date(ANCHOR_YEAR, ANCHOR_MONTH + monthOffset, 1);
   const daysInMonth = new Date(ANCHOR_YEAR, ANCHOR_MONTH + monthOffset + 1, 0).getDate();
   const startOffset = gridDate.getDay();
-  const cells = Array.from({ length: startOffset + daysInMonth }, (_, i) => (i < startOffset ? null : i - startOffset + 1));
+  const daysInPrevMonth = new Date(ANCHOR_YEAR, ANCHOR_MONTH + monthOffset, 0).getDate();
+  const trailing = (7 - ((startOffset + daysInMonth) % 7)) % 7;
 
-  const dayEvents = isAnchorMonth ? [...(meetingsByDay[selectedDay] ?? [])].sort((a, b) => a.startHour - b.startHour) : [];
-  const dayDeadlines = isAnchorMonth ? deadlinesByDay[selectedDay] ?? [] : [];
+  const cells: { day: number; outside: boolean }[] = [
+    ...Array.from({ length: startOffset }, (_, i) => ({ day: daysInPrevMonth - startOffset + 1 + i, outside: true })),
+    ...Array.from({ length: daysInMonth }, (_, i) => ({ day: i + 1, outside: false })),
+    ...Array.from({ length: trailing }, (_, i) => ({ day: i + 1, outside: true })),
+  ];
+
+  const monthLabel = gridDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+  function eventsFor(day: number, outside: boolean): CellEvent[] {
+    if (outside || !isAnchorMonth) return [];
+    const meetings: CellEvent[] = (meetingsByDay[day] ?? []).map((m) => ({
+      kind: "meeting",
+      id: m.id,
+      title: m.title,
+      priority: m.priority,
+      hour: m.startHour,
+      meeting: m,
+    }));
+    const deadlines: CellEvent[] = (deadlinesByDay[day] ?? []).map((d) => ({
+      kind: "deadline",
+      id: d.id,
+      title: d.title,
+      priority: d.priority,
+      hour: 99,
+    }));
+    return [...meetings, ...deadlines].sort((a, b) => a.hour - b.hour);
+  }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-      <GlassPanel className="lg:col-span-2 p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
-            {formatMonthLabel(monthOffset)}
-          </h2>
-          <div className="flex gap-1">
-            <button
-              onClick={() => onMonthOffsetChange(Math.max(MIN_OFFSET, monthOffset - 1))}
-              disabled={monthOffset <= MIN_OFFSET}
-              aria-label="Previous month"
-              className="w-7 h-7 rounded-lg flex items-center justify-center disabled:opacity-30 disabled:pointer-events-none transition-colors hover:bg-white/5"
-              style={{ border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink-muted)" }}
-            >
-              <ChevronLeft size={14} />
-            </button>
-            <button
-              onClick={() => onMonthOffsetChange(Math.min(MAX_OFFSET, monthOffset + 1))}
-              disabled={monthOffset >= MAX_OFFSET}
-              aria-label="Next month"
-              className="w-7 h-7 rounded-lg flex items-center justify-center disabled:opacity-30 disabled:pointer-events-none transition-colors hover:bg-white/5"
-              style={{ border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink-muted)" }}
-            >
-              <ChevronRight size={14} />
-            </button>
+    <div className="rounded-xl overflow-hidden border-l border-t flex-1 min-h-0 flex flex-col" style={{ borderColor: "var(--tf-panel-border)" }}>
+      <div className="grid grid-cols-7 shrink-0">
+        {WEEKDAYS.map((d) => (
+          <div
+            key={d}
+            className="border-r border-b px-1 py-2 text-[9.5px] sm:text-[10px] font-mono uppercase tracking-[0.1em] text-center"
+            style={{ borderColor: "var(--tf-panel-border)", color: "var(--tf-ink-muted)" }}
+          >
+            {d}
           </div>
-        </div>
+        ))}
+      </div>
 
-        <PriorityLegend className="mb-4" />
+      <div className="grid grid-cols-7 flex-1 min-h-0" style={{ gridAutoRows: "minmax(92px, 1fr)" }}>
+        {cells.map((cell, i) => {
+          const events = eventsFor(cell.day, cell.outside);
+          const isToday = !cell.outside && isAnchorMonth && cell.day === TODAY_DAY;
+          const isSelected = !cell.outside && isAnchorMonth && cell.day === selectedDay;
+          const visible = events.slice(0, 2);
+          const overflow = events.length - visible.length;
 
-        {!isAnchorMonth && (
-          <div className="mb-3 px-3 py-2 rounded-lg text-xs" style={{ background: "var(--tf-fill-03)", color: "var(--tf-ink-muted)" }}>
-            No demo meetings or deadlines outside July 2026.{" "}
-            <button onClick={() => onMonthOffsetChange(0)} className="underline hover:opacity-80" style={{ color: "var(--tf-teal)" }}>
-              Jump back to July
-            </button>
-          </div>
-        )}
+          return (
+            <div
+              key={i}
+              className="relative min-h-[92px] border-r border-b p-1.5 overflow-hidden"
+              style={{
+                borderColor: "var(--tf-panel-border)",
+                background: isSelected ? "var(--tf-fill-03)" : "transparent",
+                boxShadow: isSelected ? "inset 0 0 0 1px color-mix(in srgb, var(--tf-primary) 55%, transparent)" : undefined,
+              }}
+            >
+              {!cell.outside && (
+                <button
+                  onClick={() => onSelectDay(cell.day)}
+                  aria-label={`${monthLabel} ${cell.day}${events.length ? `, ${events.length} item${events.length === 1 ? "" : "s"}` : ""}`}
+                  aria-pressed={isSelected}
+                  className="absolute inset-0 z-0 rounded-none focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--tf-teal)]"
+                />
+              )}
 
-        <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-mono mb-2" style={{ color: "var(--tf-ink-muted)" }}>
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-            <div key={d}>{d}</div>
-          ))}
-        </div>
+              <div className="relative z-10 pointer-events-none">
+                <div className="flex justify-end">
+                  <span
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-[11.5px] font-mono"
+                    style={
+                      isToday
+                        ? { background: "var(--tf-teal)", color: "#04211d", fontWeight: 600 }
+                        : { color: cell.outside ? "var(--tf-ink-muted)" : "var(--tf-ink-soft)", opacity: cell.outside ? 0.45 : 1 }
+                    }
+                  >
+                    {cell.day}
+                  </span>
+                </div>
 
-        <div className="grid grid-cols-7 gap-1">
-          {cells.map((day, i) => {
-            const meetings = day && isAnchorMonth ? meetingsByDay[day] ?? [] : [];
-            const deadlines = day && isAnchorMonth ? deadlinesByDay[day] ?? [] : [];
-            const combined = [...meetings.map((m) => m.priority), ...deadlines.map((d) => d.priority)];
-            const isToday = isAnchorMonth && day === TODAY_DAY;
-            const isSelected = isAnchorMonth && day === selectedDay;
-            return (
-              <button
-                key={i}
-                disabled={!day || !isAnchorMonth}
-                onClick={() => day && onSelectDay(day)}
-                aria-label={day ? `${formatMonthLabel(monthOffset)} ${day}${combined.length ? `, ${combined.length} items` : ""}` : undefined}
-                className="h-16 rounded-xl text-left p-1.5 flex flex-col justify-between disabled:cursor-default"
-                style={{
-                  border: `1px solid ${isSelected ? "var(--tf-primary)" : "transparent"}`,
-                  background: !day ? "transparent" : isSelected ? "rgba(37,99,235,0.1)" : "var(--tf-fill-02)",
-                }}
-              >
-                {day && (
-                  <>
-                    <span
-                      className="text-xs font-mono flex items-center justify-center"
-                      style={
-                        isToday
-                          ? { color: "#fff", background: "var(--tf-teal)", borderRadius: "9999px", width: 18, height: 18, boxShadow: "0 0 10px var(--tf-teal)" }
-                          : { color: "var(--tf-ink-muted)" }
-                      }
-                    >
-                      {day}
+                <div className="flex flex-col gap-1 mt-1 pointer-events-auto">
+                  {visible.map((ev) => {
+                    const hex = PRIORITY_HEX[ev.priority];
+                    const chipStyle = {
+                      background: `color-mix(in srgb, ${hex} 18%, transparent)`,
+                      color: PRIORITY_TEXT[ev.priority],
+                    };
+                    const label = truncateWords(ev.title, 3, 18);
+
+                    return ev.kind === "meeting" ? (
+                      <button
+                        key={`m-${ev.id}`}
+                        onClick={() => onSelectMeeting(ev.meeting)}
+                        title={ev.title}
+                        className="text-left text-[10.5px] leading-tight px-1.5 py-1 rounded truncate transition-opacity hover:opacity-80"
+                        style={chipStyle}
+                      >
+                        {label}
+                      </button>
+                    ) : (
+                      <div
+                        key={`d-${ev.id}`}
+                        title={`Deadline: ${ev.title}`}
+                        className="flex items-center gap-1 text-[10.5px] leading-tight px-1.5 py-1 rounded"
+                        style={chipStyle}
+                      >
+                        <Flag size={9} className="shrink-0" aria-hidden="true" />
+                        <span className="truncate">{label}</span>
+                      </div>
+                    );
+                  })}
+                  {overflow > 0 && (
+                    <span className="text-[10px] font-mono pl-1" style={{ color: "var(--tf-ink-muted)" }}>
+                      +{overflow} more
                     </span>
-                    <div className="flex gap-0.5 flex-wrap">
-                      {combined.slice(0, 3).map((p, j) => (
-                        <span key={j} className="w-1.5 h-1.5 rounded-full" style={{ background: PRIORITY_HEX[p], boxShadow: `0 0 5px ${PRIORITY_HEX[p]}` }} />
-                      ))}
-                    </div>
-                  </>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </GlassPanel>
-
-      <GlassPanel className="p-5">
-        <h3 className="text-sm font-semibold font-display mb-1" style={{ color: "var(--tf-ink)" }}>
-          {isAnchorMonth ? `July ${selectedDay}` : "No day selected"}
-        </h3>
-        <p className="text-xs font-mono mb-4" style={{ color: "var(--tf-ink-muted)" }}>
-          {dayEvents.length + dayDeadlines.length} items
-        </p>
-        <div className="flex flex-col gap-3 max-h-72 overflow-y-auto tf-scroll pr-0.5">
-          {dayEvents.map((ev) => (
-            <div key={ev.id} className="flex items-start gap-2 rounded-xl p-3" style={{ border: "1px solid var(--tf-panel-border)" }}>
-              <Clock3 size={14} className="mt-0.5 shrink-0" color={PRIORITY_HEX[ev.priority]} />
-              <div>
-                <div className="text-sm font-medium leading-snug" style={{ color: "var(--tf-ink)" }}>
-                  {ev.title}
-                </div>
-                <div className="text-xs font-mono mt-0.5" style={{ color: "var(--tf-ink-muted)" }}>
-                  {formatHour(ev.startHour)}–{formatHour(ev.startHour + ev.durationHours)}
-                </div>
-                <div className="mt-1">
-                  <PriorityBadge priority={ev.priority} />
+                  )}
                 </div>
               </div>
             </div>
-          ))}
-          {dayDeadlines.map((d) => (
-            <div key={d.id} className="flex items-start gap-2 rounded-xl p-3" style={{ border: "1px solid var(--tf-panel-border)" }}>
-              <Flag size={14} className="mt-0.5 shrink-0" color={PRIORITY_HEX[d.priority]} />
-              <div>
-                <div className="text-sm font-medium leading-snug" style={{ color: "var(--tf-ink)" }}>
-                  {d.title}
-                </div>
-                <div className="text-xs font-mono mt-0.5" style={{ color: "var(--tf-ink-muted)" }}>
-                  Deadline · {d.project}
-                </div>
-                <div className="mt-1">
-                  <PriorityBadge priority={d.priority} />
-                </div>
-              </div>
-            </div>
-          ))}
-          {isAnchorMonth && !dayEvents.length && !dayDeadlines.length && (
-            <p className="text-sm" style={{ color: "var(--tf-ink-muted)" }}>
-              Nothing scheduled. Enjoy the quiet.
-            </p>
-          )}
-        </div>
-      </GlassPanel>
+          );
+        })}
+      </div>
     </div>
   );
 }

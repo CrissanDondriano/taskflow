@@ -74,7 +74,7 @@ export function NotificationsBell() {
         aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications"}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className="relative w-9 h-9 rounded-xl flex items-center justify-center transition-colors hover:bg-white/5"
+        className="relative w-10 h-10 rounded-full flex items-center justify-center transition-colors hover:bg-white/5"
         style={{ border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink-muted)" }}
       >
         <Bell size={16} />

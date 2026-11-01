@@ -1,14 +1,31 @@
 import { useState, useCallback, memo } from "react";
-import { Plus, MoreVertical, Sparkles, Edit3, Trash2, ArrowRightCircle, Inbox } from "lucide-react";
-import { Avatar, PriorityBadge, ConfirmDialog } from "../ui/Primitives";
-import { Badge } from "../ui/Badge";
+import { Plus, MoreVertical, Sparkles, Edit3, Trash2, ArrowRightCircle, Inbox, CalendarDays, ListChecks } from "lucide-react";
+import { Avatar, ConfirmDialog } from "../ui/Primitives";
 import { DropdownMenu } from "../ui/DropdownMenu";
-import { COLUMNS, PRIORITY_HEX } from "../../data/mockData";
+import { COLUMNS, PRIORITY_HEX, PRIORITY_TEXT } from "../../data/mockData";
 import { useTeamMembers } from "../../context/TeamContext";
-import type { Task, TaskColumn } from "../../types";
+import type { Priority, Task, TaskColumn } from "../../types";
 
 /** Custom drag type so foreign drags (text/files) can't land on the board. */
 const TASK_DRAG_TYPE = "text/taskflow-task";
+
+/** Dot + label pill, matching the priority chips in the reference board. */
+function PriorityChip({ priority }: { priority: Priority }) {
+  const hex = PRIORITY_HEX[priority];
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 text-[10.5px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap"
+      style={{
+        background: `color-mix(in srgb, ${hex} 12%, transparent)`,
+        border: `1px solid color-mix(in srgb, ${hex} 30%, transparent)`,
+        color: PRIORITY_TEXT[priority],
+      }}
+    >
+      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: hex }} aria-hidden="true" />
+      {priority}
+    </span>
+  );
+}
 
 const KanbanCard = memo(function KanbanCard({
   task,
@@ -29,7 +46,6 @@ const KanbanCard = memo(function KanbanCard({
 }) {
   const members = useTeamMembers();
   const person = members.find((p) => p.initials === task.assignee);
-  const color = PRIORITY_HEX[task.priority];
   const otherColumns = COLUMNS.filter((c) => c !== task.column);
 
   return (
@@ -54,93 +70,80 @@ const KanbanCard = memo(function KanbanCard({
       role="button"
       tabIndex={0}
       aria-label={`Open ${task.title}`}
-      className="group rounded-xl p-3 cursor-pointer transition-all duration-150 hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tf-teal)]"
+      className="group rounded-xl p-3 cursor-pointer transition-colors hover:border-[var(--tf-fill-12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--tf-teal)]"
       style={{
         background: "var(--tf-surface)",
         border: "1px solid var(--tf-panel-border)",
-        borderLeft: `3px solid ${color}`,
         opacity: isDragging ? 0.4 : 1,
-        boxShadow: isDragging ? "none" : undefined,
       }}
     >
-      <div className="flex items-start justify-between gap-2 mb-1">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <span className="text-[10px] font-mono truncate" style={{ color: "var(--tf-ink-muted)" }}>
+      <div className="flex items-start justify-between gap-2 mb-1.5">
+        <div className="min-w-0 flex-1">
+          <div className="text-[13.5px] font-semibold leading-snug line-clamp-2" style={{ color: "var(--tf-ink)" }}>
+            {task.title}
+          </div>
+          {task.description && (
+            <p className="text-[11.5px] leading-snug mt-1 line-clamp-2" style={{ color: "var(--tf-ink-muted)" }}>
+              {task.description}
+            </p>
+          )}
+        </div>
+
+        <div className="flex items-center gap-1 shrink-0">
+          <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+            <DropdownMenu
+              trigger={
+                <button
+                  aria-label="Task actions"
+                  className="w-6 h-6 rounded-md flex items-center justify-center transition-colors hover:bg-white/5"
+                  style={{ color: "var(--tf-ink-muted)" }}
+                >
+                  <MoreVertical size={14} />
+                </button>
+              }
+              groups={[
+                { items: [{ label: "Edit", icon: <Edit3 size={13} />, onSelect: () => onOpen(task) }] },
+                {
+                  label: "Move to",
+                  items: otherColumns.map((c) => ({ label: c, icon: <ArrowRightCircle size={13} />, onSelect: () => onMove(task.id, c) })),
+                },
+                { items: [{ label: "Delete", icon: <Trash2 size={13} />, onSelect: () => onDelete(task.id), danger: true }] },
+              ]}
+            />
+          </div>
+          {person && <Avatar initials={person.initials} color={person.color} size={24} />}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]" style={{ color: "var(--tf-ink-muted)" }}>
+        <span className="flex items-center gap-1">
+          <CalendarDays size={11} aria-hidden="true" />
+          {task.due}
+        </span>
+        {task.checklist && (
+          <span className="flex items-center gap-1" title={`Checklist ${task.checklist.done} of ${task.checklist.total}`}>
+            <ListChecks size={11} aria-hidden="true" />
+            {task.checklist.done}/{task.checklist.total}
+          </span>
+        )}
+        {task.atRisk && (
+          <span className="flex items-center gap-1" style={{ color: "var(--tf-danger-text)" }} title="AI-flagged as at risk">
+            <Sparkles size={11} aria-hidden="true" />
+            At risk
+          </span>
+        )}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
+        <PriorityChip priority={task.priority} />
+        {task.project && (
+          <span
+            className="inline-flex items-center text-[10.5px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap"
+            style={{ background: "var(--tf-fill-06)", color: "var(--tf-ink-soft)" }}
+          >
             {task.project}
           </span>
-          {task.atRisk && (
-            <span title="AI-flagged as at risk" className="flex items-center shrink-0" style={{ color: "var(--tf-danger)" }}>
-              <Sparkles size={11} />
-            </span>
-          )}
-        </div>
-
-        <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity shrink-0">
-          <DropdownMenu
-            trigger={
-              <button aria-label="Task actions" className="w-6 h-6 rounded-md flex items-center justify-center transition-colors hover:bg-white/5" style={{ color: "var(--tf-ink-muted)" }}>
-                <MoreVertical size={14} />
-              </button>
-            }
-            groups={[
-              { items: [{ label: "Edit", icon: <Edit3 size={13} />, onSelect: () => onOpen(task) }] },
-              {
-                label: "Move to",
-                items: otherColumns.map((c) => ({ label: c, icon: <ArrowRightCircle size={13} />, onSelect: () => onMove(task.id, c) })),
-              },
-              { items: [{ label: "Delete", icon: <Trash2 size={13} />, onSelect: () => onDelete(task.id), danger: true }] },
-            ]}
-          />
-        </div>
-      </div>
-
-      <div className="text-sm font-medium mb-2 leading-snug" style={{ color: "var(--tf-ink)" }}>
-        {task.title}
-      </div>
-
-      {task.description && (
-        <p className="text-xs leading-snug mb-2 line-clamp-2" style={{ color: "var(--tf-ink-muted)" }}>
-          {task.description}
-        </p>
-      )}
-
-      {task.labels && task.labels.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-2">
-          {task.labels.map((l) => (
-            <Badge key={l} color="var(--tf-ink-muted)">
-              {l}
-            </Badge>
-          ))}
-        </div>
-      )}
-
-      {task.checklist && (
-        <div className="mb-2">
-          <div className="flex justify-between text-[10px] font-mono mb-1" style={{ color: "var(--tf-ink-muted)" }}>
-            <span>Checklist</span>
-            <span>
-              {task.checklist.done}/{task.checklist.total}
-            </span>
-          </div>
-          <div className="h-1 rounded-full overflow-hidden" style={{ background: "var(--tf-fill-08)" }}>
-            <div className="h-full rounded-full" style={{ width: `${task.checklist.total > 0 ? (task.checklist.done / task.checklist.total) * 100 : 0}%`, background: "var(--tf-teal)" }} />
-          </div>
-        </div>
-      )}
-
-      <div className="flex items-center justify-between">
-        <PriorityBadge priority={task.priority} />
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-[10px] font-mono" style={{ color: "var(--tf-ink-muted)" }}>
-            {task.due}
-          </span>
-          {person?.jobTitle && (
-            <span className="text-[10px] truncate" style={{ color: "var(--tf-ink-muted)" }} title={person.jobTitle}>
-              {person.jobTitle}
-            </span>
-          )}
-          {person && <Avatar initials={person.initials} color={person.color} size={22} />}
-        </div>
+        )}
       </div>
     </div>
   );
@@ -148,12 +151,15 @@ const KanbanCard = memo(function KanbanCard({
 
 export const KanbanBoard = memo(function KanbanBoard({
   tasks,
+  columns = COLUMNS,
   onMove,
   onAddTask,
   onOpenTask,
   onDeleteTask,
 }: {
   tasks: Task[];
+  /** Which columns to render — defaults to the full board. */
+  columns?: TaskColumn[];
   onMove: (id: string, column: TaskColumn) => void;
   onAddTask: (column: TaskColumn) => void;
   onOpenTask: (task: Task) => void;
@@ -177,10 +183,9 @@ export const KanbanBoard = memo(function KanbanBoard({
 
   return (
     <>
-      <div className="flex gap-4 overflow-x-auto pb-2 tf-scroll">
-        {COLUMNS.map((col) => {
+      <div className="flex gap-3 overflow-x-auto pb-2 tf-scroll items-stretch h-[calc(100dvh-300px)] min-h-[420px]">
+        {columns.map((col) => {
           const colTasks = tasks.filter((t) => t.column === col);
-          const criticalCount = colTasks.filter((t) => t.priority === "Critical").length;
 
           return (
             <div
@@ -195,36 +200,33 @@ export const KanbanBoard = memo(function KanbanBoard({
                 e.preventDefault();
                 handleDrop(col, e.dataTransfer.getData(TASK_DRAG_TYPE));
               }}
-              className="w-72 shrink-0 rounded-2xl transition-colors flex flex-col max-h-[calc(100vh-320px)]"
+              className="w-[268px] shrink-0 rounded-xl transition-colors flex flex-col h-full"
               style={{
-                background: dragOverCol === col ? "color-mix(in srgb, var(--tf-primary) 8%, transparent)" : "var(--tf-fill-02)",
+                background:
+                  dragOverCol === col ? "color-mix(in srgb, var(--tf-primary) 8%, var(--tf-fill-02))" : "var(--tf-fill-02)",
                 border: `1px solid ${dragOverCol === col ? "color-mix(in srgb, var(--tf-primary) 40%, transparent)" : "var(--tf-panel-border)"}`,
               }}
             >
-              <div
-                className="sticky top-0 z-10 flex items-center justify-between px-3 py-3 rounded-t-2xl backdrop-blur-sm"
-                style={{ background: "var(--tf-sticky)" }}
-              >
-                <span className="text-xs font-semibold tracking-wide" style={{ color: "var(--tf-ink)" }}>
+              <div className="flex items-center gap-2 px-3.5 py-3">
+                <span className="text-[13.5px] font-semibold" style={{ color: "var(--tf-ink)" }}>
                   {col}
                 </span>
-                <div className="flex items-center gap-1.5">
-                  {criticalCount > 0 && (
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, var(--tf-danger) 12%, transparent)", color: "var(--tf-danger-text)" }}>
-                      {criticalCount} critical
-                    </span>
-                  )}
-                  <span className="text-[10px] font-mono" style={{ color: "var(--tf-ink-muted)" }}>
-                    {colTasks.length}
-                  </span>
-                </div>
+                <span
+                  className="text-[10.5px] font-mono px-1.5 py-0.5 rounded-md leading-none"
+                  style={{ background: "var(--tf-fill-08)", color: "var(--tf-ink-muted)" }}
+                >
+                  {colTasks.length}
+                </span>
               </div>
 
-              <div className="flex flex-col gap-2 px-3 pb-2 flex-1 overflow-y-auto tf-scroll" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 400px" }}>
+              <div
+                className="flex flex-col gap-2 px-2.5 pb-2.5 flex-1 overflow-y-auto tf-scroll"
+                style={{ contentVisibility: "auto", containIntrinsicSize: "auto 400px" }}
+              >
                 {colTasks.length === 0 ? (
                   <div className="flex flex-col items-center gap-1.5 py-8" style={{ color: "var(--tf-ink-muted)" }}>
-                    <Inbox size={18} />
-                    <p className="text-xs">No tasks yet</p>
+                    <Inbox size={18} aria-hidden="true" />
+                    <p className="text-[12px]">No tasks yet</p>
                   </div>
                 ) : (
                   colTasks.map((t) => (
@@ -243,11 +245,11 @@ export const KanbanBoard = memo(function KanbanBoard({
 
                 <button
                   onClick={() => onAddTask(col)}
-                  className="w-full mt-1 flex items-center justify-center gap-1 text-xs py-1.5 rounded-lg transition-colors hover:bg-white/5"
-                  style={{ color: "var(--tf-ink-muted)" }}
+                  className="w-full mt-auto flex items-center justify-center gap-1.5 text-[12px] py-2 rounded-xl border border-dashed transition-colors hover:bg-white/5"
+                  style={{ borderColor: "var(--tf-panel-border)", color: "var(--tf-ink-muted)" }}
                   aria-label={`Add task to ${col}`}
                 >
-                  <Plus size={13} /> Add task
+                  <Plus size={13} aria-hidden="true" /> Add task
                 </button>
               </div>
             </div>
@@ -259,7 +261,11 @@ export const KanbanBoard = memo(function KanbanBoard({
         open={deleteId !== null}
         onClose={() => setDeleteId(null)}
         title="Delete task?"
-        message={deleteId ? `"${tasks.find((t) => t.id === deleteId)?.title ?? "Task"}" will be removed from the board. You'll get a short window to undo this from the notification.` : ""}
+        message={
+          deleteId
+            ? `"${tasks.find((t) => t.id === deleteId)?.title ?? "Task"}" will be removed from the board. You'll get a short window to undo this from the notification.`
+            : ""
+        }
         onConfirm={() => {
           if (deleteId) onDeleteTask(deleteId);
           setDeleteId(null);
