@@ -60,7 +60,7 @@ export function ReportsPage() {
   return (
     <div className="flex flex-col gap-5">
       <GlassPanel className="p-5">
-        <h2 className="text-sm font-semibold font-display mb-4" style={{ color: "var(--tf-ink)" }}>
+        <h2 className="text-[16px] font-semibold font-display mb-4" style={{ color: "var(--tf-ink)" }}>
           Weekly completion trend
         </h2>
         {hasTrend ? (

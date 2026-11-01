@@ -229,7 +229,7 @@ export function BillingPage() {
       {canManage && (
         <GlassPanel className="p-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-            <h2 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
+            <h2 className="text-[16px] font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
               Upgrade
             </h2>
             <div className="flex gap-1 rounded-xl p-1 w-fit" style={{ background: "var(--tf-fill-03)" }}>
@@ -284,7 +284,7 @@ export function BillingPage() {
       )}
 
       <GlassPanel className="p-5">
-        <h2 className="text-sm font-semibold font-display mb-3 flex items-center gap-1.5" style={{ color: "var(--tf-ink)" }}>
+        <h2 className="text-[16px] font-semibold font-display mb-3 flex items-center gap-1.5" style={{ color: "var(--tf-ink)" }}>
           <Receipt size={14} aria-hidden="true" /> Invoices
         </h2>
         {invoices.length === 0 ? (

@@ -118,7 +118,7 @@ export function SettingsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
         <div className="flex flex-col gap-5">
           <GlassPanel className="p-5">
-            <h2 className="text-sm font-semibold font-display mb-4" style={{ color: "var(--tf-ink)" }}>
+            <h2 className="text-[16px] font-semibold font-display mb-4" style={{ color: "var(--tf-ink)" }}>
               Profile
             </h2>
             <div className="flex items-center gap-3 mb-4">
@@ -154,7 +154,7 @@ export function SettingsPage() {
           </GlassPanel>
 
           <GlassPanel className="p-5">
-            <h2 className="text-sm font-semibold font-display mb-4" style={{ color: "var(--tf-ink)" }}>
+            <h2 className="text-[16px] font-semibold font-display mb-4" style={{ color: "var(--tf-ink)" }}>
               Notifications
             </h2>
             <div className="flex flex-col gap-2">
@@ -188,7 +188,7 @@ export function SettingsPage() {
           <GlassPanel className="p-5">
             <div className="flex items-center gap-2 mb-1">
               <Slack size={16} color="var(--tf-teal)" />
-              <h2 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
+              <h2 className="text-[16px] font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
                 Slack integration
               </h2>
             </div>
@@ -222,7 +222,7 @@ export function SettingsPage() {
           </GlassPanel>
 
           <GlassPanel className="p-5" style={{ borderColor: "rgba(239,68,68,0.3)" }}>
-            <h2 className="text-sm font-semibold font-display mb-1" style={{ color: "var(--tf-danger)" }}>
+            <h2 className="text-[16px] font-semibold font-display mb-1" style={{ color: "var(--tf-danger)" }}>
               Danger zone
             </h2>
             <p className="text-xs mb-3" style={{ color: "var(--tf-ink-muted)" }}>
