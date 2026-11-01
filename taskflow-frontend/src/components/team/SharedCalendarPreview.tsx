@@ -16,7 +16,7 @@ export function SharedCalendarPreview({ meetings }: { meetings: Meeting[] }) {
     <GlassPanel className="p-5">
       <div className="flex items-center gap-1.5 mb-4">
         <CalendarClock size={14} color="var(--tf-ink-muted)" />
-        <h2 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
+        <h2 className="text-[16px] font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
           Shared calendar
         </h2>
       </div>

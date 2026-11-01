@@ -29,9 +29,7 @@ export function TeamPage() {
   const [search, setSearch] = useState("");
   const [department, setDepartment] = useState<string>("All");
   const [loading, setLoading] = useState(true);
-  // One confirm for the whole grid instead of a hidden Modal tree per card.
   const [removeTarget, setRemoveTarget] = useState<Person | null>(null);
-  // Defer the filtered-list computation so typing stays responsive.
   const deferredSearch = useDeferredValue(search);
   const tasks = useTasksData();
   const meetings = useMeetingsData();
@@ -39,10 +37,8 @@ export function TeamPage() {
   const people = useMemo(() => withComputedWorkload(members, tasks), [members, tasks]);
 
   const departments = useMemo(() => ["All", ...Array.from(new Set(people.map((p) => p.department)))], [people]);
-  // Initialize loading state after data is available from stores
-  useEffect(() => {
-    setLoading(false);
-  }, []);
+
+  useEffect(() => { setLoading(false); }, []);
 
   const filtered = people.filter((p) => {
     const matchesSearch = `${p.name} ${p.jobTitle} ${p.department}`.toLowerCase().includes(deferredSearch.toLowerCase());
@@ -53,13 +49,20 @@ export function TeamPage() {
   const avgWorkload = people.length > 0 ? Math.round(people.reduce((sum, p) => sum + p.workloadPct, 0) / people.length) : 0;
   const sharedProjectCount = new Set(tasks.map((t) => t.project)).size;
   const completedCount = tasks.filter((t) => t.column === "Completed").length;
+  const onlineCount = people.filter((p) => p.status === "online").length;
+
+  // Real delta for tasks completed in the last 30 days vs the previous 30.
+  const now = Date.now();
+  const thirty = 30 * 86400000;
+  const recentCompleted = tasks.filter((t) => t.column === "Completed" && t.completedAt && new Date(t.completedAt).getTime() > now - thirty).length;
+  const priorCompleted = tasks.filter((t) => t.column === "Completed" && t.completedAt && new Date(t.completedAt).getTime() <= now - thirty && new Date(t.completedAt).getTime() > now - 2 * thirty).length;
+  const completedDelta = recentCompleted - priorCompleted;
 
   async function inviteMember(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const email = String(form.get("email") ?? "").trim();
     if (!email) return;
-
     setInviting(true);
     setInviteError(null);
     try {
@@ -70,10 +73,7 @@ export function TeamPage() {
     } catch (err) {
       if (isUpgradeRequired(err)) {
         setInviteOpen(false);
-        toast(err instanceof ApiError ? err.message : "Member limit reached.", "error", {
-          label: "View plans",
-          run: () => (window.location.href = "/dashboard/billing"),
-        });
+        toast(err instanceof ApiError ? err.message : "Member limit reached.", "error", { label: "View plans", run: () => (window.location.href = "/dashboard/billing") });
       } else if (err instanceof ApiError && err.status === 422) {
         setInviteError("No TaskFlow account uses that email — ask them to sign up first, then invite them again.");
       } else if (err instanceof ApiError && err.status === 403) {
@@ -91,100 +91,79 @@ export function TeamPage() {
     setInviteError(null);
   }
 
-  return loading ? (
-    <div className="min-h-[80vh] flex items-center justify-center p-8">
-      <div className="flex flex-col items-center gap-4">
-        <Skeleton variant="rect" width={48} height={48} className="rounded-2xl" />
-        <Skeleton variant="rect" width={60} height={20} />
-        <Skeleton variant="text" width="30%" height={13} />
-        <Skeleton variant="text" width="50%" height={13} />
-        <Skeleton variant="text" width="35%" height={13} />
-        <Skeleton variant="rect" height={44} />
-        <Skeleton variant="rect" height={44} />
-        <Skeleton variant="rect" height={44} />
-        <Skeleton variant="text" width="30%" height={10} />
-        <Skeleton variant="text" width="24%" height={10} />
-        <Skeleton variant="text" width="55%" height={10} />
+  if (loading) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center p-8">
+        <div className="flex flex-col items-center gap-4">
+          <Skeleton variant="rect" width={48} height={48} className="rounded-2xl" />
+          <Skeleton variant="rect" width={60} height={20} />
+          <Skeleton variant="text" width="30%" height={13} />
+          <Skeleton variant="text" width="50%" height={13} />
+        </div>
       </div>
-    </div>
-  ) : (
+    );
+  }
+
+  return (
     <div className="flex flex-col gap-5">
       <Modal open={inviteOpen} onClose={closeInvite} title="Invite a team member">
         <form onSubmit={inviteMember} className="flex flex-col gap-3">
           <div>
-            <label htmlFor="invite-email" className="text-[11px] font-mono block mb-1" style={{ color: "var(--tf-ink-muted)" }}>
-              Email *
-            </label>
-            <input
-              id="invite-email"
-              name="email"
-              type="email"
-              required
-              autoFocus
-              placeholder="priya@company.com"
-              className="w-full text-sm px-3 py-2 rounded-xl outline-none"
-              style={{ background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
-            />
+            <label htmlFor="invite-email" className="text-[11px] font-mono block mb-1" style={{ color: "var(--tf-ink-muted)" }}>Email *</label>
+            <input id="invite-email" name="email" type="email" required autoFocus placeholder="priya@company.com" className="w-full text-sm px-3 py-2 rounded-xl outline-none" style={{ background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }} />
           </div>
           <p className="text-[11px]" style={{ color: "var(--tf-ink-muted)" }}>
-            Adds an existing TaskFlow account to your team. No invite email is sent — if they haven't signed up yet,
-            they'll need to register first. Your team is created automatically if you don't have one yet.
+            Adds an existing TaskFlow account to your team. No invite email is sent — if they haven&apos;t signed up yet, they&apos;ll need to register first.
           </p>
-          {inviteError && (
-            <p className="text-[11px]" style={{ color: "var(--tf-danger-text)" }}>
-              {inviteError}
-            </p>
-          )}
+          {inviteError && <p className="text-[11px]" style={{ color: "var(--tf-danger-text)" }}>{inviteError}</p>}
           <div className="flex justify-end gap-2 mt-1">
-            <Button type="button" variant="secondary" onClick={closeInvite}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary" loading={inviting}>
-              Add member
-            </Button>
+            <Button type="button" variant="secondary" onClick={closeInvite}>Cancel</Button>
+            <Button type="submit" variant="primary" loading={inviting}>Add member</Button>
           </div>
         </form>
       </Modal>
 
-      {/* overview stats */}
+      {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <GlassPanel className="p-4">
-          <div className="text-[10px] font-mono uppercase tracking-wide" style={{ color: "var(--tf-ink-muted)" }}>
-            Members
-          </div>
-          <div className="text-xl font-display font-semibold" style={{ color: "var(--tf-ink)" }}>
-            {people.length}
-          </div>
-        </GlassPanel>
-        <GlassPanel className="p-4">
-          <div className="text-[10px] font-mono uppercase tracking-wide" style={{ color: "var(--tf-ink-muted)" }}>
-            Avg workload
-          </div>
-          <div className="text-xl font-display font-semibold" style={{ color: "var(--tf-ink)" }}>
-            {avgWorkload}%
+        <GlassPanel className="p-5">
+          <div className="text-[13px]" style={{ color: "var(--tf-ink-muted)" }}>Members</div>
+          <div className="text-[30px] font-display font-semibold leading-none mt-2" style={{ color: "var(--tf-ink)" }}>{people.length}</div>
+          <div className="flex items-center justify-between mt-4 text-[12px]">
+            <span style={{ color: "var(--tf-ink-muted)" }}>On this team</span>
+            <span style={{ color: "var(--tf-success)" }}>{onlineCount} active now</span>
           </div>
         </GlassPanel>
-        <GlassPanel className="p-4">
-          <div className="text-[10px] font-mono uppercase tracking-wide" style={{ color: "var(--tf-ink-muted)" }}>
-            Shared projects
-          </div>
-          <div className="text-xl font-display font-semibold" style={{ color: "var(--tf-ink)" }}>
-            {sharedProjectCount}
+        <GlassPanel className="p-5">
+          <div className="text-[13px]" style={{ color: "var(--tf-ink-muted)" }}>Avg workload</div>
+          <div className="text-[30px] font-display font-semibold leading-none mt-2" style={{ color: "var(--tf-ink)" }}>{avgWorkload}%</div>
+          <div className="flex items-center justify-between mt-4 text-[12px]">
+            <span style={{ color: "var(--tf-ink-muted)" }}>Across the team</span>
+            <span style={{ color: "var(--tf-ink-muted)" }}>{Math.max(...people.map((p) => p.workloadPct), 0)}% peak</span>
           </div>
         </GlassPanel>
-        <GlassPanel className="p-4">
-          <div className="text-[10px] font-mono uppercase tracking-wide" style={{ color: "var(--tf-ink-muted)" }}>
-            Tasks completed
+        <GlassPanel className="p-5">
+          <div className="text-[13px]" style={{ color: "var(--tf-ink-muted)" }}>Shared projects</div>
+          <div className="text-[30px] font-display font-semibold leading-none mt-2" style={{ color: "var(--tf-ink)" }}>{sharedProjectCount}</div>
+          <div className="flex items-center justify-between mt-4 text-[12px]">
+            <span style={{ color: "var(--tf-ink-muted)" }}>Active now</span>
+            <span style={{ color: "var(--tf-ink-muted)" }}>{tasks.filter((t) => t.column !== "Completed").length} open tasks</span>
           </div>
-          <div className="text-xl font-display font-semibold" style={{ color: "var(--tf-ink)" }}>
-            {completedCount}
+        </GlassPanel>
+        <GlassPanel className="p-5">
+          <div className="text-[13px]" style={{ color: "var(--tf-ink-muted)" }}>Tasks completed</div>
+          <div className="text-[30px] font-display font-semibold leading-none mt-2" style={{ color: "var(--tf-ink)" }}>{completedCount}</div>
+          <div className="flex items-center justify-between mt-4 text-[12px]">
+            <span style={{ color: "var(--tf-ink-muted)" }}>Last 30 days</span>
+            <span style={{ color: completedDelta >= 0 ? "var(--tf-success)" : "var(--tf-danger)" }}>
+              {completedDelta >= 0 ? "↑" : "↓"} {completedDelta >= 0 ? "+" : ""}{completedDelta}
+            </span>
           </div>
         </GlassPanel>
       </div>
 
       <AiWorkloadPanel people={people} tasks={tasks} />
 
-      {/* search + filter + invite */}
+      {/* Search + filter + invite */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex flex-col sm:flex-row gap-2 flex-1">
           <div className="relative">
@@ -194,21 +173,24 @@ export function TeamPage() {
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search members..."
               aria-label="Search members"
-              className="pl-8 pr-3 py-2 rounded-xl text-sm outline-none w-full sm:w-56"
+              className="pl-8 pr-3 py-2 rounded-xl text-sm outline-none w-full sm:w-80"
               style={{ background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
             />
           </div>
           <div className="flex gap-1 rounded-xl p-1 w-fit" style={{ background: "var(--tf-fill-03)" }}>
-            {departments.map((d) => (
-              <button
-                key={d}
-                onClick={() => setDepartment(d)}
-                className="px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                style={{ background: department === d ? "var(--tf-primary)" : "transparent", color: department === d ? "white" : "var(--tf-ink-muted)" }}
-              >
-                {d}
-              </button>
-            ))}
+            {departments.map((d) => {
+              const count = d === "All" ? people.length : people.filter((p) => p.department === d).length;
+              return (
+                <button
+                  key={d}
+                  onClick={() => setDepartment(d)}
+                  className="px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors flex items-center gap-1.5"
+                  style={{ background: department === d ? "var(--tf-fill-12)" : "transparent", color: department === d ? "var(--tf-ink)" : "var(--tf-ink-muted)" }}
+                >
+                  {d} <span style={{ color: department === d ? "var(--tf-ink-muted)" : "var(--tf-ink-muted)", opacity: 0.8, fontSize: 11 }}>{count}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
         <Button variant="primary" size="sm" icon={<UserPlus size={14} />} onClick={() => setInviteOpen(true)}>
@@ -216,8 +198,8 @@ export function TeamPage() {
         </Button>
       </div>
 
-      {/* member grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 300px" }}>
+      {/* Member grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {filtered.map((p) => (
           <MemberCard
             key={p.initials}
@@ -229,31 +211,26 @@ export function TeamPage() {
             onSaveTitle={(initials, title) => setMemberTitle(initials, title)}
           />
         ))}
+        <button
+          onClick={() => setInviteOpen(true)}
+          className="rounded-2xl flex flex-col items-center justify-center gap-2 p-4 min-h-[160px] transition-colors hover:bg-white/5"
+          style={{ border: "1px dashed var(--tf-panel-border)", color: "var(--tf-ink-muted)" }}
+        >
+          <span className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "var(--tf-fill-04)" }}>
+            <UserPlus size={16} />
+          </span>
+          <span className="text-[13px]">Invite a teammate</span>
+        </button>
         {filtered.length === 0 && (
           <div className="col-span-full">
             <EmptyState
               icon={<Search size={22} />}
-              message={
-                search || department !== "All"
-                  ? `No members match "${search}"${department !== "All" ? ` in ${department}` : ""}.`
-                  : "Nobody here yet — invite your first teammate."
-              }
+              message={search || department !== "All" ? `No members match "${search}"${department !== "All" ? ` in ${department}` : ""}.` : "Nobody here yet — invite your first teammate."}
               action={
                 search || department !== "All" ? (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => {
-                      setSearch("");
-                      setDepartment("All");
-                    }}
-                  >
-                    Clear search and filters
-                  </Button>
+                  <Button variant="secondary" size="sm" onClick={() => { setSearch(""); setDepartment("All"); }}>Clear search and filters</Button>
                 ) : (
-                  <Button variant="primary" size="sm" onClick={() => setInviteOpen(true)}>
-                    Invite a member
-                  </Button>
+                  <Button variant="primary" size="sm" onClick={() => setInviteOpen(true)}>Invite a member</Button>
                 )
               }
             />
@@ -282,7 +259,7 @@ export function TeamPage() {
         <TeamAchievements tasks={tasks} />
       </div>
 
-      <CollaborationTimeline />
+      <CollaborationTimeline tasks={tasks} />
     </div>
   );
 }

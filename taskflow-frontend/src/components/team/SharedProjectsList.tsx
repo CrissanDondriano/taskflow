@@ -17,23 +17,24 @@ export function SharedProjectsList({ tasks }: { tasks: Task[] }) {
     <GlassPanel className="p-5">
       <div className="flex items-center gap-1.5 mb-4">
         <FolderKanban size={14} color="var(--tf-ink-muted)" />
-        <h2 className="text-sm font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
+        <h2 className="text-[16px] font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
           Shared projects
         </h2>
       </div>
       <div className="flex flex-col gap-3">
-        {projects.map(([name, stats]) => {
+        {projects.map(([name, stats], i) => {
           const pct = stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0;
+          const color = ["var(--tf-primary)", "var(--tf-warning)", "var(--tf-teal)"][i % 3];
           return (
             <div key={name}>
-              <div className="flex justify-between text-xs mb-1">
+              <div className="flex justify-between text-[13px] mb-1">
                 <span style={{ color: "var(--tf-ink)" }}>{name}</span>
                 <span className="font-mono" style={{ color: "var(--tf-ink-muted)" }}>
-                  {stats.done}/{stats.total}
+                  {pct}%
                 </span>
               </div>
               <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--tf-fill-08)" }}>
-                <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--tf-teal)" }} />
+                <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
               </div>
             </div>
           );

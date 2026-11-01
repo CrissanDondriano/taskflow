@@ -20,7 +20,7 @@ export function TeamAchievements({ tasks }: { tasks: Task[] }) {
 
   return (
     <GlassPanel className="p-5">
-      <h2 className="text-sm font-semibold font-display mb-4" style={{ color: "var(--tf-ink)" }}>
+      <h2 className="text-[16px] font-semibold font-display mb-4" style={{ color: "var(--tf-ink)" }}>
         Team achievements
       </h2>
       <div className="flex flex-col gap-3">

@@ -2,13 +2,18 @@ import { memo, useState } from "react";
 import { Mail, MoreVertical, Pencil, X } from "lucide-react";
 import { Avatar, GlassPanel } from "../ui/Primitives";
 import { Badge } from "../ui/Badge";
-import { CircularGauge } from "../ui/CircularGauge";
 import { DropdownMenu } from "../ui/DropdownMenu";
 import { useMeetingsData } from "../../context/MeetingsContext";
 import { isPersonBusyNow, nextFreeHour, formatHour } from "../../lib/calendar";
 import { JOB_TITLE_PRESETS, UNTITLED } from "../../lib/jobTitles";
 import { ApiError } from "../../lib/api";
 import type { Person } from "../../types";
+
+const STATUS_LABEL: Record<Person["status"], string> = {
+  online: "Available now",
+  away: "Away",
+  offline: "Offline",
+};
 
 const STATUS_COLOR: Record<Person["status"], string> = {
   online: "var(--tf-success)",
@@ -30,7 +35,6 @@ export const MemberCard = memo(function MemberCard({
   assignedCount: number;
   completedCount: number;
   onRemove: (person: Person) => void;
-  /** Owners/admins only — everyone else sees the read-only badge. */
   canManage: boolean;
   onSaveTitle: (initials: string, title: string | null) => Promise<void>;
 }) {
@@ -69,6 +73,10 @@ export const MemberCard = memo(function MemberCard({
     }
   }
 
+  const statusText = currentMeeting
+    ? `In "${currentMeeting.title}"${freeAt !== null ? ` until ${formatHour(freeAt)}` : ""}`
+    : STATUS_LABEL[person.status];
+
   return (
     <GlassPanel className="p-4 relative">
       <div className="flex items-start justify-between">
@@ -82,10 +90,10 @@ export const MemberCard = memo(function MemberCard({
             />
           </div>
           <div className="min-w-0">
-            <div className="text-sm font-semibold truncate" style={{ color: "var(--tf-ink)" }}>
+            <div className="text-[15px] font-semibold truncate" style={{ color: "var(--tf-ink)" }}>
               {person.name}
             </div>
-            <div className="text-xs truncate flex items-center gap-1.5" style={{ color: "var(--tf-ink-muted)" }}>
+            <div className="text-[12.5px] truncate flex items-center gap-1.5" style={{ color: "var(--tf-ink-muted)" }}>
               <span className="truncate">{person.jobTitle ?? UNTITLED}</span>
               {canManage && !editing && (
                 <button
@@ -119,23 +127,14 @@ export const MemberCard = memo(function MemberCard({
           <select
             id={`title-${person.initials}`}
             value={(JOB_TITLE_PRESETS as readonly string[]).includes(choice) ? choice : choice ? CUSTOM : ""}
-            onChange={(e) => {
-              setChoice(e.target.value === CUSTOM ? CUSTOM : e.target.value);
-              setError(null);
-            }}
+            onChange={(e) => { setChoice(e.target.value === CUSTOM ? CUSTOM : e.target.value); setError(null); }}
             disabled={saving}
             className="w-full text-[13px] px-2.5 py-2 rounded-lg outline-none"
             style={{ background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
           >
             <option value="">No title</option>
-            {JOB_TITLE_PRESETS.map((t) => (
-              <option key={t} value={t} style={{ background: "var(--tf-surface)" }}>
-                {t}
-              </option>
-            ))}
-            <option value={CUSTOM} style={{ background: "var(--tf-surface)" }}>
-              Custom…
-            </option>
+            {JOB_TITLE_PRESETS.map((t) => (<option key={t} value={t} style={{ background: "var(--tf-surface)" }}>{t}</option>))}
+            <option value={CUSTOM} style={{ background: "var(--tf-surface)" }}>Custom…</option>
           </select>
           {choice === CUSTOM && (
             <input
@@ -149,28 +148,10 @@ export const MemberCard = memo(function MemberCard({
               style={{ background: "var(--tf-fill-04)", border: "1px solid var(--tf-panel-border)", color: "var(--tf-ink)" }}
             />
           )}
-          {error && (
-            <p className="text-[11px]" style={{ color: "var(--tf-danger-text)" }}>
-              {error}
-            </p>
-          )}
+          {error && <p className="text-[11px]" style={{ color: "var(--tf-danger-text)" }}>{error}</p>}
           <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setEditing(false)}
-              disabled={saving}
-              className="px-2.5 py-1.5 rounded-lg text-xs transition-colors hover:bg-white/5 disabled:opacity-50"
-              style={{ color: "var(--tf-ink-muted)" }}
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={() => void save()}
-              disabled={saving}
-              className="px-2.5 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50"
-              style={{ background: "var(--tf-primary)", color: "#fff" }}
-            >
+            <button type="button" onClick={() => setEditing(false)} disabled={saving} className="px-2.5 py-1.5 rounded-lg text-[12px] transition-colors hover:bg-white/5 disabled:opacity-50" style={{ color: "var(--tf-ink-muted)" }}>Cancel</button>
+            <button type="button" onClick={() => void save()} disabled={saving} className="px-2.5 py-1.5 rounded-lg text-[12px] font-medium disabled:opacity-50" style={{ background: "var(--tf-primary)", color: "#fff" }}>
               {saving ? "Saving…" : "Save"}
             </button>
           </div>
@@ -179,12 +160,12 @@ export const MemberCard = memo(function MemberCard({
 
       <div className="flex items-center gap-1.5 mt-3">
         <Badge color={person.color}>{person.department}</Badge>
-        <span className="text-xs" style={{ color: currentMeeting ? "var(--tf-warning)" : "var(--tf-ink-muted)" }}>
-          {currentMeeting ? `In "${currentMeeting.title}"${freeAt !== null ? ` until ${formatHour(freeAt)}` : ""}` : "Available now"}
+        <span className="text-[12.5px]" style={{ color: currentMeeting ? "var(--tf-warning)" : "var(--tf-ink-muted)" }}>
+          {statusText}
         </span>
       </div>
 
-      <div className="flex items-center gap-1.5 mt-2 text-xs" style={{ color: "var(--tf-ink-muted)" }}>
+      <div className="flex items-center gap-1.5 mt-2 text-[12px]" style={{ color: "var(--tf-ink-muted)" }}>
         <Mail size={12} /> <span className="truncate">{person.email}</span>
       </div>
 
@@ -193,11 +174,17 @@ export const MemberCard = memo(function MemberCard({
           <div className="text-[10px] font-mono uppercase tracking-wide" style={{ color: "var(--tf-ink-muted)" }}>
             Tasks
           </div>
-          <div className="text-sm font-display font-semibold" style={{ color: "var(--tf-ink)" }}>
+          <div className="text-[14px] font-display font-semibold" style={{ color: "var(--tf-ink)" }}>
             {completedCount}/{assignedCount} done
           </div>
         </div>
-        <CircularGauge value={person.workloadPct} size={52} strokeWidth={5} color={person.color} sublabel="load" />
+        <div className="flex items-center gap-2">
+          <span className="text-[12px]" style={{ color: "var(--tf-ink-muted)" }}>Workload</span>
+          <div className="w-20 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--tf-fill-08)" }}>
+            <div className="h-full rounded-full" style={{ width: `${person.workloadPct}%`, background: person.color }} />
+          </div>
+          <span className="text-[12px] font-mono" style={{ color: "var(--tf-ink)" }}>{person.workloadPct}%</span>
+        </div>
       </div>
     </GlassPanel>
   );

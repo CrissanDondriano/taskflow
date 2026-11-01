@@ -71,6 +71,8 @@ export interface ActionItem {
   owner: string;
   priority: Priority;
   selected: boolean;
+  /** Optional due date (ISO yyyy-mm-dd) for the task created from this item. */
+  dueDate?: string | null;
 }
 
 export interface AuthUser {
