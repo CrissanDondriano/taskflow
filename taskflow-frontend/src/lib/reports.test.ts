@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { computeCompletionSeries, computeProjectStatus, computeWeeklyTrend } from "./reports";
+import {
+  computeCompletionSeries,
+  computeProjectReport,
+  computeProjectStatus,
+  computeReportMetrics,
+  computeWeeklyTrend,
+  isOverdue,
+} from "./reports";
 import type { Task } from "../types";
 
 function task(patch: Partial<Task>): Task {
@@ -81,5 +88,122 @@ describe("computeProjectStatus", () => {
   it("marks fully completed projects as Completed", () => {
     const rows = computeProjectStatus([task({ column: "Completed" })]);
     expect(rows[0].status).toBe("Completed");
+  });
+});
+
+describe("isOverdue", () => {
+  const now = new Date("2026-11-02T12:00:00");
+
+  it("is true only for open tasks whose due day has passed", () => {
+    expect(isOverdue(task({ due: "Nov 1" }), now)).toBe(true);
+    expect(isOverdue(task({ due: "Nov 2" }), now)).toBe(false);
+    expect(isOverdue(task({ due: "Dec 1" }), now)).toBe(false);
+    expect(isOverdue(task({ due: "No due date" }), now)).toBe(false);
+    expect(isOverdue(task({ due: "Nov 1", column: "Completed" }), now)).toBe(false);
+  });
+});
+
+describe("computeReportMetrics", () => {
+  const now = new Date("2026-11-02T12:00:00");
+  const daysAgo = (n: number) => new Date(now.getTime() - n * 86_400_000).toISOString();
+
+  it("counts completions in the window and compares with the previous 30 days", () => {
+    const metrics = computeReportMetrics(
+      [
+        task({ column: "Completed", completedAt: daysAgo(1) }),
+        task({ column: "Completed", completedAt: daysAgo(2) }),
+        task({ column: "Completed", completedAt: daysAgo(40) }),
+      ],
+      now
+    );
+    expect(metrics.completedLast30).toBe(2);
+    expect(metrics.completedDeltaPct).toBe(100);
+  });
+
+  it("returns nulls instead of inventing history", () => {
+    const metrics = computeReportMetrics([task({ column: "Completed", completedAt: daysAgo(1) })], now);
+    expect(metrics.completedDeltaPct).toBeNull();
+    expect(metrics.avgCompletionDays).toBeNull();
+    expect(metrics.onTimeRate).toBeNull();
+  });
+
+  it("computes the on-time rate from real due dates", () => {
+    const metrics = computeReportMetrics(
+      [
+        task({ column: "Completed", due: "Oct 30", completedAt: "2026-10-29T10:00:00" }),
+        task({ column: "Completed", due: "Oct 30", completedAt: "2026-11-01T10:00:00" }),
+        task({ column: "Completed", due: "No due date", completedAt: daysAgo(1) }),
+      ],
+      now
+    );
+    expect(metrics.onTimeRate).toBe(50);
+  });
+
+  it("averages createdAt to completedAt for the window", () => {
+    const metrics = computeReportMetrics(
+      [
+        task({ column: "Completed", createdAt: "2026-10-28T12:00:00", completedAt: "2026-10-30T12:00:00" }),
+        task({ column: "Completed", createdAt: "2026-10-30T12:00:00", completedAt: "2026-11-01T12:00:00" }),
+      ],
+      now
+    );
+    expect(metrics.avgCompletionDays).toBe(2);
+  });
+
+  it("counts open past-due tasks as at risk right now", () => {
+    const metrics = computeReportMetrics(
+      [
+        task({ due: "Oct 1" }),
+        task({ due: "Dec 1" }),
+        task({ column: "Completed", due: "Oct 1", completedAt: daysAgo(1) }),
+      ],
+      now
+    );
+    expect(metrics.atRiskNow).toBe(1);
+  });
+});
+
+describe("computeProjectReport", () => {
+  const now = new Date("2026-11-02T12:00:00");
+  const nameFor = (initials: string) => (initials === "AR" ? "Anna R." : "Jade K.");
+
+  it("picks the busiest owner, the next deadline and a health status", () => {
+    const rows = computeProjectReport(
+      [
+        task({ project: "Q4 launch", assignee: "AR" }),
+        task({ project: "Q4 launch", assignee: "AR" }),
+        task({ project: "Q4 launch", assignee: "JK", due: "Nov 9" }),
+      ],
+      nameFor,
+      now
+    );
+    expect(rows[0]).toMatchObject({
+      name: "Q4 launch",
+      owner: "Anna R.",
+      tasks: 3,
+      progress: 0,
+      status: "Watch",
+      due: "2026-11-09",
+    });
+  });
+
+  it("marks overdue work At risk and finished projects Completed", () => {
+    const rows = computeProjectReport(
+      [
+        task({ project: "Late", due: "Oct 1" }),
+        task({ project: "Done", column: "Completed" }),
+      ],
+      nameFor,
+      now
+    );
+    const late = rows.find((r) => r.name === "Late");
+    const done = rows.find((r) => r.name === "Done");
+    expect(late?.status).toBe("At risk");
+    expect(done?.status).toBe("Completed");
+  });
+
+  it("falls back to Unassigned when no task has an owner", () => {
+    const rows = computeProjectReport([task({ project: "Solo" })], nameFor, now);
+    expect(rows[0].owner).toBe("Unassigned");
   });
 });

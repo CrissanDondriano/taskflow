@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { AlertTriangle, CreditCard, FlaskConical, Receipt } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AlertTriangle, Check, CreditCard, FlaskConical, Receipt, ShieldCheck, X } from "lucide-react";
 import { GlassPanel, EmptyState, ConfirmDialog } from "../../components/ui/Primitives";
 import { Button } from "../../components/ui/Button";
 import { Skeleton } from "../../components/ui/Skeleton";
@@ -20,6 +20,16 @@ import { useToast } from "../../context/ToastContext";
 
 const INTERVALS: BillingInterval[] = ["monthly", "yearly"];
 
+/** Usage cards shown in the "Usage this month" row, in comp order. */
+const USAGE_METRICS: UsageMetric[] = ["members", "ai_messages", "plan_imports", "projects"];
+
+const USAGE_LABEL: Record<UsageMetric, string> = {
+  members: "Team members",
+  ai_messages: "AI actions",
+  plan_imports: "PDF imports",
+  projects: "Projects",
+};
+
 interface InvoiceRow {
   id: string;
   amount: number;
@@ -27,6 +37,15 @@ interface InvoiceRow {
   status: string;
   date: string | null;
   url: string | null;
+}
+
+/** "2026-11-30T…" / "2026-11-30" → "Nov 30, 2026"; null when unparseable. */
+function formatLongDate(value: string | null): string | null {
+  if (!value) return null;
+  const iso = value.slice(0, 10);
+  const date = new Date(`${iso}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 /**
@@ -45,6 +64,8 @@ export function BillingPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
+  const [showPlans, setShowPlans] = useState(false);
+  const plansRef = useRef<HTMLDivElement | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -102,6 +123,11 @@ export function BillingPage() {
     });
   }
 
+  function openPlans() {
+    setShowPlans(true);
+    requestAnimationFrame(() => plansRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }));
+  }
+
   if (loading) {
     return (
       <div className="flex flex-col gap-4" role="status" aria-live="polite">
@@ -133,6 +159,9 @@ export function BillingPage() {
 
   const sub = info.subscription;
   const pastDue = sub?.status === "past_due";
+  const renewal = formatLongDate(sub?.ends_at ?? null);
+  const paidPlan = PAID_PLANS.find((p) => p.key === info.plan.key);
+  const membersUsed = info.usage.members?.used ?? 0;
 
   return (
     <div className="flex flex-col gap-5">
@@ -167,150 +196,298 @@ export function BillingPage() {
         </GlassPanel>
       )}
 
-      <GlassPanel className="p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <div className="text-[10px] font-mono uppercase tracking-wide" style={{ color: "var(--tf-ink-muted)" }}>
-              Current plan{info.team_name ? ` · ${info.team_name}` : ""}
-            </div>
-            <div className="text-xl font-display font-semibold" style={{ color: "var(--tf-ink)" }}>
-              {info.plan.name}
-            </div>
-            {sub && (
-              <p className="text-xs mt-1 font-mono" style={{ color: "var(--tf-ink-muted)" }}>
-                Subscription {sub.status}
-                {sub.ends_at ? ` · ends ${sub.ends_at.slice(0, 10)}` : ""}
-                {sub.on_grace_period ? " · cancels at period end" : ""}
+      {/* Current plan + payment method */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
+        <GlassPanel className="p-6 lg:col-span-2 flex flex-col">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-[10.5px] font-mono uppercase tracking-[0.16em]" style={{ color: "var(--tf-ink-muted)" }}>
+                Current plan{info.team_name ? ` · ${info.team_name}` : ""}
+              </div>
+              <div className="flex items-center gap-2.5 mt-1">
+                <span className="text-[28px] leading-none font-display font-semibold" style={{ color: "var(--tf-ink)" }}>
+                  {info.plan.name}
+                </span>
+                <span
+                  className="text-[11px] px-2 py-0.5 rounded-full font-medium"
+                  style={{
+                    background: pastDue ? "rgba(239,68,68,0.12)" : "rgba(34,197,94,0.12)",
+                    color: pastDue ? "var(--tf-danger-text)" : "var(--tf-success-text)",
+                  }}
+                >
+                  {pastDue ? "Past due" : sub ? (sub.on_grace_period ? "Cancels soon" : "Active") : "Active"}
+                </span>
+              </div>
+              <p className="text-[13px] mt-2" style={{ color: "var(--tf-ink-soft)" }}>
+                {paidPlan ? `${formatUsd(paidPlan.monthly)} / month` : "Free plan"}
+                <span style={{ color: "var(--tf-ink-muted)" }}>
+                  {" "}
+                  • {membersUsed} member{membersUsed === 1 ? "" : "s"}
+                </span>
               </p>
+              <p className="text-[12.5px] mt-1 font-mono" style={{ color: "var(--tf-ink-muted)" }}>
+                {renewal
+                  ? `${sub?.on_grace_period ? "Cancels on" : "Renews on"} ${renewal}`
+                  : sub
+                    ? "No renewal date scheduled"
+                    : "No renewal — free plan"}
+              </p>
+            </div>
+            {canManage && (
+              <div className="flex flex-wrap gap-2 shrink-0">
+                <Button variant="secondary" size="sm" onClick={openPlans}>
+                  Change plan
+                </Button>
+                {sub && !sub.on_grace_period && (
+                  <Button variant="ghost" size="sm" onClick={() => setConfirmCancel(true)}>
+                    Cancel plan
+                  </Button>
+                )}
+              </div>
             )}
           </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 mt-6">
+            {[
+              `${formatLimit(info.plan.limits.members)} team members`,
+              `${formatLimit(info.plan.limits.projects)} projects`,
+              `${formatLimit(info.plan.limits.plan_imports)} plan imports / mo`,
+              `${formatLimit(info.plan.limits.ai_messages)} AI actions / mo`,
+            ].map((feature) => (
+              <div key={feature} className="flex items-center gap-2 text-[13px]" style={{ color: "var(--tf-ink-soft)" }}>
+                <Check size={13} aria-hidden="true" style={{ color: "var(--tf-teal)" }} />
+                {feature}
+              </div>
+            ))}
+          </div>
+
+          {sub && (
+            <p className="text-[11.5px] mt-auto pt-5 font-mono" style={{ color: "var(--tf-ink-muted)" }}>
+              Subscription {sub.status}
+              {sub.stripe_price ? ` · ${sub.stripe_price}` : ""}
+            </p>
+          )}
+        </GlassPanel>
+
+        <GlassPanel className="p-6 flex flex-col">
+          <h2 className="text-[16px] font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
+            Payment method
+          </h2>
+          <div
+            className="mt-4 rounded-xl p-4 flex items-center gap-3"
+            style={{ border: "1px solid var(--tf-panel-border)", background: "var(--tf-fill-03)" }}
+          >
+            <span
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: "var(--tf-fill-06)", color: "var(--tf-ink-muted)" }}
+            >
+              <CreditCard size={18} aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <div className="text-[13px] font-medium" style={{ color: "var(--tf-ink)" }}>
+                {sub ? "Card on file" : "No card on file"}
+              </div>
+              <div className="text-[11.5px]" style={{ color: "var(--tf-ink-muted)" }}>
+                {sub ? "Managed securely by Stripe" : "You're on the free plan"}
+              </div>
+            </div>
+          </div>
+          <p className="text-[12px] mt-3 flex items-start gap-1.5" style={{ color: "var(--tf-ink-muted)" }}>
+            <ShieldCheck size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
+            Card details never touch TaskFlow — they're entered on Stripe.
+          </p>
           {canManage && (
-            <div className="flex flex-wrap gap-2">
-              <Button variant="secondary" size="sm" loading={busy === "portal"} onClick={() => void portal()}>
-                Manage subscription
-              </Button>
-              {sub && !sub.on_grace_period && (
-                <Button variant="danger" size="sm" onClick={() => setConfirmCancel(true)}>
-                  Cancel
+            <div className="mt-auto pt-4">
+              {sub ? (
+                <Button variant="secondary" size="sm" loading={busy === "portal"} onClick={() => void portal()}>
+                  Update payment method
+                </Button>
+              ) : (
+                <Button variant="primary" size="sm" onClick={openPlans}>
+                  Add payment method
                 </Button>
               )}
             </div>
           )}
-        </div>
+        </GlassPanel>
+      </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
-          {(Object.keys(METRIC_LABELS) as UsageMetric[]).map((metric) => {
+      {/* Usage this month */}
+      <GlassPanel className="p-6">
+        <h2 className="text-[16px] font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
+          Usage this month
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-5 mt-5">
+          {USAGE_METRICS.map((metric) => {
             const entry = info.usage[metric];
             if (!entry) return null;
             const pct = usagePercent(entry.used, entry.limit);
+            const critical = pct !== null && pct >= 90;
             return (
               <div key={metric}>
-                <div className="flex justify-between text-xs mb-1.5">
-                  <span style={{ color: "var(--tf-ink-soft)" }}>{METRIC_LABELS[metric]}</span>
-                  <span className="font-mono" style={{ color: "var(--tf-ink-muted)" }}>
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="text-[13px]" style={{ color: "var(--tf-ink-soft)" }}>
+                    {USAGE_LABEL[metric]}
+                  </span>
+                  <span className="text-[12px] font-mono" style={{ color: "var(--tf-ink-muted)" }}>
                     {entry.used} / {formatLimit(entry.limit)}
                   </span>
                 </div>
-                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--tf-fill-08)" }}>
+                <div className="h-1.5 rounded-full overflow-hidden mt-2" style={{ background: "var(--tf-fill-08)" }}>
                   <div
                     className="h-full rounded-full transition-all"
-                    style={{
-                      width: `${pct ?? 100}%`,
-                      background: pct !== null && pct >= 90 ? "var(--tf-danger)" : "var(--tf-teal)",
-                    }}
+                    style={{ width: `${pct ?? 100}%`, background: critical ? "var(--tf-danger)" : "var(--tf-teal)" }}
                   />
+                </div>
+                <div className="text-[11px] mt-1.5" style={{ color: critical ? "var(--tf-danger-text)" : "var(--tf-ink-muted)" }}>
+                  {pct === null ? "Unlimited" : `${pct}% used`}
                 </div>
               </div>
             );
           })}
         </div>
+        <p className="text-[11.5px] mt-5" style={{ color: "var(--tf-ink-muted)" }}>
+          {METRIC_LABELS.plan_imports} and {METRIC_LABELS.ai_messages} reset at the start of each billing period.
+        </p>
       </GlassPanel>
 
-      {canManage && (
-        <GlassPanel className="p-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-            <h2 className="text-[16px] font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
-              Upgrade
-            </h2>
-            <div className="flex gap-1 rounded-xl p-1 w-fit" style={{ background: "var(--tf-fill-03)" }}>
-              {INTERVALS.map((i) => (
-                <button
-                  key={i}
-                  onClick={() => setInterval(i)}
-                  aria-pressed={interval === i}
-                  className="px-2.5 py-1.5 rounded-lg text-xs font-medium transition-opacity hover:opacity-90 active:opacity-80"
-                  style={{ background: interval === i ? "var(--tf-primary)" : "transparent", color: interval === i ? "white" : "var(--tf-ink-muted)" }}
-                >
-                  {i === "monthly" ? "Monthly" : "Yearly (−20%)"}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {PAID_PLANS.map((p) => {
-              const price = interval === "monthly" ? p.monthly : p.yearlyTotal / 12;
-              const isCurrent = info.plan.key === p.key;
-              return (
-                <div key={p.key} className="rounded-xl p-4" style={{ border: "1px solid var(--tf-panel-border)" }}>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-base font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
-                      {p.name}
-                    </span>
-                    <span className="text-sm font-display font-semibold" style={{ color: "var(--tf-ink)" }}>
-                      {formatUsd(price)}
-                      <span className="text-[11px] font-normal" style={{ color: "var(--tf-ink-muted)" }}>
-                        {" "}
-                        / mo{interval === "yearly" ? `, billed ${formatUsd(p.yearlyTotal)}/yr` : ""}
-                      </span>
-                    </span>
-                  </div>
-                  <p className="text-xs mt-1 mb-3" style={{ color: "var(--tf-ink-muted)" }}>
-                    {p.blurb}
-                  </p>
-                  <Button
-                    variant={isCurrent ? "secondary" : "primary"}
-                    size="sm"
-                    disabled={isCurrent}
-                    loading={busy === `checkout-${p.key}`}
-                    onClick={() => void checkout(p.key)}
-                  >
-                    {isCurrent ? "Current plan" : sub ? `Switch to ${p.name}` : `Upgrade to ${p.name}`}
-                  </Button>
+      {/* Plan switcher — hidden until "Change plan" is used, like the comp. */}
+      {canManage && showPlans && (
+        <div ref={plansRef}>
+          <GlassPanel className="p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+              <div>
+                <h2 className="text-[16px] font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
+                  Change plan
+                </h2>
+                <p className="text-[12px]" style={{ color: "var(--tf-ink-muted)" }}>
+                  Switching takes effect immediately and is prorated by Stripe.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1 rounded-xl p-1 w-fit" style={{ background: "var(--tf-fill-03)" }}>
+                  {INTERVALS.map((i) => (
+                    <button
+                      key={i}
+                      onClick={() => setInterval(i)}
+                      aria-pressed={interval === i}
+                      className="px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-colors"
+                      style={{
+                        background: interval === i ? "var(--tf-fill-12)" : "transparent",
+                        color: interval === i ? "var(--tf-ink)" : "var(--tf-ink-muted)",
+                      }}
+                    >
+                      {i === "monthly" ? "Monthly" : "Yearly (−20%)"}
+                    </button>
+                  ))}
                 </div>
-              );
-            })}
-          </div>
-        </GlassPanel>
+                <button
+                  onClick={() => setShowPlans(false)}
+                  aria-label="Close plan options"
+                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5"
+                  style={{ color: "var(--tf-ink-muted)" }}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {PAID_PLANS.map((p) => {
+                const price = interval === "monthly" ? p.monthly : p.yearlyTotal / 12;
+                const isCurrent = info.plan.key === p.key;
+                return (
+                  <div
+                    key={p.key}
+                    className="rounded-xl p-4 flex flex-col"
+                    style={{ border: "1px solid var(--tf-panel-border)", background: "var(--tf-fill-02)" }}
+                  >
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-[15px] font-semibold font-display" style={{ color: "var(--tf-ink)" }}>
+                        {p.name}
+                      </span>
+                      <span className="text-[14px] font-display font-semibold" style={{ color: "var(--tf-ink)" }}>
+                        {formatUsd(price)}
+                        <span className="text-[11px] font-normal" style={{ color: "var(--tf-ink-muted)" }}>
+                          {" "}
+                          / mo{interval === "yearly" ? `, billed ${formatUsd(p.yearlyTotal)}/yr` : ""}
+                        </span>
+                      </span>
+                    </div>
+                    <p className="text-[12px] mt-1 mb-3" style={{ color: "var(--tf-ink-muted)" }}>
+                      {p.blurb}
+                    </p>
+                    <div className="mt-auto">
+                      <Button
+                        variant={isCurrent ? "secondary" : "primary"}
+                        size="sm"
+                        disabled={isCurrent}
+                        loading={busy === `checkout-${p.key}`}
+                        onClick={() => void checkout(p.key)}
+                      >
+                        {isCurrent ? "Current plan" : sub ? `Switch to ${p.name}` : `Upgrade to ${p.name}`}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </GlassPanel>
+        </div>
       )}
 
-      <GlassPanel className="p-5">
-        <h2 className="text-[16px] font-semibold font-display mb-3 flex items-center gap-1.5" style={{ color: "var(--tf-ink)" }}>
-          <Receipt size={14} aria-hidden="true" /> Invoices
-        </h2>
+      {/* Invoices */}
+      <GlassPanel className="p-6">
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <h2 className="text-[16px] font-semibold font-display flex items-center gap-1.5" style={{ color: "var(--tf-ink)" }}>
+            <Receipt size={15} aria-hidden="true" /> Invoices
+          </h2>
+          <span className="text-[11.5px] font-mono" style={{ color: "var(--tf-ink-muted)" }}>
+            {invoices.length} total
+          </span>
+        </div>
         {invoices.length === 0 ? (
-          <p className="text-sm" style={{ color: "var(--tf-ink-muted)" }}>
+          <p className="text-[13px]" style={{ color: "var(--tf-ink-muted)" }}>
             No invoices yet — they appear here after your first payment.
           </p>
         ) : (
           <div className="overflow-x-auto tf-scroll">
             <table className="w-full text-[13px]">
+              <thead>
+                <tr className="text-left" style={{ color: "var(--tf-ink-muted)" }}>
+                  <th className="font-mono text-[10.5px] font-normal tracking-wide pb-2 pr-4">INVOICE</th>
+                  <th className="font-mono text-[10.5px] font-normal tracking-wide pb-2 pr-4">DATE</th>
+                  <th className="font-mono text-[10.5px] font-normal tracking-wide pb-2 pr-4">AMOUNT</th>
+                  <th className="font-mono text-[10.5px] font-normal tracking-wide pb-2 pr-4">STATUS</th>
+                  <th className="font-mono text-[10.5px] font-normal tracking-wide pb-2 text-right">RECEIPT</th>
+                </tr>
+              </thead>
               <tbody>
                 {invoices.map((inv) => (
                   <tr key={inv.id} style={{ borderTop: "1px solid var(--tf-panel-border)" }}>
-                    <td className="py-2.5 pr-4 font-mono text-xs" style={{ color: "var(--tf-ink-muted)" }}>
-                      {inv.date ?? "—"}
+                    <td className="py-3 pr-4 font-mono text-[11.5px] max-w-[180px] truncate" style={{ color: "var(--tf-ink-soft)" }} title={inv.id}>
+                      {inv.id}
                     </td>
-                    <td className="py-2.5 pr-4" style={{ color: "var(--tf-ink)" }}>
-                      {formatUsd(inv.amount / 100)} {inv.currency}
+                    <td className="py-3 pr-4 text-[12.5px]" style={{ color: "var(--tf-ink-muted)" }}>
+                      {formatLongDate(inv.date) ?? "—"}
                     </td>
-                    <td className="py-2.5 pr-4 text-xs capitalize" style={{ color: "var(--tf-ink-muted)" }}>
-                      {inv.status}
+                    <td className="py-3 pr-4 font-medium" style={{ color: "var(--tf-ink)" }}>
+                      {formatUsd(inv.amount / 100)} <span className="text-[11px] uppercase" style={{ color: "var(--tf-ink-muted)" }}>{inv.currency}</span>
                     </td>
-                    <td className="py-2.5 text-right">
-                      {inv.url && (
-                        <a href={inv.url} target="_blank" rel="noreferrer" className="text-xs font-medium hover:underline" style={{ color: "var(--tf-primary)" }}>
-                          View
+                    <td className="py-3 pr-4">
+                      <span
+                        className="text-[11px] px-2 py-0.5 rounded-full capitalize"
+                        style={{ background: "rgba(34,197,94,0.12)", color: "var(--tf-success-text)" }}
+                      >
+                        {inv.status}
+                      </span>
+                    </td>
+                    <td className="py-3 text-right">
+                      {inv.url ? (
+                        <a href={inv.url} target="_blank" rel="noreferrer" className="text-[12px] font-medium hover:underline" style={{ color: "var(--tf-primary)" }}>
+                          Download PDF
                         </a>
+                      ) : (
+                        <span className="text-[12px]" style={{ color: "var(--tf-ink-muted)" }}>—</span>
                       )}
                     </td>
                   </tr>
